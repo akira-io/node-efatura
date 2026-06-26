@@ -1,0 +1,31 @@
+import { EfaturaValidationError } from '../../domain/errors';
+import { validateIud } from '../../domain/iud/iud';
+import type { EmissionMode } from '../xml/dfe-xml';
+
+export const CONTINGENCY_NOTICE = 'EMITIDO EM CONTINGENCIA';
+export const OFFLINE_CONTINGENCY_NOTICE = 'EMITIDO EM CONTINGENCIA OFFLINE';
+export const OFF_CONTINGENCY_NOTICE = 'EMITIDO EM CONTINGENCIA OFF';
+
+export function dfaQrCodeUrl(iud: string, baseUrl: string): string {
+  if (!validateIud(iud)) {
+    throw new EfaturaValidationError('iud', 'IUD is invalid.', 'dfa.iud_invalid');
+  }
+
+  return `${baseUrl.replace(/\/+$/, '')}/${encodeURIComponent(iud)}`;
+}
+
+export function dfaContingencyNotice(value: boolean | EmissionMode): string | null {
+  if (value === true) {
+    return CONTINGENCY_NOTICE;
+  }
+
+  if (value === 'Offline') {
+    return OFFLINE_CONTINGENCY_NOTICE;
+  }
+
+  if (value === 'Off') {
+    return OFF_CONTINGENCY_NOTICE;
+  }
+
+  return null;
+}
