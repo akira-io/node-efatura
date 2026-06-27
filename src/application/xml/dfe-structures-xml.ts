@@ -1,4 +1,9 @@
 import type { ResolvedEfaturaConfig } from '../../config';
+import {
+  EmissionMode,
+  type EmissionModeInput,
+  normalizeEmissionMode,
+} from '../../domain/enums/emission-mode';
 import type {
   DatePeriodData,
   DeliveryData,
@@ -13,12 +18,11 @@ import type { ExtraFieldData, ExtraFieldScalar } from '../../domain/value-object
 import type { ContingencyData, InvoiceData } from '../../domain/value-objects/invoice-data';
 import { taxXml } from './dfe-lines-xml';
 import { addressXml } from './dfe-party-xml';
-import type { EmissionMode } from './dfe-xml';
 import { element, escapeXml, requiredValue } from './xml-core';
 
 export interface TransmissionXmlInput {
   config: ResolvedEfaturaConfig;
-  emissionMode?: EmissionMode;
+  emissionMode?: EmissionModeInput;
   contingency?: ContingencyData | null;
 }
 
@@ -127,7 +131,7 @@ export function datePeriodXml(name: string, period: DatePeriodData | null): stri
 }
 
 export function transmissionXml(input: TransmissionXmlInput): string {
-  const mode = input.emissionMode ?? 'Online';
+  const mode = normalizeEmissionMode(input.emissionMode);
 
   return `<Transmission>${element('IssueMode', issueModeCode(mode))}<TransmitterTaxId CountryCode="CV">${escapeXml(
     input.config.transmitterNif,
@@ -183,7 +187,7 @@ function softwareXml(config: ResolvedEfaturaConfig): string {
 }
 
 function contingencyXml(contingency: ContingencyData | null, mode: EmissionMode): string {
-  if (mode === 'Online') {
+  if (mode === EmissionMode.Online) {
     return '';
   }
 
@@ -219,11 +223,11 @@ function scalarXml(value: ExtraFieldScalar | null): string {
 }
 
 function issueModeCode(mode: EmissionMode): number {
-  if (mode === 'Offline') {
+  if (mode === EmissionMode.Offline) {
     return 2;
   }
 
-  if (mode === 'Off') {
+  if (mode === EmissionMode.Off) {
     return 3;
   }
 

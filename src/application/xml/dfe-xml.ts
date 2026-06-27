@@ -1,5 +1,6 @@
 import type { ResolvedEfaturaConfig } from '../../config';
 import { DocumentType, documentTypeCode } from '../../domain/enums/document-type';
+import type { EmissionModeInput } from '../../domain/enums/emission-mode';
 import { EfaturaValidationError } from '../../domain/errors';
 import { parseIud, validateIud } from '../../domain/iud/iud';
 import type { InvoiceData } from '../../domain/value-objects/invoice-data';
@@ -31,13 +32,13 @@ import {
 export const DFE_NAMESPACE = 'urn:cv:efatura:xsd:v1.0';
 export const DFE_XML_VERSION = '1.0';
 
-export type EmissionMode = 'Online' | 'Offline' | 'Off';
+export type { EmissionMode, EmissionModeInput } from '../../domain/enums/emission-mode';
 
 export interface BuildDfeXmlInput {
   iud: string;
   invoice: InvoiceData;
   config: ResolvedEfaturaConfig;
-  emissionMode?: EmissionMode;
+  emissionMode?: EmissionModeInput;
 }
 
 const DOCUMENT_ROOTS: Record<DocumentType, string> = {

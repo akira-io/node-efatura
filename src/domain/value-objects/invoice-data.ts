@@ -22,6 +22,7 @@ import {
 } from './document-structures';
 import { type ExtraFieldData, extraFieldsDataFrom } from './extra-fields';
 import { assertDocumentFieldCompatibility } from './invoice-field-compatibility';
+import { assertInvoiceFiscalRules } from './invoice-fiscal-rules';
 import { type LineItemData, lineItemDataFrom } from './line-item-data';
 import { type PartyData, partyDataFrom } from './party-data';
 import { type TotalsData, totalsDataFrom } from './totals-data';
@@ -198,6 +199,7 @@ export function invoiceDataFrom(
   };
 
   assertDocumentFieldCompatibility(invoice);
+  assertInvoiceFiscalRules(invoice);
 
   return invoice;
 }

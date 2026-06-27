@@ -1,4 +1,5 @@
 import type { ResolvedEfaturaConfig } from '../../config';
+import { EmissionMode } from '../../domain/enums/emission-mode';
 import { buildEventId } from '../../domain/iud/event-id';
 import { type EventData, eventDataFrom } from '../../domain/value-objects/event-data';
 import type { EfaturaBuildEventIdInput, EfaturaBuildEventXmlOptions } from '../efatura-options';
@@ -35,7 +36,7 @@ export function buildEventXmlForConfig(
     eventId,
     event,
     config,
-    emissionMode: options.emissionMode ?? 'Online',
+    emissionMode: options.emissionMode ?? EmissionMode.Online,
   });
 }
 

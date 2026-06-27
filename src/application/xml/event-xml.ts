@@ -1,17 +1,18 @@
 import type { ResolvedEfaturaConfig } from '../../config';
 import { documentTypeCode } from '../../domain/enums/document-type';
+import type { EmissionModeInput } from '../../domain/enums/emission-mode';
 import { EfaturaValidationError } from '../../domain/errors';
 import { validateEventId } from '../../domain/iud/event-id';
 import type { EventData, EventDocumentRangeData } from '../../domain/value-objects/event-data';
 import { transmissionXml } from './dfe-structures-xml';
-import { DFE_NAMESPACE, DFE_XML_VERSION, type EmissionMode } from './dfe-xml';
+import { DFE_NAMESPACE, DFE_XML_VERSION } from './dfe-xml';
 import { element, escapeAttribute, escapeXml } from './xml-core';
 
 export interface BuildEventXmlInput {
   eventId: string;
   event: EventData;
   config: ResolvedEfaturaConfig;
-  emissionMode?: EmissionMode;
+  emissionMode?: EmissionModeInput;
 }
 
 export function buildEventXml(input: BuildEventXmlInput): string {

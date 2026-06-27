@@ -1,14 +1,10 @@
 import { z } from 'zod';
 import { messages } from '../../support/messages';
 import { optionalText } from '../../support/normalizers';
+import { TaxTypeCode, taxTypeCodeFromValue } from '../enums/tax-type-code';
 import { EfaturaValidationError } from '../errors';
 
-export enum TaxTypeCode {
-  NotApplicable = 'NA',
-  IVA = 'IVA',
-  StampTax = 'IS',
-  IncomeTax = 'IR',
-}
+export type { TaxTypeCode } from '../enums/tax-type-code';
 
 export interface TaxData {
   taxTypeCode: TaxTypeCode;
@@ -106,23 +102,5 @@ function normalizeOptionalText(value: unknown): string | null {
 }
 
 function normalizeTaxType(value: unknown): TaxTypeCode | null {
-  const text = optionalText(value)?.toUpperCase();
-
-  if (text === TaxTypeCode.NotApplicable) {
-    return TaxTypeCode.NotApplicable;
-  }
-
-  if (text === TaxTypeCode.IVA) {
-    return TaxTypeCode.IVA;
-  }
-
-  if (text === TaxTypeCode.StampTax) {
-    return TaxTypeCode.StampTax;
-  }
-
-  if (text === TaxTypeCode.IncomeTax) {
-    return TaxTypeCode.IncomeTax;
-  }
-
-  return null;
+  return taxTypeCodeFromValue(optionalText(value));
 }

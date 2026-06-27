@@ -48,6 +48,7 @@ import type {
   XsdValidator,
 } from './core/contracts';
 import type { DocumentType } from './domain/enums/document-type';
+import { EmissionMode } from './domain/enums/emission-mode';
 import { EfaturaValidationError } from './domain/errors';
 import { buildIud } from './domain/iud/iud';
 import { type EventData, eventDataFrom } from './domain/value-objects/event-data';
@@ -123,7 +124,7 @@ export class Efatura extends EfaturaDocuments {
     options: EfaturaBuildDfeXmlOptions,
   ): string {
     const invoice = isInvoiceData(data) ? data : this.validateInvoice(data);
-    const emissionMode = options.emissionMode ?? 'Online';
+    const emissionMode = options.emissionMode ?? EmissionMode.Online;
 
     validateIssueDateTolerance({
       issueDate: invoice.issueDate,

@@ -1,4 +1,5 @@
 import { DocumentType } from '../src/domain/enums/document-type';
+import { TaxTypeCode } from '../src/domain/enums/tax-type-code';
 
 export function baseInvoicePayload(
   overrides: Record<string, unknown> = {},
@@ -50,7 +51,7 @@ export function baseInvoicePayload(
           netTotal: 1000,
           taxes: [
             {
-              taxTypeCode: 'IVA',
+              taxTypeCode: TaxTypeCode.IVA,
               taxPercentage: 15,
               taxTotal: 150,
             },

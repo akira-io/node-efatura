@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createEfatura } from '../src/create-efatura';
 import { DocumentType } from '../src/domain/enums/document-type';
+import { TaxTypeCode } from '../src/domain/enums/tax-type-code';
 import { EfaturaValidationError } from '../src/domain/errors';
 import {
   creditNoteDataFrom,
@@ -66,10 +67,23 @@ describe('data validation', () => {
     const payload = baseInvoicePayload({
       type: DocumentType.ElectronicSalesTicket,
       receiver: null,
+      lines: [
+        {
+          quantity: { value: 1, unitCode: 'EA' },
+          price: 16521.74,
+          priceExtension: 16521.74,
+          netTotal: 16521.74,
+          taxes: [{ taxTypeCode: TaxTypeCode.IVA, taxPercentage: 15, taxTotal: 2478.26 }],
+          item: {
+            description: 'Item',
+            emitterIdentification: 'ITEM1',
+          },
+        },
+      ],
       totals: {
-        priceExtensionTotalAmount: 1000,
-        netTotalAmount: 1000,
-        taxTotalAmount: 150,
+        priceExtensionTotalAmount: 16521.74,
+        netTotalAmount: 16521.74,
+        taxTotalAmount: 2478.26,
         payableAmount: 19000,
       },
     });
@@ -81,6 +95,19 @@ describe('data validation', () => {
     const payload = baseInvoicePayload({
       type: DocumentType.ElectronicSalesTicket,
       receiver: null,
+      lines: [
+        {
+          quantity: { value: 1, unitCode: 'EA' },
+          price: 18000,
+          priceExtension: 18000,
+          netTotal: 18000,
+          taxes: [{ taxTypeCode: TaxTypeCode.IVA, taxPercentage: 15, taxTotal: 2000 }],
+          item: {
+            description: 'Item',
+            emitterIdentification: 'ITEM1',
+          },
+        },
+      ],
       totals: {
         priceExtensionTotalAmount: 18000,
         netTotalAmount: 18000,
@@ -165,7 +192,7 @@ describe('data validation', () => {
 
   it('requires NA tax exemption reason', () => {
     expectValidation(
-      () => taxDataFrom({ taxTypeCode: 'NA', taxExemptionReasonCode: null }),
+      () => taxDataFrom({ taxTypeCode: TaxTypeCode.NotApplicable, taxExemptionReasonCode: null }),
       'taxExemptionReasonCode',
       'NA tax requires an exemption reason.',
     );

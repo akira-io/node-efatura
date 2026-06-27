@@ -4,6 +4,7 @@ import { dfaContingencyNotice, dfaQrCodeUrl } from '../src/application/dfa/dfa';
 import { buildDfeZip } from '../src/application/packaging/dfe-zip';
 import type { MiddlewareSubmitInput } from '../src/core/contracts';
 import { createEfatura } from '../src/create-efatura';
+import { EmissionMode } from '../src/domain/enums/emission-mode';
 
 const iud = 'CV3260208100200300001230100000000112345678909';
 
@@ -69,8 +70,8 @@ describe('DFA helpers', () => {
       `https://pe.efatura.cv/dfe/view/${iud}`,
     );
     expect(dfaContingencyNotice(true)).toBe('EMITIDO EM CONTINGENCIA');
-    expect(dfaContingencyNotice('Offline')).toBe('EMITIDO EM CONTINGENCIA OFFLINE');
-    expect(dfaContingencyNotice('Off')).toBe('EMITIDO EM CONTINGENCIA OFF');
+    expect(dfaContingencyNotice(EmissionMode.Offline)).toBe('EMITIDO EM CONTINGENCIA OFFLINE');
+    expect(dfaContingencyNotice(EmissionMode.Off)).toBe('EMITIDO EM CONTINGENCIA OFF');
     expect(dfaContingencyNotice(false)).toBeNull();
   });
 

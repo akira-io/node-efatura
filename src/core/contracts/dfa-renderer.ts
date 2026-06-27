@@ -1,4 +1,4 @@
-import type { EmissionMode } from '../../application/xml/dfe-xml';
+import type { EmissionMode } from '../../domain/enums/emission-mode';
 
 export interface DfaRenderInput {
   iud: string;

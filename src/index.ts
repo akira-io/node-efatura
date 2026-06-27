@@ -29,7 +29,7 @@ export {
 } from './application/issue-date-validation';
 export type { DfeZipFile } from './application/packaging/dfe-zip';
 export { buildDfeZip } from './application/packaging/dfe-zip';
-export type { BuildDfeXmlInput, EmissionMode } from './application/xml/dfe-xml';
+export type { BuildDfeXmlInput } from './application/xml/dfe-xml';
 export {
   buildDfeXml,
   DFE_NAMESPACE,
@@ -63,6 +63,15 @@ export {
   documentTypeIudCode,
   isDocumentType,
 } from './domain/enums/document-type';
+export type { EmissionModeInput } from './domain/enums/emission-mode';
+export {
+  EMISSION_MODES,
+  EmissionMode,
+  emissionModeFromValue,
+  isContingencyEmissionMode,
+  isEmissionMode,
+  normalizeEmissionMode,
+} from './domain/enums/emission-mode';
 export {
   Environment,
   environmentCode,
@@ -70,6 +79,12 @@ export {
   isEnvironment,
 } from './domain/enums/environment';
 export { EVENT_TYPES, EventType, eventTypeFromValue, isEventType } from './domain/enums/event-type';
+export {
+  isTaxTypeCode,
+  TAX_TYPE_CODES,
+  TaxTypeCode,
+  taxTypeCodeFromValue,
+} from './domain/enums/tax-type-code';
 export {
   EfaturaError,
   EfaturaValidationError,

@@ -2,6 +2,7 @@ import PDFDocument from 'pdfkit';
 import QRCode from 'qrcode';
 import { dfaContingencyNotice } from '../../application/dfa/dfa';
 import type { DfaDocument, DfaLineInput, DfaRenderer, DfaRenderInput } from '../../core/contracts';
+import { EmissionMode } from '../../domain/enums/emission-mode';
 
 export class PdfDfaRenderer implements DfaRenderer {
   async render(input: DfaRenderInput): Promise<DfaDocument> {
@@ -29,7 +30,7 @@ export class PdfDfaRenderer implements DfaRenderer {
     document.text(`Emissao: ${formatDateTime(input.issueDate, input.issueTime)}`, { width: 360 });
     document.text(`Consulta DFE: ${input.qrCodeUrl}`, { width: 360 });
 
-    const notice = dfaContingencyNotice(input.emissionMode !== 'Online');
+    const notice = dfaContingencyNotice(input.emissionMode !== EmissionMode.Online);
 
     if (notice) {
       document.moveDown();

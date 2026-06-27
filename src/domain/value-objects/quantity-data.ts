@@ -9,7 +9,7 @@ export interface QuantityData {
 }
 
 export const quantityDataSchema = z.object({
-  value: z.coerce.number().finite().min(0),
+  value: z.coerce.number().finite().gt(0),
   unitCode: z.preprocess(normalizeUnitCode, z.string().min(1).max(50)),
   isStandardUnitCode: z.preprocess(optionalBoolean, z.boolean().nullable()),
 });

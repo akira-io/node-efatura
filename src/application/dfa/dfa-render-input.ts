@@ -1,5 +1,6 @@
 import type { DfaLineInput, DfaRenderInput, DfaTotalsInput } from '../../core/contracts';
 import { documentTypeCode } from '../../domain/enums/document-type';
+import { normalizeEmissionMode } from '../../domain/enums/emission-mode';
 import type { InvoiceData } from '../../domain/value-objects/invoice-data';
 import type { LineItemData } from '../../domain/value-objects/line-item-data';
 import type { TotalsData } from '../../domain/value-objects/totals-data';
@@ -21,7 +22,7 @@ export function dfaRenderInputFrom(options: RenderDfaOptions, qrCodeUrl: string)
     totals: dfaTotalsFromInvoice(options.invoice),
     total: options.invoice?.totals?.payableAmount,
     currency: options.currency,
-    emissionMode: options.emissionMode ?? 'Online',
+    emissionMode: normalizeEmissionMode(options.emissionMode),
   };
 }
 

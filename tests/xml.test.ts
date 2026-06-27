@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { buildDfeXml, DFE_NAMESPACE } from '../src/application/xml/dfe-xml';
 import { createEfatura } from '../src/create-efatura';
 import { DocumentType } from '../src/domain/enums/document-type';
+import { EmissionMode } from '../src/domain/enums/emission-mode';
 import { baseInvoicePayload } from './helpers';
 
 const config = {
@@ -76,7 +77,7 @@ describe('DFE XML', () => {
       {
         documentNumber: 7,
         randomCode: '1111111111',
-        emissionMode: 'Offline',
+        emissionMode: EmissionMode.Offline,
       },
     );
 
@@ -105,7 +106,7 @@ describe('DFE XML', () => {
           randomCode: '1234567890',
         },
       ),
-    ).toThrow('Emitter email is required for e-Fatura v11.0 XML.');
+    ).toThrow('Emitter email is required.');
   });
 
   it('serializes official ExtraFields as typed XML blocks', () => {

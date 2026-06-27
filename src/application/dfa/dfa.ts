@@ -1,6 +1,10 @@
+import {
+  EmissionMode,
+  type EmissionModeInput,
+  normalizeEmissionMode,
+} from '../../domain/enums/emission-mode';
 import { EfaturaValidationError } from '../../domain/errors';
 import { validateIud } from '../../domain/iud/iud';
-import type { EmissionMode } from '../xml/dfe-xml';
 
 export const CONTINGENCY_NOTICE = 'EMITIDO EM CONTINGENCIA';
 export const OFFLINE_CONTINGENCY_NOTICE = 'EMITIDO EM CONTINGENCIA OFFLINE';
@@ -14,16 +18,22 @@ export function dfaQrCodeUrl(iud: string, baseUrl: string): string {
   return `${baseUrl.replace(/\/+$/, '')}/${encodeURIComponent(iud)}`;
 }
 
-export function dfaContingencyNotice(value: boolean | EmissionMode): string | null {
+export function dfaContingencyNotice(value: boolean | EmissionModeInput): string | null {
   if (value === true) {
     return CONTINGENCY_NOTICE;
   }
 
-  if (value === 'Offline') {
+  if (value === false) {
+    return null;
+  }
+
+  const emissionMode = normalizeEmissionMode(value);
+
+  if (emissionMode === EmissionMode.Offline) {
     return OFFLINE_CONTINGENCY_NOTICE;
   }
 
-  if (value === 'Off') {
+  if (emissionMode === EmissionMode.Off) {
     return OFF_CONTINGENCY_NOTICE;
   }
 

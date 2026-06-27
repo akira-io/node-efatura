@@ -1,19 +1,24 @@
 import type { Clock } from '../core/contracts';
+import {
+  EmissionMode,
+  type EmissionModeInput,
+  normalizeEmissionMode,
+} from '../domain/enums/emission-mode';
 import { EfaturaValidationError } from '../domain/errors';
-import type { EmissionMode } from './xml/dfe-xml';
 
 export interface IssueDateValidationInput {
   issueDate: string;
   issueTime?: string | null;
-  emissionMode: EmissionMode;
+  emissionMode: EmissionModeInput;
   clock: Clock;
 }
 
 export function validateIssueDateTolerance(input: IssueDateValidationInput): Date {
   const issuedAt = parseIssueDateTime(input.issueDate, input.issueTime);
   const now = input.clock.now();
+  const emissionMode = normalizeEmissionMode(input.emissionMode);
 
-  if (input.emissionMode === 'Online') {
+  if (emissionMode === EmissionMode.Online) {
     const lowerBound = new Date(now.getTime() - 24 * 60 * 60 * 1000);
     const upperBound = new Date(now.getTime() + 60 * 60 * 1000);
 

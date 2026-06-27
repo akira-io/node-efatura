@@ -10,9 +10,9 @@ import type {
   XsdValidator,
 } from '../core/contracts';
 import type { DocumentTypePolicy } from '../core/contracts/document-type-policy';
+import type { EmissionModeInput } from '../domain/enums/emission-mode';
 import type { BuildIudInput } from '../domain/iud/iud';
 import type { InvoiceData } from '../domain/value-objects/invoice-data';
-import type { EmissionMode } from './xml/dfe-xml';
 
 export interface EfaturaDependencies {
   certificateValidator?: CertificateValidator;
@@ -43,7 +43,7 @@ export interface EfaturaBuildDfeXmlOptions {
   iud?: string;
   documentNumber?: number | string;
   randomCode?: number | string;
-  emissionMode?: EmissionMode;
+  emissionMode?: EmissionModeInput;
 }
 
 export interface EfaturaBuildEventIdInput {
@@ -54,13 +54,13 @@ export interface EfaturaBuildEventIdInput {
 
 export interface EfaturaBuildEventXmlOptions {
   id?: string;
-  emissionMode?: EmissionMode;
+  emissionMode?: EmissionModeInput;
 }
 
 export interface RenderDfaOptions {
   iud: string;
   invoice?: InvoiceData;
-  emissionMode?: EmissionMode;
+  emissionMode?: EmissionModeInput;
   title?: string;
   currency?: string;
 }

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createEfatura } from '../src/create-efatura';
 import { DocumentType } from '../src/domain/enums/document-type';
+import { TaxTypeCode } from '../src/domain/enums/tax-type-code';
 import { isUuid } from '../src/support/generators';
 
 describe('Efatura facade and builder', () => {
@@ -18,14 +19,18 @@ describe('Efatura facade and builder', () => {
       .invoice()
       .type(DocumentType.ElectronicInvoice)
       .issueDate('2026-02-08')
-      .emitter({ taxId: { countryCode: 'CV', value: '100200300' }, name: 'Emitter' })
+      .emitter({
+        taxId: { countryCode: 'CV', value: '100200300' },
+        name: 'Emitter',
+        contacts: { email: 'issuer@example.cv', telephone: '5551234' },
+      })
       .receiver({ taxId: { countryCode: 'CV', value: '900800700' }, name: 'Receiver' })
       .line({
         quantity: { value: 1, unitCode: 'EA' },
         price: 1000,
         priceExtension: 1000,
         netTotal: 1000,
-        taxes: [{ taxTypeCode: 'IVA', taxPercentage: 15, taxTotal: 150 }],
+        taxes: [{ taxTypeCode: TaxTypeCode.IVA, taxPercentage: 15, taxTotal: 150 }],
         item: {
           description: 'Item',
           emitterIdentification: 'ITEM1',
