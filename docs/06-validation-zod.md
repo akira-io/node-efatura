@@ -12,6 +12,8 @@ The package exports Zod schemas for reusable fiscal value-object validation:
 - `totalsDataSchema`
 - `eventDataSchema`
 - `eventDocumentRangeDataSchema`
+- `extraFieldDataSchema`
+- `extraFieldsDataSchema`
 
 The parsing functions keep the public error contract stable by converting schema failures into `EfaturaValidationError`.
 
@@ -48,6 +50,7 @@ The domain validates the rules that are cheap to catch before XSD validation:
 - Credit, debit, and return notes validate allowed `IssueReasonCode` values per document type.
 - `IssueReasonCode = DRP` requires `RappelPeriod`.
 - `TaxTypeCode = NA` requires `TaxExemptionReasonCode`.
+- Payload fields are rejected when the selected official document type does not allow them in its XSD sequence.
 
 ## Boundary Rule
 

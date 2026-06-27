@@ -72,6 +72,7 @@ console.log(invoice.id); // UUID
 - Generates compact DFE XML using the official v11 document-element mapping.
 - Generates official `Event` XML for fiscal document cancellation/annulment (`FDC`) and unused document number invalidation (`UDN`).
 - Validates XML with the bundled official XSD set through `XmllintXsdValidator`.
+- Test coverage validates generated XML for all 9 DFE types against the bundled official XSD.
 - Signs XML with a certificate-backed XAdES-BES signer.
 - Packages DFE XML files into Deflate ZIP payloads.
 - Submits ZIP payloads through middleware and platform transports with normalized responses.
