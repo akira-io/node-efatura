@@ -31,7 +31,8 @@ export class XmllintXsdValidator implements XsdValidator {
 
   async validate(xml: string, context: XsdValidationContext): Promise<XsdValidationResult> {
     const directory = await mkdtemp(join(tmpdir(), 'efatura-xsd-'));
-    const xmlPath = join(directory, `${context.documentType}-${context.schemaVersion}.xml`);
+    const documentName = context.documentType ?? context.documentKind ?? 'xml';
+    const xmlPath = join(directory, `${documentName}-${context.schemaVersion}.xml`);
 
     try {
       await writeFile(xmlPath, xml, 'utf8');

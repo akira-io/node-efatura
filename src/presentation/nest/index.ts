@@ -13,6 +13,7 @@ import type { Response } from 'express';
 import type { Efatura } from '../../efatura';
 import {
   type HttpResult,
+  handleBuildEventXml,
   handleBuildXml,
   handleBuildZip,
   handleRenderDfa,
@@ -32,6 +33,11 @@ export class EfaturaController {
   @Post('dfe/xml')
   async buildXml(@Body() body: unknown, @Res() response: Response): Promise<void> {
     send(response, await handleBuildXml(this.efatura, body));
+  }
+
+  @Post('event/xml')
+  async buildEventXml(@Body() body: unknown, @Res() response: Response): Promise<void> {
+    send(response, await handleBuildEventXml(this.efatura, body));
   }
 
   @Post('dfe/zip')

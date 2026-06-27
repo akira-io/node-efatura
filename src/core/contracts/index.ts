@@ -1,5 +1,11 @@
 export type { Clock } from './clock';
-export type { DfaDocument, DfaRenderer, DfaRenderInput } from './dfa-renderer';
+export type {
+  DfaDocument,
+  DfaLineInput,
+  DfaRenderer,
+  DfaRenderInput,
+  DfaTotalsInput,
+} from './dfa-renderer';
 export type {
   GoldenVector,
   GoldenVectorKind,

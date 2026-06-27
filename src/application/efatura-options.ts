@@ -44,6 +44,17 @@ export interface EfaturaBuildDfeXmlOptions {
   emissionMode?: EmissionMode;
 }
 
+export interface EfaturaBuildEventIdInput {
+  issueDateTime: string;
+  repositoryCode?: number | string;
+  transmitterNif?: number | string;
+}
+
+export interface EfaturaBuildEventXmlOptions {
+  id?: string;
+  emissionMode?: EmissionMode;
+}
+
 export interface RenderDfaOptions {
   iud: string;
   invoice?: InvoiceData;

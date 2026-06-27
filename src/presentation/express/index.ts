@@ -2,6 +2,7 @@ import { json, type RequestHandler, Router } from 'express';
 import type { Efatura } from '../../efatura';
 import {
   type HttpResult,
+  handleBuildEventXml,
   handleBuildXml,
   handleBuildZip,
   handleRenderDfa,
@@ -19,6 +20,10 @@ export function efaturaRoutes(efatura: Efatura, _options: EfaturaRoutesOptions =
   router.post(
     '/dfe/xml',
     handle((req) => handleBuildXml(efatura, req.body)),
+  );
+  router.post(
+    '/event/xml',
+    handle((req) => handleBuildEventXml(efatura, req.body)),
   );
   router.post(
     '/dfe/zip',

@@ -1,7 +1,8 @@
 import type { DocumentType } from '../../domain/enums/document-type';
 
 export interface XsdValidationContext {
-  documentType: DocumentType;
+  documentType?: DocumentType;
+  documentKind?: 'dfe' | 'event';
   schemaVersion: string;
 }
 

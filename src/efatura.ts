@@ -1,5 +1,7 @@
 import { InvoiceBuilder } from './application/builders/invoice-builder';
 import { dfaQrCodeUrl } from './application/dfa/dfa';
+import { dfaRenderInputFrom } from './application/dfa/dfa-render-input';
+import { resolveEfaturaDependencies } from './application/efatura-dependencies';
 import {
   isInvoiceData,
   normalizeDocumentTypeForSequence,
@@ -8,12 +10,18 @@ import {
 } from './application/efatura-normalizers';
 import type {
   EfaturaBuildDfeXmlOptions,
+  EfaturaBuildEventIdInput,
+  EfaturaBuildEventXmlOptions,
   EfaturaBuildIudInput,
   EfaturaBuildSequentialIudInput,
   EfaturaDependencies,
   RenderDfaOptions,
   SubmitPlatformOptions,
 } from './application/efatura-options';
+import {
+  buildEventIdForConfig,
+  buildEventXmlForConfig,
+} from './application/events/event-xml-request';
 import { assertGoldenVector as assertGoldenVectorValue } from './application/golden-vector-assertion';
 import { validateIssueDateTolerance } from './application/issue-date-validation';
 import { buildDfeZip } from './application/packaging/dfe-zip';
@@ -40,7 +48,6 @@ import type { DocumentTypePolicy } from './core/contracts/document-type-policy';
 import type { DocumentType } from './domain/enums/document-type';
 import { EfaturaValidationError } from './domain/errors';
 import { buildIud } from './domain/iud/iud';
-import { DefaultDocumentTypePolicy } from './domain/policies/default-document-type-policy';
 import {
   creditNoteDataFrom,
   debitNoteDataFrom,
@@ -53,24 +60,8 @@ import {
   transportDocumentDataFrom,
   type WrappedInvoiceData,
 } from './domain/value-objects/documents';
+import { type EventData, eventDataFrom } from './domain/value-objects/event-data';
 import { type InvoiceData, invoiceDataFrom } from './domain/value-objects/invoice-data';
-import { SystemClock } from './infrastructure/clock/system-clock';
-import { PdfDfaRenderer } from './infrastructure/dfa/pdf-dfa-renderer';
-import { InMemoryGoldenVectorRepository } from './infrastructure/golden-vectors/in-memory-golden-vector-repository';
-import { FetchMiddlewareTransport } from './infrastructure/middleware/fetch-middleware-transport';
-import { FetchPlatformTransport } from './infrastructure/middleware/fetch-platform-transport';
-import { InMemorySequenceStore } from './infrastructure/sequence/in-memory-sequence-store';
-import { XadesBesSigner } from './infrastructure/signing/xades-bes-signer';
-import { XmllintXsdValidator } from './infrastructure/validation/xmllint-xsd-validator';
-
-export type {
-  EfaturaBuildDfeXmlOptions,
-  EfaturaBuildIudInput,
-  EfaturaBuildSequentialIudInput,
-  EfaturaDependencies,
-  RenderDfaOptions,
-  SubmitPlatformOptions,
-} from './application/efatura-options';
 
 export class Efatura {
   readonly documentTypePolicy: DocumentTypePolicy;
@@ -87,15 +78,17 @@ export class Efatura {
     readonly config: ResolvedEfaturaConfig,
     dependencies: EfaturaDependencies = {},
   ) {
-    this.documentTypePolicy = dependencies.documentTypePolicy ?? new DefaultDocumentTypePolicy();
-    this.clock = dependencies.clock ?? new SystemClock();
-    this.sequenceStore = dependencies.sequenceStore ?? new InMemorySequenceStore();
-    this.xsdValidator = dependencies.xsdValidator ?? new XmllintXsdValidator();
-    this.xmlSigner = dependencies.xmlSigner ?? new XadesBesSigner();
-    this.dfaRenderer = dependencies.dfaRenderer ?? new PdfDfaRenderer();
-    this.middlewareTransport = dependencies.middlewareTransport ?? new FetchMiddlewareTransport();
-    this.platformTransport = dependencies.platformTransport ?? new FetchPlatformTransport();
-    this.goldenVectors = dependencies.goldenVectors ?? new InMemoryGoldenVectorRepository();
+    const resolvedDependencies = resolveEfaturaDependencies(dependencies);
+
+    this.documentTypePolicy = resolvedDependencies.documentTypePolicy;
+    this.clock = resolvedDependencies.clock;
+    this.sequenceStore = resolvedDependencies.sequenceStore;
+    this.xsdValidator = resolvedDependencies.xsdValidator;
+    this.xmlSigner = resolvedDependencies.xmlSigner;
+    this.dfaRenderer = resolvedDependencies.dfaRenderer;
+    this.middlewareTransport = resolvedDependencies.middlewareTransport;
+    this.platformTransport = resolvedDependencies.platformTransport;
+    this.goldenVectors = resolvedDependencies.goldenVectors;
   }
 
   invoice(): InvoiceBuilder {
@@ -175,6 +168,10 @@ export class Efatura {
     });
   }
 
+  buildEventId(input: EfaturaBuildEventIdInput): string {
+    return buildEventIdForConfig(input, this.config);
+  }
+
   async buildSequentialIud(input: EfaturaBuildSequentialIudInput): Promise<string> {
     const issueDate = normalizeIssueDate(input.issueDate);
     const documentType = normalizeDocumentTypeForSequence(input.documentType);
@@ -215,14 +212,37 @@ export class Efatura {
     return buildDfeXml(input);
   }
 
+  validateEvent(data: Record<string, unknown>): EventData {
+    return eventDataFrom(data);
+  }
+
+  buildEventXml(
+    data: Record<string, unknown> | EventData,
+    options: EfaturaBuildEventXmlOptions = {},
+  ): string {
+    return buildEventXmlForConfig(data, options, this.config);
+  }
+
   validateDfeXml(xml: string, documentType: DocumentType): Promise<XsdValidationResult> {
     return this.xsdValidator.validate(xml, {
+      documentKind: 'dfe',
       documentType,
       schemaVersion: DFE_XML_VERSION,
     });
   }
 
+  validateEventXml(xml: string): Promise<XsdValidationResult> {
+    return this.xsdValidator.validate(xml, {
+      documentKind: 'event',
+      schemaVersion: DFE_XML_VERSION,
+    });
+  }
+
   signDfeXml(xml: string, options: XmlSigningOptions = {}): Promise<SignedXmlResult> {
+    return this.xmlSigner.sign(xml, options);
+  }
+
+  signEventXml(xml: string, options: XmlSigningOptions = {}): Promise<SignedXmlResult> {
     return this.xmlSigner.sign(xml, options);
   }
 
@@ -265,16 +285,7 @@ export class Efatura {
   }
 
   async renderDfa(options: RenderDfaOptions): Promise<DfaDocument> {
-    return this.dfaRenderer.render({
-      iud: options.iud,
-      qrCodeUrl: this.dfaQrCodeUrl(options.iud),
-      title: options.title,
-      issuerName: options.invoice?.emitter.name ?? undefined,
-      customerName: options.invoice?.receiver?.name ?? undefined,
-      total: options.invoice?.totals?.payableAmount,
-      currency: options.currency,
-      emissionMode: options.emissionMode ?? 'Online',
-    });
+    return this.dfaRenderer.render(dfaRenderInputFrom(options, this.dfaQrCodeUrl(options.iud)));
   }
 
   assertGoldenVector(kind: GoldenVectorKind, name: string, actual: string): Promise<void> {

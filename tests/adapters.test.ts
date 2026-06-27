@@ -20,10 +20,22 @@ describe('HTTP adapters', () => {
 
     expect(typeof router).toBe('function');
     expect(typeof router.use).toBe('function');
+    expect(router.stack.map((layer: { route?: { path: string } }) => layer.route?.path)).toContain(
+      '/event/xml',
+    );
   });
 
-  it('exposes a Fastify plugin function', () => {
-    expect(typeof efaturaFastifyPlugin).toBe('function');
+  it('registers Fastify routes for DFE and Event XML', async () => {
+    const routes: string[] = [];
+    const fastify = {
+      post: (path: string) => routes.push(`POST ${path}`),
+      get: (path: string) => routes.push(`GET ${path}`),
+    };
+
+    await efaturaFastifyPlugin(fastify as never, { efatura });
+
+    expect(routes).toContain('POST /dfe/xml');
+    expect(routes).toContain('POST /event/xml');
   });
 
   it('creates a Nest dynamic module with the configured service', () => {
@@ -32,5 +44,6 @@ describe('HTTP adapters', () => {
     expect(module.controllers).toEqual([EfaturaController]);
     expect(module.exports).toEqual([EFATURA]);
     expect(module.providers).toEqual([{ provide: EFATURA, useValue: efatura }]);
+    expect(typeof EfaturaController.prototype.buildEventXml).toBe('function');
   });
 });

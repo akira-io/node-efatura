@@ -66,7 +66,11 @@ export function buildDfeXml(input: BuildDfeXmlInput): string {
     )}" DocumentTypeCode="${documentTypeCode(input.invoice.type)}">`,
     element('IsSpecimen', input.invoice.isSpecimen === true ? true : null),
     documentXml(input),
-    transmissionXml(input),
+    transmissionXml({
+      config: input.config,
+      emissionMode: input.emissionMode,
+      contingency: input.invoice.contingency,
+    }),
     element('RepositoryCode', input.config.repositoryCode),
     '</Dfe>',
   ].join('');

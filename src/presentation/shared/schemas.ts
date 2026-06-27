@@ -5,6 +5,11 @@ export const dfeXmlRequestSchema = z.object({
   options: z.record(z.string(), z.unknown()).optional().default({}),
 });
 
+export const eventXmlRequestSchema = z.object({
+  event: z.record(z.string(), z.unknown()),
+  options: z.record(z.string(), z.unknown()).optional().default({}),
+});
+
 export const dfeZipFileSchema = z.object({
   iud: z.string().min(1),
   xml: z.union([z.string(), z.instanceof(Buffer)]),
@@ -15,4 +20,5 @@ export const dfeZipRequestSchema = z.object({
 });
 
 export type DfeXmlRequest = z.infer<typeof dfeXmlRequestSchema>;
+export type EventXmlRequest = z.infer<typeof eventXmlRequestSchema>;
 export type DfeZipRequest = z.infer<typeof dfeZipRequestSchema>;

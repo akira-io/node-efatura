@@ -1,5 +1,6 @@
+import type { EfaturaDependencies } from './application/efatura-options';
 import { type EfaturaConfig, type ResolvedEfaturaConfig, resolveConfig } from './config';
-import { Efatura, type EfaturaDependencies } from './efatura';
+import { Efatura } from './efatura';
 
 export interface CreateEfaturaOptions extends EfaturaDependencies {}
 

@@ -12,8 +12,14 @@ import type {
 import type { ContingencyData, InvoiceData } from '../../domain/value-objects/invoice-data';
 import { taxXml } from './dfe-lines-xml';
 import { addressXml } from './dfe-party-xml';
-import type { BuildDfeXmlInput, EmissionMode } from './dfe-xml';
+import type { EmissionMode } from './dfe-xml';
 import { element, escapeXml, requiredValue } from './xml-core';
+
+export interface TransmissionXmlInput {
+  config: ResolvedEfaturaConfig;
+  emissionMode?: EmissionMode;
+  contingency?: ContingencyData | null;
+}
 
 export function selfBillingXml(selfBilling: InvoiceData['selfBilling']): string {
   if (!selfBilling) {
@@ -119,13 +125,13 @@ export function datePeriodXml(name: string, period: DatePeriodData | null): stri
     : '';
 }
 
-export function transmissionXml(input: BuildDfeXmlInput): string {
+export function transmissionXml(input: TransmissionXmlInput): string {
   const mode = input.emissionMode ?? 'Online';
 
   return `<Transmission>${element('IssueMode', issueModeCode(mode))}<TransmitterTaxId CountryCode="CV">${escapeXml(
     input.config.transmitterNif,
   )}</TransmitterTaxId>${softwareXml(input.config)}${contingencyXml(
-    input.invoice.contingency,
+    input.contingency ?? null,
     mode,
   )}</Transmission>`;
 }

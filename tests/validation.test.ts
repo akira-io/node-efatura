@@ -2,7 +2,12 @@ import { describe, expect, it } from 'vitest';
 import { createEfatura } from '../src/create-efatura';
 import { DocumentType } from '../src/domain/enums/document-type';
 import { EfaturaValidationError } from '../src/domain/errors';
-import { creditNoteDataFrom, salesReceiptDataFrom } from '../src/domain/value-objects/documents';
+import {
+  creditNoteDataFrom,
+  electronicReceiptDataFrom,
+  salesReceiptDataFrom,
+  transportDocumentDataFrom,
+} from '../src/domain/value-objects/documents';
 import { invoiceDataFrom } from '../src/domain/value-objects/invoice-data';
 import { partyDataFrom } from '../src/domain/value-objects/party-data';
 import { taxDataFrom } from '../src/domain/value-objects/tax-data';
@@ -110,6 +115,56 @@ describe('data validation', () => {
     );
   });
 
+  it('requires rent receipt data for receipt type renda', () => {
+    const payload = baseInvoicePayload({
+      type: DocumentType.ElectronicReceipt,
+      receiptTypeCode: '4',
+    });
+
+    expectValidation(
+      () => electronicReceiptDataFrom({ invoice: payload }),
+      'invoice.rentReceipt',
+      'RentReceipt is required when ReceiptTypeCode is 4.',
+    );
+  });
+
+  it('requires references for customer return transport documents', () => {
+    const payload = baseInvoicePayload({
+      type: DocumentType.ElectronicTransportDocument,
+      transportDocumentTypeCode: '5',
+      transportServiceProviderParty: baseInvoicePayload().emitter,
+      transportRoute: transportRoutePayload(),
+      references: [],
+    });
+
+    expectValidation(
+      () => transportDocumentDataFrom({ invoice: payload }),
+      'invoice.references',
+      'References are required for customer return transport documents.',
+    );
+  });
+
+  it('requires rappel period for DRP credit notes', () => {
+    const payload = baseInvoicePayload({
+      type: DocumentType.ElectronicCreditNote,
+      issueReasonCode: 'DRP',
+      references: [
+        {
+          fiscalDocument: {
+            value: 'CV32602081002003001234500001012345678903',
+            isOldDocument: false,
+          },
+        },
+      ],
+    });
+
+    expectValidation(
+      () => creditNoteDataFrom({ invoice: payload }),
+      'invoice.rappelPeriod',
+      'RappelPeriod is required when IssueReasonCode is DRP.',
+    );
+  });
+
   it('requires NA tax exemption reason', () => {
     expectValidation(
       () => taxDataFrom({ taxTypeCode: 'NA', taxExemptionReasonCode: null }),
@@ -154,5 +209,34 @@ function validConfig() {
     softwareName: 'Efatura Suite',
     softwareVersion: '1.0.0',
     middlewareBaseUrl: 'https://middleware.example',
+  };
+}
+
+function transportRoutePayload() {
+  return {
+    locations: [
+      {
+        address: {
+          countryCode: 'CV',
+          addressDetail: 'Origem',
+        },
+        duration: {
+          startDate: '2026-02-08',
+          startTime: '10:30:00',
+        },
+        transportModeCode: '1',
+      },
+      {
+        address: {
+          countryCode: 'CV',
+          addressDetail: 'Destino',
+        },
+        duration: {
+          startDate: '2026-02-08',
+          startTime: '11:30:00',
+        },
+        transportModeCode: '1',
+      },
+    ],
   };
 }

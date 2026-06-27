@@ -12,6 +12,16 @@ export {
   OFF_CONTINGENCY_NOTICE,
   OFFLINE_CONTINGENCY_NOTICE,
 } from './application/dfa/dfa';
+export type {
+  EfaturaBuildDfeXmlOptions,
+  EfaturaBuildEventIdInput,
+  EfaturaBuildEventXmlOptions,
+  EfaturaBuildIudInput,
+  EfaturaBuildSequentialIudInput,
+  EfaturaDependencies,
+  RenderDfaOptions,
+  SubmitPlatformOptions,
+} from './application/efatura-options';
 export { assertGoldenVector } from './application/golden-vector-assertion';
 export {
   parseIssueDateTime,
@@ -27,6 +37,8 @@ export {
   dfeDocumentElementName,
   escapeXml,
 } from './application/xml/dfe-xml';
+export type { BuildEventXmlInput } from './application/xml/event-xml';
+export { buildEventXml } from './application/xml/event-xml';
 export type {
   EfaturaConfig,
   EfaturaConfigArray,
@@ -57,11 +69,19 @@ export {
   environmentFromValue,
   isEnvironment,
 } from './domain/enums/environment';
+export { EVENT_TYPES, EventType, eventTypeFromValue, isEventType } from './domain/enums/event-type';
 export {
   EfaturaError,
   EfaturaValidationError,
   OfficialArtifactMissingError,
 } from './domain/errors';
+export {
+  type BuildEventIdInput,
+  buildEventId,
+  type ParsedEventId,
+  parseEventId,
+  validateEventId,
+} from './domain/iud/event-id';
 export {
   type BuildIudInput,
   buildIud,
@@ -84,6 +104,12 @@ export {
   salesReceiptDataFrom,
   transportDocumentDataFrom,
 } from './domain/value-objects/documents';
+export type { EventData, EventDocumentRangeData } from './domain/value-objects/event-data';
+export {
+  eventDataFrom,
+  eventDataSchema,
+  eventDocumentRangeDataSchema,
+} from './domain/value-objects/event-data';
 export type {
   ContingencyData,
   InvoiceData,
@@ -98,14 +124,6 @@ export type { TaxData } from './domain/value-objects/tax-data';
 export { taxDataFrom, taxDataSchema } from './domain/value-objects/tax-data';
 export type { TotalsData } from './domain/value-objects/totals-data';
 export { totalsDataFrom, totalsDataSchema } from './domain/value-objects/totals-data';
-export type {
-  EfaturaBuildDfeXmlOptions,
-  EfaturaBuildIudInput,
-  EfaturaBuildSequentialIudInput,
-  EfaturaDependencies,
-  RenderDfaOptions,
-  SubmitPlatformOptions,
-} from './efatura';
 export { Efatura } from './efatura';
 export {
   FetchMiddlewareTransport,
@@ -125,11 +143,12 @@ export {
   XadesBesSigner,
   XmllintXsdValidator,
 } from './infrastructure';
-export type { DfeXmlRequest, DfeZipRequest } from './presentation/shared/schemas';
+export type { DfeXmlRequest, DfeZipRequest, EventXmlRequest } from './presentation/shared/schemas';
 export {
   dfeXmlRequestSchema,
   dfeZipFileSchema,
   dfeZipRequestSchema,
+  eventXmlRequestSchema,
 } from './presentation/shared/schemas';
 export { generateUuid, isUuid } from './support/generators';
 export { messages } from './support/messages';

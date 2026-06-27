@@ -1,7 +1,7 @@
 import { EfaturaValidationError } from '../../domain/errors';
 import type { Efatura } from '../../efatura';
 import { isRecord } from '../../support/normalizers';
-import { dfeXmlRequestSchema, dfeZipRequestSchema } from './schemas';
+import { dfeXmlRequestSchema, dfeZipRequestSchema, eventXmlRequestSchema } from './schemas';
 
 export interface HttpResult {
   status: number;
@@ -12,6 +12,13 @@ export interface HttpResult {
 export async function handleBuildXml(efatura: Efatura, body: unknown): Promise<HttpResult> {
   const payload = parseRequest(body, dfeXmlRequestSchema, 'body');
   const xml = efatura.buildDfeXml(payload.invoice, payload.options);
+
+  return { status: 200, body: { xml } };
+}
+
+export async function handleBuildEventXml(efatura: Efatura, body: unknown): Promise<HttpResult> {
+  const payload = parseRequest(body, eventXmlRequestSchema, 'body');
+  const xml = efatura.buildEventXml(payload.event, payload.options);
 
   return { status: 200, body: { xml } };
 }
