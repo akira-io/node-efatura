@@ -9,6 +9,10 @@ export interface MiddlewareDocumentResult {
   status?: string;
   code?: string;
   message?: string;
+  repositoryCode?: string;
+  authorizationCode?: string;
+  validationCode?: string;
+  processedAt?: string;
   raw?: unknown;
 }
 
@@ -16,6 +20,8 @@ export interface MiddlewareSubmissionError {
   code?: string;
   message: string;
   field?: string;
+  severity?: string;
+  details?: string;
   raw?: unknown;
 }
 
@@ -25,6 +31,9 @@ export interface MiddlewareSubmissionResult {
   statusText: string;
   rawBody: string;
   body: unknown;
+  requestId?: string;
+  correlationId?: string;
+  receivedAt?: string;
   documents: MiddlewareDocumentResult[];
   errors: MiddlewareSubmissionError[];
 }

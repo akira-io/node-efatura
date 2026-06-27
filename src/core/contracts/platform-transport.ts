@@ -17,9 +17,22 @@ export interface PlatformSubmissionResult {
     code?: string;
     message?: string;
     repositoryCode?: string;
+    authorizationCode?: string;
+    validationCode?: string;
+    processedAt?: string;
     raw?: unknown;
   }>;
-  errors: Array<{ code?: string; message: string; field?: string; raw?: unknown }>;
+  requestId?: string;
+  correlationId?: string;
+  receivedAt?: string;
+  errors: Array<{
+    code?: string;
+    message: string;
+    field?: string;
+    severity?: string;
+    details?: string;
+    raw?: unknown;
+  }>;
 }
 
 export interface PlatformTransport {

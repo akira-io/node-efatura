@@ -5,6 +5,25 @@ import type {
   MiddlewareSubmissionResult,
   PlatformSubmissionResult,
 } from '../../core/contracts';
+import {
+  CORRELATION_ID_KEYS,
+  DOCUMENT_AUTHORIZATION_KEYS,
+  DOCUMENT_CODE_KEYS,
+  DOCUMENT_CONTAINER_KEYS,
+  DOCUMENT_ID_KEYS,
+  DOCUMENT_PROCESSED_AT_KEYS,
+  DOCUMENT_REPOSITORY_KEYS,
+  DOCUMENT_STATUS_KEYS,
+  DOCUMENT_VALIDATION_KEYS,
+  ERROR_CODE_KEYS,
+  ERROR_CONTAINER_KEYS,
+  ERROR_DETAIL_KEYS,
+  ERROR_FIELD_KEYS,
+  ERROR_SEVERITY_KEYS,
+  MESSAGE_KEYS,
+  RECEIVED_AT_KEYS,
+  REQUEST_ID_KEYS,
+} from './response-parser-keys';
 
 type SubmissionInput = Pick<
   MiddlewareSubmissionResult,
@@ -50,6 +69,7 @@ export function parseServiceBody(body: string, contentType = ''): unknown {
 export function normalizeSubmissionResult(input: SubmissionInput): MiddlewareSubmissionResult {
   return {
     ...input,
+    ...extractMetadata(input.body),
     documents: extractDocuments(input.body),
     errors: extractErrors(input),
   };
@@ -60,38 +80,33 @@ export function normalizePlatformSubmissionResult(
 ): PlatformSubmissionResult {
   return {
     ...input,
+    ...extractMetadata(input.body),
     documents: extractDocuments(input.body),
     errors: extractErrors(input),
   };
 }
 
 function extractDocuments(body: unknown): MiddlewareDocumentResult[] {
-  const candidates = findValues(body, ['documents', 'Documents', 'dfe', 'Dfe', 'dfes', 'results']);
+  const candidates = findValues(body, DOCUMENT_CONTAINER_KEYS);
 
   return candidates
     .flatMap((candidate) => (Array.isArray(candidate) ? candidate : [candidate]))
     .filter(isRecord)
     .map((item) => ({
-      iud: text(valueByKeys(item, ['iud', 'IUD', 'id', 'Id'])),
-      status: text(valueByKeys(item, ['status', 'Status', 'state', 'State'])),
-      code: text(valueByKeys(item, ['code', 'Code', 'statusCode', 'StatusCode'])),
-      message: text(valueByKeys(item, ['message', 'Message', 'description', 'Description'])),
-      repositoryCode: text(valueByKeys(item, ['repositoryCode', 'RepositoryCode'])),
+      iud: text(valueByKeys(item, DOCUMENT_ID_KEYS)),
+      status: text(valueByKeys(item, DOCUMENT_STATUS_KEYS)),
+      code: text(valueByKeys(item, DOCUMENT_CODE_KEYS)),
+      message: text(valueByKeys(item, MESSAGE_KEYS)),
+      repositoryCode: text(valueByKeys(item, DOCUMENT_REPOSITORY_KEYS)),
+      authorizationCode: text(valueByKeys(item, DOCUMENT_AUTHORIZATION_KEYS)),
+      validationCode: text(valueByKeys(item, DOCUMENT_VALIDATION_KEYS)),
+      processedAt: text(valueByKeys(item, DOCUMENT_PROCESSED_AT_KEYS)),
       raw: item,
     }));
 }
 
 function extractErrors(input: SubmissionInput): MiddlewareSubmissionError[] {
-  const candidates = findValues(input.body, [
-    'errors',
-    'Errors',
-    'error',
-    'Error',
-    'validationErrors',
-    'ValidationErrors',
-    'messages',
-    'Messages',
-  ]);
+  const candidates = findValues(input.body, ERROR_CONTAINER_KEYS);
   const errors = candidates
     .flatMap((candidate) => (Array.isArray(candidate) ? candidate : [candidate]))
     .map(errorFromValue);
@@ -109,11 +124,11 @@ function errorFromValue(item: unknown): MiddlewareSubmissionError {
   }
 
   return {
-    code: text(valueByKeys(item, ['code', 'Code', 'errorCode', 'ErrorCode', 'statusCode'])),
-    message:
-      text(valueByKeys(item, ['message', 'Message', 'description', 'Description', 'detail'])) ??
-      'Submission failed.',
-    field: text(valueByKeys(item, ['field', 'Field', 'path', 'Path', 'property'])),
+    code: text(valueByKeys(item, ERROR_CODE_KEYS)),
+    message: text(valueByKeys(item, [...MESSAGE_KEYS, 'detail', 'Detail'])) ?? 'Submission failed.',
+    field: text(valueByKeys(item, ERROR_FIELD_KEYS)),
+    severity: text(valueByKeys(item, ERROR_SEVERITY_KEYS)),
+    details: text(valueByKeys(item, ERROR_DETAIL_KEYS)),
     raw: item,
   };
 }
@@ -121,7 +136,7 @@ function errorFromValue(item: unknown): MiddlewareSubmissionError {
 function parseXmlBody(xml: string): unknown {
   const root = new DOMParser().parseFromString(xml, 'application/xml').documentElement as XmlNode;
 
-  return root ? { [root.nodeName]: nodeValue(root) } : xml;
+  return root ? { [xmlName(root.nodeName)]: nodeValue(root) } : xml;
 }
 
 function nodeValue(node: XmlNode): unknown {
@@ -136,9 +151,10 @@ function nodeValue(node: XmlNode): unknown {
   return children.reduce<Record<string, unknown>>(
     (record, child) => {
       const value = nodeValue(child);
-      const current = record[child.nodeName];
+      const childName = xmlName(child.nodeName);
+      const current = record[childName];
 
-      record[child.nodeName] = current === undefined ? value : arrayOf(current).concat(value);
+      record[childName] = current === undefined ? value : arrayOf(current).concat(value);
 
       return record;
     },
@@ -203,6 +219,28 @@ function findValues(value: unknown, keys: string[]): unknown[] {
   ];
 }
 
+function extractMetadata(
+  body: unknown,
+): Pick<MiddlewareSubmissionResult, 'correlationId' | 'receivedAt' | 'requestId'> {
+  return {
+    requestId: firstText(body, REQUEST_ID_KEYS),
+    correlationId: firstText(body, CORRELATION_ID_KEYS),
+    receivedAt: firstText(body, RECEIVED_AT_KEYS),
+  };
+}
+
+function firstText(value: unknown, keys: string[]): string | undefined {
+  for (const candidate of findValues(value, keys)) {
+    const result = text(candidate);
+
+    if (result) {
+      return result;
+    }
+  }
+
+  return undefined;
+}
+
 function valueByKeys(record: Record<string, unknown>, keys: string[]): unknown {
   const key = keys.find((candidate) => record[candidate] !== undefined);
 
@@ -223,6 +261,10 @@ function text(value: unknown): string | undefined {
   }
 
   return undefined;
+}
+
+function xmlName(name: string): string {
+  return name.includes(':') ? (name.split(':').at(-1) ?? name) : name;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
