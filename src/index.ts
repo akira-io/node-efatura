@@ -146,6 +146,15 @@ export type { PartyData } from './domain/value-objects/party-data';
 export { partyDataFrom, partyDataSchema } from './domain/value-objects/party-data';
 export type { TaxData } from './domain/value-objects/tax-data';
 export { taxDataFrom, taxDataSchema } from './domain/value-objects/tax-data';
+export type { TaxIdData } from './domain/value-objects/tax-id';
+export {
+  CAPE_VERDE_NIF_MESSAGE,
+  CAPE_VERDE_NIF_PATTERN,
+  isCapeVerdeNif,
+  normalizeCapeVerdeNif,
+  taxIdDataFrom,
+  taxIdDataSchema,
+} from './domain/value-objects/tax-id';
 export type { TotalsData } from './domain/value-objects/totals-data';
 export { totalsDataFrom, totalsDataSchema } from './domain/value-objects/totals-data';
 export { Efatura } from './efatura';

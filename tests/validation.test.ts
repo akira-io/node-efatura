@@ -12,6 +12,7 @@ import {
 import { invoiceDataFrom } from '../src/domain/value-objects/invoice-data';
 import { partyDataFrom } from '../src/domain/value-objects/party-data';
 import { taxDataFrom } from '../src/domain/value-objects/tax-data';
+import { isCapeVerdeNif, taxIdDataFrom } from '../src/domain/value-objects/tax-id';
 import { totalsDataFrom } from '../src/domain/value-objects/totals-data';
 import {
   baseInvoicePayload,
@@ -241,6 +242,26 @@ describe('data validation', () => {
     );
 
     expectValidation(() => partyDataFrom({ name: '' }), 'taxId', 'Party TaxId is required.');
+  });
+
+  it('validates Cabo Verde NIF format for CV tax ids', () => {
+    expect(isCapeVerdeNif('100200300')).toBe(true);
+    expect(isCapeVerdeNif('010020030')).toBe(false);
+    expect(taxIdDataFrom({ countryCode: 'CV', value: '100200300' })?.value).toBe('100200300');
+
+    expectValidation(
+      () => taxIdDataFrom({ countryCode: 'CV', value: '010020030' }),
+      'taxId.value',
+      'Cabo Verde NIF must have 9 digits and cannot start with zero.',
+    );
+
+    expectValidation(
+      () => taxIdDataFrom({ countryCode: 'CV', value: '100-200-300' }),
+      'taxId.value',
+      'Cabo Verde NIF must have 9 digits and cannot start with zero.',
+    );
+
+    expect(taxIdDataFrom({ countryCode: 'PT', value: 'PT12345' })?.value).toBe('PT12345');
   });
 
   it('rejects invoice type mismatch in wrappers', () => {

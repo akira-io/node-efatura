@@ -50,6 +50,8 @@ Validation includes:
 - NIF and code validation.
 - Mathematical consistency for taxes, totals, and calculations.
 
+For Cabo Verde taxpayers, the official `stTaxIdCV` XSD pattern is `[1-9][0-9]{8}`: exactly 9 digits, with the first digit between 1 and 9, and no formatting characters. Existence in the fiscal registry is a PE/DNRE validation, not a local checksum.
+
 ## Electronic Fiscal Documents
 
 | Code | Acronym | Document Type | Description |

@@ -18,7 +18,7 @@ The package exports Zod schemas for reusable fiscal value-object validation:
 The parsing functions keep the public error contract stable by converting schema failures into `EfaturaValidationError`.
 
 ```ts
-import { partyDataSchema, partyDataFrom } from '@akira-io/efatura';
+import { isCapeVerdeNif, partyDataFrom, partyDataSchema } from '@akira-io/efatura';
 
 const parsed = partyDataSchema.parse({
   taxId: { countryCode: 'CV', value: '100200300' },
@@ -26,7 +26,10 @@ const parsed = partyDataSchema.parse({
 });
 
 const party = partyDataFrom(parsed);
+const valid = isCapeVerdeNif('100200300');
 ```
+
+For `countryCode = CV`, `TaxId.value` must match the official XSD `stTaxIdCV` pattern `[1-9][0-9]{8}`. The package also applies this validation to `transmitterNif` during `createEfatura(config)` resolution. Other country codes keep the generic no-space, 5-to-20-character `TaxId` rule from the official XSD.
 
 ## Presentation Schemas
 

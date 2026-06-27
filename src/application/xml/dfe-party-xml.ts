@@ -1,7 +1,8 @@
 import { EfaturaValidationError } from '../../domain/errors';
 import type { AddressData } from '../../domain/value-objects/address-data';
 import type { ContactsData } from '../../domain/value-objects/contacts-data';
-import type { PartyData, TaxIdData } from '../../domain/value-objects/party-data';
+import type { PartyData } from '../../domain/value-objects/party-data';
+import type { TaxIdData } from '../../domain/value-objects/tax-id';
 import { element, escapeAttribute, escapeXml, requiredValue } from './xml-core';
 
 export function assertEmitter(emitter: PartyData): void {

@@ -1,5 +1,6 @@
 import { Environment, environmentCode, environmentFromValue } from './domain/enums/environment';
 import { EfaturaValidationError } from './domain/errors';
+import { normalizeCapeVerdeNif } from './domain/value-objects/tax-id';
 import { generateUuid } from './support/generators';
 import { messages } from './support/messages';
 import { isRecord, optionalText, requiredText } from './support/normalizers';
@@ -91,11 +92,14 @@ export interface EfaturaConfigArray {
 
 export function resolveConfig(config: EfaturaConfig): ResolvedEfaturaConfig {
   const environment = resolveEnvironment(config.environment);
-  const transmitterNif = requiredText(
-    config.transmitterNif,
+  const transmitterNif = normalizeCapeVerdeNif(
+    requiredText(
+      config.transmitterNif,
+      'transmitter.nif',
+      messages.config.transmitterNifRequired,
+      'config.transmitter_nif_required',
+    ),
     'transmitter.nif',
-    messages.config.transmitterNifRequired,
-    'config.transmitter_nif_required',
   );
   const transmitterLed = requiredText(
     config.transmitterLed,

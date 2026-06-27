@@ -80,6 +80,9 @@ describe('resolveConfig', () => {
     expect(() => resolveConfig(makeConfig({ transmitterNif: '' }))).toThrow(
       'Transmitter NIF is required.',
     );
+    expect(() => resolveConfig(makeConfig({ transmitterNif: '010020030' }))).toThrow(
+      'Cabo Verde NIF must have 9 digits and cannot start with zero.',
+    );
     expect(() => resolveConfig(makeConfig({ transmitterLed: '' }))).toThrow(
       'Transmitter LED code is required.',
     );

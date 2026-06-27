@@ -1,13 +1,9 @@
 import { z } from 'zod';
-import { isRecord, optionalText } from '../../support/normalizers';
+import { optionalText } from '../../support/normalizers';
 import { EfaturaValidationError } from '../errors';
 import { type AddressData, addressDataFrom } from './address-data';
 import { type ContactsData, contactsDataFrom } from './contacts-data';
-
-export interface TaxIdData {
-  countryCode: string;
-  value: string;
-}
+import { type TaxIdData, taxIdDataFrom, taxIdDataSchema } from './tax-id';
 
 export interface PartyData {
   reference: 'EP' | 'RP' | null;
@@ -16,11 +12,6 @@ export interface PartyData {
   address: AddressData | null;
   contacts: ContactsData | null;
 }
-
-export const taxIdDataSchema = z.object({
-  countryCode: z.preprocess(normalizeCountry, z.string().length(2)),
-  value: z.preprocess(normalizeOptionalText, z.string().min(5).max(20).regex(/^\S+$/)),
-});
 
 export const partyDataSchema = z
   .object({
@@ -65,35 +56,8 @@ export function partyDataFrom(data: Record<string, unknown>, prefix = ''): Party
   return result.data;
 }
 
-export function taxIdDataFrom(value: unknown, prefix = 'taxId'): TaxIdData | null {
-  if (!isRecord(value)) {
-    return null;
-  }
-
-  const result = taxIdDataSchema.safeParse({
-    countryCode: value.countryCode,
-    value: value.value,
-  });
-
-  if (!result.success) {
-    const issuePath = result.error.issues[0]?.path.join('.') ?? 'taxId';
-
-    throw new EfaturaValidationError(
-      field(prefix, issuePath),
-      'TaxId is invalid.',
-      'tax_id.invalid',
-    );
-  }
-
-  return result.data;
-}
-
 function normalizeOptionalText(value: unknown): string | null {
   return optionalText(value);
-}
-
-function normalizeCountry(value: unknown): string | null {
-  return optionalText(value)?.toUpperCase() ?? null;
 }
 
 function normalizeReference(value: unknown): 'EP' | 'RP' | null {
@@ -104,8 +68,4 @@ function normalizeReference(value: unknown): 'EP' | 'RP' | null {
   }
 
   return null;
-}
-
-function field(prefix: string, name: string): string {
-  return prefix === '' ? name : `${prefix}.${name}`;
 }
