@@ -2,11 +2,31 @@ import type { ResolvedEfaturaConfig } from '../../config';
 import { DocumentType, documentTypeCode } from '../../domain/enums/document-type';
 import { EfaturaValidationError } from '../../domain/errors';
 import { parseIud, validateIud } from '../../domain/iud/iud';
-import type { ContingencyData, InvoiceData } from '../../domain/value-objects/invoice-data';
-import type { LineItemData } from '../../domain/value-objects/line-item-data';
-import type { PartyData } from '../../domain/value-objects/party-data';
-import type { TaxData } from '../../domain/value-objects/tax-data';
-import type { TotalsData } from '../../domain/value-objects/totals-data';
+import type { InvoiceData } from '../../domain/value-objects/invoice-data';
+import {
+  assertEmitter,
+  datePeriodXml,
+  deliveryXml,
+  element,
+  escapeAttribute,
+  escapeXml,
+  footerXml,
+  linesXml,
+  optionalPartyXml,
+  orderReferenceXml,
+  partyXml,
+  paymentsForTypeXml,
+  paymentsInvoiceXml,
+  paymentsPaymentXml,
+  referencesXml,
+  rentReceiptXml,
+  requiredParty,
+  requiredValue,
+  selfBillingXml,
+  totalsXml,
+  transmissionXml,
+  transportRouteXml,
+} from './dfe-xml-fragments';
 
 export const DFE_NAMESPACE = 'urn:cv:efatura:xsd:v1.0';
 export const DFE_XML_VERSION = '1.0';
@@ -37,16 +57,17 @@ export function buildDfeXml(input: BuildDfeXmlInput): string {
     throw new EfaturaValidationError('iud', 'IUD is invalid.', 'xml.iud_invalid');
   }
 
-  assertEmitterContacts(input.invoice.emitter);
-
-  const documentTypeCodeValue = documentTypeCode(input.invoice.type);
+  assertEmitter(input.invoice.emitter);
 
   return [
     '<?xml version="1.0" encoding="UTF-8"?>',
     `<Dfe xmlns="${DFE_NAMESPACE}" Version="${DFE_XML_VERSION}" Id="${escapeAttribute(
       input.iud,
-    )}" DocumentTypeCode="${documentTypeCodeValue}">`,
+    )}" DocumentTypeCode="${documentTypeCode(input.invoice.type)}">`,
+    element('IsSpecimen', input.invoice.isSpecimen === true ? true : null),
     documentXml(input),
+    transmissionXml(input),
+    element('RepositoryCode', input.config.repositoryCode),
     '</Dfe>',
   ].join('');
 }
@@ -55,200 +76,144 @@ export function dfeDocumentElementName(type: DocumentType): string {
   return DOCUMENT_ROOTS[type];
 }
 
-export function escapeXml(value: string | number | boolean): string {
-  return String(value)
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&apos;');
-}
+export { escapeXml };
 
 function documentXml(input: BuildDfeXmlInput): string {
-  const parsedIud = parseIud(input.iud);
+  const documentNumber = parseIud(input.iud).documentNumber;
   const root = dfeDocumentElementName(input.invoice.type);
-  const emissionMode = input.emissionMode ?? 'Online';
+  const content = documentContentXml(input.invoice, input.config, documentNumber);
 
-  return `<${root}>${identificationXml(
-    input.invoice,
-    input.config,
-    parsedIud.documentNumber,
-    emissionMode,
-  )}${softwareXml(input.config)}${partyXml('Emitter', input.invoice.emitter)}${
-    input.invoice.receiver ? partyXml('Receiver', input.invoice.receiver) : ''
-  }${input.invoice.payer ? partyXml('Payer', input.invoice.payer) : ''}${linesXml(
-    input.invoice.lines,
-  )}${totalsXml(input.invoice.totals)}${referenceXml(input.invoice)}${contingencyXml(
-    input.invoice.contingency,
-    emissionMode,
-    input.config,
-  )}${extraFieldsXml(input.invoice.extraFields)}</${root}>`;
+  return `<${root}>${content}</${root}>`;
 }
 
-function escapeAttribute(value: string | number | boolean): string {
-  return escapeXml(value);
-}
-
-function element(name: string, value: string | number | boolean | null | undefined): string {
-  if (value === null || value === undefined || value === '') {
-    return '';
-  }
-
-  return `<${name}>${escapeXml(value)}</${name}>`;
-}
-
-function identificationXml(
+function documentContentXml(
   invoice: InvoiceData,
   config: ResolvedEfaturaConfig,
   documentNumber: string,
-  emissionMode: EmissionMode,
 ): string {
-  return `<Identification>${element('LedCode', config.transmitterLed)}${element(
-    'Serie',
-    invoice.serie ?? config.transmitterLed,
-  )}${element('DocumentNumber', documentNumber)}${element('IssueDate', invoice.issueDate)}${element(
-    'IssueTime',
-    invoice.issueTime,
-  )}${element('IssueMode', emissionMode.toUpperCase())}${element('DueDate', invoice.dueDate)}${element(
-    'TaxPointDate',
-    invoice.taxPointDate,
-  )}${element('IssueReasonCode', invoice.issueReasonCode)}${element(
-    'IsIsolatedAct',
-    invoice.isIsolatedAct,
-  )}</Identification>`;
-}
-
-function softwareXml(config: ResolvedEfaturaConfig): string {
-  return `<Software>${element('Code', config.softwareCode)}${element(
-    'Name',
-    config.softwareName,
-  )}${element('Version', config.softwareVersion)}</Software>`;
-}
-
-function partyXml(name: 'Emitter' | 'Receiver' | 'Payer', party: PartyData): string {
-  return `<${name}>${element('NIF', party.nif)}${element('Name', party.name)}${element(
-    'Address',
-    party.address,
-  )}${element('City', party.city)}${element('Country', party.country)}${element(
-    'Email',
-    party.email,
-  )}${element('Phone', party.phone)}</${name}>`;
-}
-
-function linesXml(lines: LineItemData[]): string {
-  return `<Lines>${lines.map(lineXml).join('')}</Lines>`;
-}
-
-function lineXml(line: LineItemData): string {
-  return `<Line>${element('Description', line.description)}${element(
-    'Quantity',
-    line.quantity,
-  )}${element('UnitPrice', line.unitPrice)}${element('Total', line.total)}${taxesXml(
-    line.taxes,
-  )}</Line>`;
-}
-
-function taxesXml(taxes: TaxData[]): string {
-  if (taxes.length === 0) {
-    return '';
+  if (invoice.type === DocumentType.ElectronicInvoice) {
+    return invoiceXml(invoice, config, documentNumber);
   }
 
-  return `<Taxes>${taxes.map(taxXml).join('')}</Taxes>`;
-}
-
-function taxXml(tax: TaxData): string {
-  return `<Tax>${element('TaxTypeCode', tax.type)}${element('Rate', tax.rate)}${element(
-    'Amount',
-    tax.amount,
-  )}${element('TaxExemptionReasonCode', tax.exemptionReason)}</Tax>`;
-}
-
-function totalsXml(totals: TotalsData): string {
-  return `<Totals>${element('Subtotal', totals.subtotal)}${element(
-    'TaxTotal',
-    totals.taxTotal,
-  )}${element('GrandTotal', totals.grandTotal)}</Totals>`;
-}
-
-function referenceXml(invoice: InvoiceData): string {
-  const reason = invoice.creditNoteReason ?? invoice.debitNoteReason ?? invoice.returnNoteReason;
-
-  if (!invoice.originalIud && !reason) {
-    return '';
+  if (invoice.type === DocumentType.ElectronicTransportDocument) {
+    return transportXml(invoice, config, documentNumber);
   }
 
-  return `<Reference>${element('OriginalIUD', invoice.originalIud)}${element(
-    'Reason',
-    reason,
-  )}</Reference>`;
+  if (invoice.type === DocumentType.ElectronicReceipt) {
+    return receiptXml(invoice, config, documentNumber);
+  }
+
+  return defaultDocumentXml(invoice, config, documentNumber);
 }
 
-function contingencyXml(
-  contingency: ContingencyData | null,
-  emissionMode: EmissionMode,
+function invoiceXml(
+  invoice: InvoiceData,
   config: ResolvedEfaturaConfig,
+  documentNumber: string,
 ): string {
-  if (emissionMode === 'Online') {
-    return '';
-  }
-
-  if (!contingency) {
-    throw new EfaturaValidationError(
-      'contingency',
-      'Contingency data is required for Offline and Off emission modes.',
-      'contingency.required',
-    );
-  }
-
-  return `<Contingency>${element('LedCode', config.transmitterLed)}${element(
-    'IUC',
-    contingency.iuc,
-  )}${element('ReasonTypeCode', contingency.reasonTypeCode)}${element(
-    'ReasonDescription',
-    contingency.reasonDescription,
-  )}</Contingency>`;
+  return `${headerXml(invoice, config, documentNumber)}${element('DueDate', invoice.dueDate)}${orderReferenceXml(
+    invoice.orderReferenceId,
+  )}${element('TaxPointDate', invoice.taxPointDate)}${partyXml(
+    'EmitterParty',
+    invoice.emitter,
+  )}${partyXml('ReceiverParty', requiredParty(invoice.receiver, 'receiver'))}${linesTotalsXml(
+    invoice,
+  )}${referencesXml(invoice.references)}${paymentsInvoiceXml(invoice.payments)}${deliveryXml(
+    invoice.delivery,
+  )}${footerXml(invoice)}`;
 }
 
-function extraFieldsXml(fields: Record<string, unknown>): string {
-  return Object.entries(fields)
-    .map(([name, value]) => valueXml(name, value))
-    .join('');
+function transportXml(
+  invoice: InvoiceData,
+  config: ResolvedEfaturaConfig,
+  documentNumber: string,
+): string {
+  return `${headerXml(invoice, config, documentNumber)}${element(
+    'ReceiverTypeCode',
+    invoice.receiverTypeCode,
+  )}${element(
+    'TransportDocumentTypeCode',
+    requiredValue(invoice.transportDocumentTypeCode, 'transportDocumentTypeCode'),
+  )}${partyXml('EmitterParty', invoice.emitter)}${
+    invoice.receiver ? partyXml('ReceiverParty', invoice.receiver) : ''
+  }${partyXml(
+    'TransportServiceProviderParty',
+    requiredParty(invoice.transportServiceProviderParty, 'transportServiceProviderParty'),
+  )}${linesXml(invoice.lines)}${transportRouteXml(
+    requiredValue(invoice.transportRoute, 'transportRoute'),
+  )}${referencesXml(invoice.references)}${footerXml(invoice)}`;
 }
 
-function valueXml(name: string, value: unknown): string {
-  if (value === null || value === undefined || value === '') {
-    return '';
+function receiptXml(
+  invoice: InvoiceData,
+  config: ResolvedEfaturaConfig,
+  documentNumber: string,
+): string {
+  return `${headerXml(invoice, config, documentNumber)}${partyXml(
+    'EmitterParty',
+    invoice.emitter,
+  )}${partyXml('ReceiverParty', requiredParty(invoice.receiver, 'receiver'))}${optionalPartyXml(
+    'PaymentParty',
+    invoice.paymentParty,
+  )}${element('ReceiptTypeCode', requiredValue(invoice.receiptTypeCode, 'receiptTypeCode'))}${rentReceiptXml(
+    invoice.rentReceipt,
+  )}${referencesXml(invoice.references)}${paymentsPaymentXml(invoice.payments)}${footerXml(invoice)}`;
+}
+
+function defaultDocumentXml(
+  invoice: InvoiceData,
+  config: ResolvedEfaturaConfig,
+  documentNumber: string,
+): string {
+  return `${headerXml(invoice, config, documentNumber)}${typedMiddleXml(invoice)}${partyXml(
+    'EmitterParty',
+    invoice.emitter,
+  )}${invoice.receiver ? partyXml('ReceiverParty', invoice.receiver) : ''}${optionalPartyXml(
+    'PaymentParty',
+    invoice.paymentParty,
+  )}${linesTotalsXml(invoice)}${referencesXml(invoice.references)}${paymentsForTypeXml(
+    invoice,
+  )}${deliveryXml(invoice.delivery)}${footerXml(invoice)}`;
+}
+
+function typedMiddleXml(invoice: InvoiceData): string {
+  if (invoice.type === DocumentType.ElectronicCreditNote) {
+    return `${element(
+      'IssueReasonCode',
+      requiredValue(invoice.issueReasonCode, 'issueReasonCode'),
+    )}${datePeriodXml('RappelPeriod', invoice.rappelPeriod)}`;
   }
 
-  if (Array.isArray(value)) {
-    return value.map((item) => valueXml(name, item)).join('');
-  }
-
-  if (typeof value === 'object') {
-    return `<${name}>${extraFieldsXml(value as Record<string, unknown>)}</${name}>`;
-  }
-
-  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
-    return element(name, value);
+  if (
+    invoice.type === DocumentType.ElectronicDebitNote ||
+    invoice.type === DocumentType.ElectronicReturnNote
+  ) {
+    return `${element(
+      'IssueReasonCode',
+      requiredValue(invoice.issueReasonCode, 'issueReasonCode'),
+    )}${element('IssueReasonDescription', invoice.issueReasonDescription)}`;
   }
 
   return '';
 }
 
-function assertEmitterContacts(emitter: PartyData): void {
-  if (!emitter.email) {
-    throw new EfaturaValidationError(
-      'emitter.email',
-      'Emitter email is required for e-Fatura v11.0 XML.',
-      'xml.emitter_email_required',
-    );
-  }
+function headerXml(
+  invoice: InvoiceData,
+  config: ResolvedEfaturaConfig,
+  documentNumber: string,
+): string {
+  return [
+    element('IsIsolatedAct', invoice.isIsolatedAct),
+    selfBillingXml(invoice.selfBilling),
+    element('LedCode', config.transmitterLed),
+    element('Serie', invoice.serie ?? config.transmitterLed),
+    element('DocumentNumber', documentNumber),
+    element('InnerDocumentNumber', invoice.innerDocumentNumber),
+    element('IssueDate', invoice.issueDate),
+    element('IssueTime', requiredValue(invoice.issueTime, 'issueTime')),
+  ].join('');
+}
 
-  if (!emitter.phone) {
-    throw new EfaturaValidationError(
-      'emitter.phone',
-      'Emitter phone is required for e-Fatura v11.0 XML.',
-      'xml.emitter_phone_required',
-    );
-  }
+function linesTotalsXml(invoice: InvoiceData): string {
+  return `${linesXml(invoice.lines)}${totalsXml(requiredValue(invoice.totals, 'totals'))}`;
 }

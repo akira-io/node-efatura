@@ -33,7 +33,7 @@ export function salesReceiptDataFrom(
 ): WrappedInvoiceData {
   const wrapped = wrapInvoice(data, DocumentType.ElectronicSalesTicket, options);
 
-  if (wrapped.invoice.totals.grandTotal >= 20000 && wrapped.invoice.receiver === null) {
+  if ((wrapped.invoice.totals?.payableAmount ?? 0) >= 20000 && wrapped.invoice.receiver === null) {
     throw new EfaturaValidationError(
       'invoice.receiver',
       messages.invoice.receiverRequiredForType,
@@ -55,52 +55,66 @@ export function creditNoteDataFrom(
   data: Record<string, unknown>,
   options: WrapperValidationOptions = {},
 ): WrappedInvoiceData {
-  if (!isRecord(data.invoice)) {
-    throw new EfaturaValidationError(
-      'invoice',
-      messages.validation.invoiceRequired,
-      'validation.invoice_required',
-    );
-  }
+  const wrapped = wrapInvoice(data, DocumentType.ElectronicCreditNote, options);
 
-  if (data.invoice.originalIud == null || data.invoice.originalIud === '') {
-    throw new EfaturaValidationError(
-      'invoice.originalIud',
-      messages.invoice.originalIudRequired,
-      'invoice.original_iud_required',
-    );
-  }
+  assertCorrectiveDocument(wrapped.invoice);
 
-  if (data.invoice.creditNoteReason == null || data.invoice.creditNoteReason === '') {
-    throw new EfaturaValidationError(
-      'invoice.creditNoteReason',
-      messages.invoice.creditNoteReasonRequired,
-      'invoice.credit_note_reason_required',
-    );
-  }
-
-  return wrapInvoice(data, DocumentType.ElectronicCreditNote, options);
+  return wrapped;
 }
 
 export function debitNoteDataFrom(
   data: Record<string, unknown>,
   options: WrapperValidationOptions = {},
 ): WrappedInvoiceData {
-  return wrapInvoice(data, DocumentType.ElectronicDebitNote, options);
+  const wrapped = wrapInvoice(data, DocumentType.ElectronicDebitNote, options);
+
+  assertCorrectiveDocument(wrapped.invoice);
+
+  return wrapped;
 }
 
 export function transportDocumentDataFrom(
   data: Record<string, unknown>,
   options: WrapperValidationOptions = {},
 ): WrappedInvoiceData {
-  return wrapInvoice(data, DocumentType.ElectronicTransportDocument, options);
+  const wrapped = wrapInvoice(data, DocumentType.ElectronicTransportDocument, options);
+
+  if (!wrapped.invoice.transportDocumentTypeCode) {
+    throw new EfaturaValidationError(
+      'invoice.transportDocumentTypeCode',
+      'TransportDocumentTypeCode is required for transport documents.',
+      'invoice.transport_document_type_code_required',
+    );
+  }
+
+  if (!wrapped.invoice.transportServiceProviderParty) {
+    throw new EfaturaValidationError(
+      'invoice.transportServiceProviderParty',
+      'TransportServiceProviderParty is required for transport documents.',
+      'invoice.transport_service_provider_required',
+    );
+  }
+
+  if (!wrapped.invoice.transportRoute) {
+    throw new EfaturaValidationError(
+      'invoice.transportRoute',
+      'TransportRoute is required for transport documents.',
+      'invoice.transport_route_required',
+    );
+  }
+
+  return wrapped;
 }
 
 export function returnNoteDataFrom(
   data: Record<string, unknown>,
   options: WrapperValidationOptions = {},
 ): WrappedInvoiceData {
-  return wrapInvoice(data, DocumentType.ElectronicReturnNote, options);
+  const wrapped = wrapInvoice(data, DocumentType.ElectronicReturnNote, options);
+
+  assertCorrectiveDocument(wrapped.invoice);
+
+  return wrapped;
 }
 
 export function entryNoteDataFrom(
@@ -134,4 +148,22 @@ function wrapInvoice(
   }
 
   return { invoice };
+}
+
+function assertCorrectiveDocument(invoice: InvoiceData): void {
+  if (!invoice.issueReasonCode) {
+    throw new EfaturaValidationError(
+      'invoice.issueReasonCode',
+      'IssueReasonCode is required for credit, debit, and return notes.',
+      'invoice.issue_reason_code_required',
+    );
+  }
+
+  if (invoice.issueReasonCode !== 'IN' && invoice.references.length === 0) {
+    throw new EfaturaValidationError(
+      'invoice.references',
+      'References are required for credit, debit, and return notes.',
+      'invoice.references_required',
+    );
+  }
 }

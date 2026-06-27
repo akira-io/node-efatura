@@ -8,7 +8,7 @@ const config = {
   transmitterNif: '100200300',
   transmitterLed: '123',
   transmitterKey: 'k'.repeat(64),
-  softwareCode: 'SW-001',
+  softwareCode: 'SW001',
   softwareName: 'Efatura Suite',
   softwareVersion: '1.0.0',
   middlewareBaseUrl: 'https://localhost:3443',
@@ -30,10 +30,12 @@ describe('DFE XML', () => {
     const invoice = efatura.validateInvoice(
       baseInvoicePayload({
         emitter: {
-          nif: '100200300',
+          taxId: { countryCode: 'CV', value: '100200300' },
           name: 'Emitter & Co',
-          email: 'issuer@example.cv',
-          phone: '5551234',
+          contacts: {
+            email: 'issuer@example.cv',
+            telephone: '5551234',
+          },
         },
       }),
     );
@@ -42,8 +44,8 @@ describe('DFE XML', () => {
     expect(xml).toContain(`xmlns="${DFE_NAMESPACE}"`);
     expect(xml).toContain(`Id="${iud}"`);
     expect(xml).toContain('DocumentTypeCode="1"');
-    expect(xml).toContain('<Invoice><Identification>');
-    expect(xml).toContain('<Software><Code>SW-001</Code><Name>Efatura Suite</Name>');
+    expect(xml).toContain('<Invoice><LedCode>123</LedCode>');
+    expect(xml).toContain('<Software><Code>SW001</Code><Name>Efatura Suite</Name>');
     expect(xml).toContain('<Name>Emitter &amp; Co</Name>');
     expect(xml).not.toContain('\n');
   });
@@ -57,12 +59,17 @@ describe('DFE XML', () => {
         type: DocumentType.ElectronicSalesTicket,
         receiver: null,
         emitter: {
-          nif: '100200300',
+          taxId: { countryCode: 'CV', value: '100200300' },
           name: 'Emitter',
-          email: 'issuer@example.cv',
-          phone: '5551234',
+          contacts: {
+            email: 'issuer@example.cv',
+            telephone: '5551234',
+          },
         },
         contingency: {
+          ledCode: '123',
+          issueDate: '2026-02-08',
+          issueTime: '11:30:00',
           reasonTypeCode: '4',
         },
       }),
@@ -75,7 +82,7 @@ describe('DFE XML', () => {
 
     expect(xml).toContain('DocumentTypeCode="3"');
     expect(xml).toContain('<SalesReceipt>');
-    expect(xml).toContain('<IssueMode>OFFLINE</IssueMode>');
+    expect(xml).toContain('<IssueMode>2</IssueMode>');
     expect(xml).toContain('<Contingency><LedCode>123</LedCode>');
     expect(xml).not.toContain('<Receiver>');
   });
@@ -84,10 +91,20 @@ describe('DFE XML', () => {
     const efatura = createEfatura(config, { clock: fixedClock });
 
     expect(() =>
-      efatura.buildDfeXml(baseInvoicePayload({ issueDate: '2026-02-08' }), {
-        documentNumber: 1,
-        randomCode: '1234567890',
-      }),
+      efatura.buildDfeXml(
+        baseInvoicePayload({
+          issueDate: '2026-02-08',
+          emitter: {
+            contacts: {
+              email: null,
+            },
+          },
+        }),
+        {
+          documentNumber: 1,
+          randomCode: '1234567890',
+        },
+      ),
     ).toThrow('Emitter email is required for e-Fatura v11.0 XML.');
   });
 });

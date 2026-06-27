@@ -4,12 +4,31 @@ import { isRecord, optionalText, requiredText } from '../../support/normalizers'
 import { DocumentType, documentTypeFromValue } from '../enums/document-type';
 import { EfaturaValidationError } from '../errors';
 import { DefaultDocumentTypePolicy } from '../policies/default-document-type-policy';
+import {
+  type DatePeriodData,
+  type DeliveryData,
+  datePeriodDataFrom,
+  deliveryDataFrom,
+  type PaymentsData,
+  paymentsDataFrom,
+  type ReferenceData,
+  type RentReceiptData,
+  referencesDataFrom,
+  rentReceiptDataFrom,
+  type SelfBillingData,
+  selfBillingDataFrom,
+  type TransportRouteData,
+  transportRouteDataFrom,
+} from './document-structures';
 import { type LineItemData, lineItemDataFrom } from './line-item-data';
 import { type PartyData, partyDataFrom } from './party-data';
 import { type TotalsData, totalsDataFrom } from './totals-data';
 
 export interface ContingencyData {
+  ledCode: string | null;
   iuc: string | null;
+  issueDate: string;
+  issueTime: string | null;
   reasonTypeCode: string;
   reasonDescription: string | null;
 }
@@ -20,19 +39,31 @@ export interface InvoiceData {
   issueDate: string;
   issueTime: string | null;
   dueDate: string | null;
+  orderReferenceId: string | null;
   taxPointDate: string | null;
   issueReasonCode: string | null;
+  issueReasonDescription: string | null;
   isIsolatedAct: boolean | null;
+  isSpecimen: boolean | null;
+  selfBilling: SelfBillingData | null;
   serie: string | null;
+  innerDocumentNumber: string | null;
+  rappelPeriod: DatePeriodData | null;
+  receiverTypeCode: string | null;
+  transportDocumentTypeCode: string | null;
   emitter: PartyData;
   receiver: PartyData | null;
-  payer: PartyData | null;
+  paymentParty: PartyData | null;
+  transportServiceProviderParty: PartyData | null;
+  receiptTypeCode: string | null;
+  rentReceipt: RentReceiptData | null;
   lines: LineItemData[];
-  totals: TotalsData;
-  originalIud: string | null;
-  creditNoteReason: string | null;
-  debitNoteReason: string | null;
-  returnNoteReason: string | null;
+  totals: TotalsData | null;
+  references: ReferenceData[];
+  payments: PaymentsData | null;
+  delivery: DeliveryData | null;
+  transportRoute: TransportRouteData | null;
+  note: string | null;
   contingency: ContingencyData | null;
   extraFields: Record<string, unknown>;
 }
@@ -87,15 +118,19 @@ export function invoiceDataFrom(
     );
   }
 
-  if (data.payer !== null && data.payer !== undefined && !isRecord(data.payer)) {
+  if (
+    data.paymentParty !== null &&
+    data.paymentParty !== undefined &&
+    !isRecord(data.paymentParty)
+  ) {
     throw new EfaturaValidationError(
-      'payer',
-      'Payer must be an object.',
-      'validation.payer_invalid',
+      'paymentParty',
+      'PaymentParty must be an object.',
+      'validation.payment_party_invalid',
     );
   }
 
-  if (!isRecord(data.totals)) {
+  if (requiresTotals(type) && !isRecord(data.totals)) {
     throw new EfaturaValidationError(
       'totals',
       messages.validation.totalsRequired,
@@ -125,21 +160,37 @@ export function invoiceDataFrom(
     issueDate,
     issueTime: optionalText(data.issueTime),
     dueDate: optionalText(data.dueDate),
+    orderReferenceId: optionalText(data.orderReferenceId),
     taxPointDate: optionalText(data.taxPointDate),
     issueReasonCode: optionalText(data.issueReasonCode),
+    issueReasonDescription: optionalText(data.issueReasonDescription),
     isIsolatedAct: optionalBoolean(data.isIsolatedAct),
+    isSpecimen: optionalBoolean(data.isSpecimen),
+    selfBilling: selfBillingDataFrom(data.selfBilling, 'selfBilling'),
     serie: optionalText(data.serie),
+    innerDocumentNumber: optionalText(data.innerDocumentNumber),
+    rappelPeriod: datePeriodDataFrom(data.rappelPeriod, 'rappelPeriod'),
+    receiverTypeCode: optionalText(data.receiverTypeCode),
+    transportDocumentTypeCode: optionalText(data.transportDocumentTypeCode),
     emitter: partyDataFrom(data.emitter, 'emitter'),
     receiver: isRecord(data.receiver) ? partyDataFrom(data.receiver, 'receiver') : null,
-    payer: isRecord(data.payer) ? partyDataFrom(data.payer, 'payer') : null,
+    paymentParty: isRecord(data.paymentParty)
+      ? partyDataFrom(data.paymentParty, 'paymentParty')
+      : null,
+    transportServiceProviderParty: isRecord(data.transportServiceProviderParty)
+      ? partyDataFrom(data.transportServiceProviderParty, 'transportServiceProviderParty')
+      : null,
+    receiptTypeCode: optionalText(data.receiptTypeCode),
+    rentReceipt: rentReceiptDataFrom(data.rentReceipt, 'rentReceipt'),
     lines: data.lines
       .filter(isRecord)
       .map((line, index) => lineItemDataFrom(line, `lines.${index}`)),
-    totals: totalsDataFrom(data.totals, 'totals'),
-    originalIud: optionalText(data.originalIud),
-    creditNoteReason: optionalText(data.creditNoteReason),
-    debitNoteReason: optionalText(data.debitNoteReason),
-    returnNoteReason: optionalText(data.returnNoteReason),
+    totals: isRecord(data.totals) ? totalsDataFrom(data.totals, 'totals') : null,
+    references: referencesDataFrom(data.references, 'references'),
+    payments: paymentsDataFrom(data.payments, 'payments'),
+    delivery: deliveryDataFrom(data.delivery, 'delivery'),
+    transportRoute: transportRouteDataFrom(data.transportRoute, 'transportRoute'),
+    note: optionalText(data.note),
     contingency: contingencyDataFrom(data.contingency),
     extraFields: isRecord(data.extraFields) ? data.extraFields : {},
   };
@@ -151,7 +202,15 @@ function contingencyDataFrom(value: unknown): ContingencyData | null {
   }
 
   return {
+    ledCode: optionalText(value.ledCode),
     iuc: optionalText(value.iuc),
+    issueDate: requiredText(
+      value.issueDate,
+      'contingency.issueDate',
+      'Contingency issue date is required.',
+      'contingency.issue_date_required',
+    ),
+    issueTime: optionalText(value.issueTime),
     reasonTypeCode: requiredText(
       value.reasonTypeCode,
       'contingency.reasonTypeCode',
@@ -176,4 +235,10 @@ function optionalBoolean(value: unknown): boolean | null {
   }
 
   return null;
+}
+
+function requiresTotals(type: DocumentType): boolean {
+  return (
+    type !== DocumentType.ElectronicReceipt && type !== DocumentType.ElectronicTransportDocument
+  );
 }

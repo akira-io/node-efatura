@@ -67,9 +67,10 @@ describe('data validation', () => {
       type: DocumentType.ElectronicSalesTicket,
       receiver: null,
       totals: {
-        subtotal: 1000,
-        taxTotal: 150,
-        grandTotal: 19000,
+        priceExtensionTotalAmount: 1000,
+        netTotalAmount: 1000,
+        taxTotalAmount: 150,
+        payableAmount: 19000,
       },
     });
 
@@ -81,9 +82,10 @@ describe('data validation', () => {
       type: DocumentType.ElectronicSalesTicket,
       receiver: null,
       totals: {
-        subtotal: 18000,
-        taxTotal: 2000,
-        grandTotal: 20000,
+        priceExtensionTotalAmount: 18000,
+        netTotalAmount: 18000,
+        taxTotalAmount: 2000,
+        payableAmount: 20000,
       },
     });
 
@@ -97,33 +99,39 @@ describe('data validation', () => {
   it('requires credit note references', () => {
     const payload = baseInvoicePayload({
       type: DocumentType.ElectronicCreditNote,
-      originalIud: '',
-      creditNoteReason: '',
+      issueReasonCode: '2',
+      references: [],
     });
 
     expectValidation(
       () => creditNoteDataFrom({ invoice: payload }),
-      'invoice.originalIud',
-      'Original IUD is required for credit notes.',
+      'invoice.references',
+      'References are required for credit, debit, and return notes.',
     );
   });
 
   it('requires NA tax exemption reason', () => {
     expectValidation(
-      () => taxDataFrom({ type: 'NA', rate: 0, amount: 0, exemptionReason: null }),
-      'exemptionReason',
+      () => taxDataFrom({ taxTypeCode: 'NA', taxExemptionReasonCode: null }),
+      'taxExemptionReasonCode',
       'NA tax requires an exemption reason.',
     );
   });
 
   it('rejects negative totals and requires party fields', () => {
     expectValidation(
-      () => totalsDataFrom({ subtotal: -1, taxTotal: 0, grandTotal: 0 }),
-      'subtotal',
+      () =>
+        totalsDataFrom({
+          priceExtensionTotalAmount: -1,
+          netTotalAmount: 0,
+          taxTotalAmount: 0,
+          payableAmount: 0,
+        }),
+      'priceExtensionTotalAmount',
       'Totals cannot be negative.',
     );
 
-    expectValidation(() => partyDataFrom({ nif: '', name: '' }), 'nif', 'Party NIF is required.');
+    expectValidation(() => partyDataFrom({ name: '' }), 'taxId', 'Party TaxId is required.');
   });
 
   it('rejects invoice type mismatch in wrappers', () => {
@@ -141,8 +149,8 @@ describe('data validation', () => {
 function validConfig() {
   return {
     transmitterNif: '100200300',
-    transmitterLed: 'LED123',
-    softwareCode: 'SW-001',
+    transmitterLed: '123',
+    softwareCode: 'SW001',
     softwareName: 'Efatura Suite',
     softwareVersion: '1.0.0',
     middlewareBaseUrl: 'https://middleware.example',

@@ -3,26 +3,75 @@ import { messages } from '../../support/messages';
 import { optionalText } from '../../support/normalizers';
 import { EfaturaValidationError } from '../errors';
 
+export enum TaxTypeCode {
+  NotApplicable = 'NA',
+  IVA = 'IVA',
+  StampTax = 'IS',
+  IncomeTax = 'IR',
+}
+
 export interface TaxData {
-  type: string;
-  rate: number;
-  amount: number;
-  exemptionReason: string | null;
+  taxTypeCode: TaxTypeCode;
+  stampTaxCode: string | null;
+  taxPercentage: number | null;
+  taxAmount: number | null;
+  taxExemptionReasonCode: string | null;
+  taxTotal: number | null;
 }
 
 export const taxDataSchema = z
   .object({
-    type: z.preprocess(normalizeOptionalText, z.string().min(1)),
-    rate: z.coerce.number().finite(),
-    amount: z.coerce.number().finite(),
-    exemptionReason: z.preprocess(normalizeOptionalText, z.string().nullable()),
+    taxTypeCode: z.preprocess(
+      normalizeTaxType,
+      z.enum([
+        TaxTypeCode.NotApplicable,
+        TaxTypeCode.IVA,
+        TaxTypeCode.StampTax,
+        TaxTypeCode.IncomeTax,
+      ]),
+    ),
+    stampTaxCode: z.preprocess(
+      normalizeOptionalText,
+      z
+        .string()
+        .regex(/^[1-9]$/)
+        .nullable(),
+    ),
+    taxPercentage: z.coerce.number().finite().gt(0).max(100).nullable(),
+    taxAmount: z.coerce.number().finite().gt(0).nullable(),
+    taxExemptionReasonCode: z.preprocess(normalizeOptionalText, z.string().min(1).nullable()),
+    taxTotal: z.coerce.number().finite().gt(0).nullable(),
   })
   .superRefine((tax, context) => {
-    if (tax.type === 'NA' && tax.exemptionReason === null) {
+    if (tax.taxTypeCode === TaxTypeCode.NotApplicable && tax.taxExemptionReasonCode === null) {
       context.addIssue({
         code: 'custom',
-        path: ['exemptionReason'],
+        path: ['taxExemptionReasonCode'],
         message: messages.validation.naTaxExemptionRequired,
+      });
+
+      return;
+    }
+
+    const valueCount = [
+      tax.taxPercentage !== null,
+      tax.taxAmount !== null,
+      tax.taxExemptionReasonCode !== null,
+    ].filter(Boolean).length;
+
+    if (valueCount !== 1) {
+      context.addIssue({
+        code: 'custom',
+        path: ['taxPercentage'],
+        message: 'Tax must contain exactly one value field.',
+      });
+    }
+
+    if (tax.taxTypeCode === TaxTypeCode.StampTax && tax.stampTaxCode === null) {
+      context.addIssue({
+        code: 'custom',
+        path: ['stampTaxCode'],
+        message: 'StampTaxCode is required for stamp tax.',
       });
     }
   });
@@ -30,45 +79,50 @@ export const taxDataSchema = z
 export function taxDataFrom(data: Record<string, unknown>, prefix = ''): TaxData {
   const field = (name: string): string => (prefix === '' ? name : `${prefix}.${name}`);
   const result = taxDataSchema.safeParse({
-    type: data.type,
-    rate: data.rate,
-    amount: data.amount,
-    exemptionReason: data.exemptionReason,
+    taxTypeCode: data.taxTypeCode,
+    stampTaxCode: data.stampTaxCode,
+    taxPercentage: nullableNumber(data.taxPercentage),
+    taxAmount: nullableNumber(data.taxAmount),
+    taxExemptionReasonCode: data.taxExemptionReasonCode,
+    taxTotal: nullableNumber(data.taxTotal),
   });
 
   if (!result.success) {
-    const issuePath = result.error.issues[0]?.path.join('.');
+    const issuePath = result.error.issues[0]?.path.join('.') ?? 'tax';
+    const issueMessage = result.error.issues[0]?.message ?? 'Tax is invalid.';
 
-    if (issuePath === 'type') {
-      throw new EfaturaValidationError(field('type'), 'Tax type is required.', 'tax.type_required');
-    }
-
-    if (issuePath === 'rate') {
-      throw new EfaturaValidationError(field('rate'), 'Tax rate is required.', 'tax.rate_required');
-    }
-
-    if (issuePath === 'amount') {
-      throw new EfaturaValidationError(
-        field('amount'),
-        'Tax amount is required.',
-        'tax.amount_required',
-      );
-    }
-
-    if (issuePath === 'exemptionReason') {
-      throw new EfaturaValidationError(
-        field('exemptionReason'),
-        messages.validation.naTaxExemptionRequired,
-        'validation.na_tax_exemption_required',
-      );
-    }
-
-    throw new EfaturaValidationError(field(issuePath ?? 'tax'), 'Tax is invalid.', 'tax.invalid');
+    throw new EfaturaValidationError(field(issuePath), issueMessage, 'tax.invalid');
   }
 
   return result.data;
 }
 
+function nullableNumber(value: unknown): unknown {
+  return value === undefined || value === null || value === '' ? null : value;
+}
+
 function normalizeOptionalText(value: unknown): string | null {
   return optionalText(value);
+}
+
+function normalizeTaxType(value: unknown): TaxTypeCode | null {
+  const text = optionalText(value)?.toUpperCase();
+
+  if (text === TaxTypeCode.NotApplicable) {
+    return TaxTypeCode.NotApplicable;
+  }
+
+  if (text === TaxTypeCode.IVA) {
+    return TaxTypeCode.IVA;
+  }
+
+  if (text === TaxTypeCode.StampTax) {
+    return TaxTypeCode.StampTax;
+  }
+
+  if (text === TaxTypeCode.IncomeTax) {
+    return TaxTypeCode.IncomeTax;
+  }
+
+  return null;
 }

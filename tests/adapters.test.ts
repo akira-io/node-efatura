@@ -8,7 +8,7 @@ const efatura = createEfatura({
   transmitterNif: '100200300',
   transmitterLed: '123',
   transmitterKey: 'k'.repeat(64),
-  softwareCode: 'SW-001',
+  softwareCode: 'SW001',
   softwareName: 'Efatura Suite',
   softwareVersion: '1.0.0',
   middlewareBaseUrl: 'https://localhost:3443',

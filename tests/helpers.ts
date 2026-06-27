@@ -7,33 +7,67 @@ export function baseInvoicePayload(
     {
       type: DocumentType.ElectronicInvoice,
       issueDate: '2026-02-08',
+      issueTime: '10:30:00',
       emitter: {
-        nif: '100200300',
+        taxId: {
+          countryCode: 'CV',
+          value: '100200300',
+        },
         name: 'Emitter',
+        address: {
+          countryCode: 'CV',
+          addressDetail: 'Emitter address',
+        },
+        contacts: {
+          email: 'issuer@example.cv',
+          telephone: '5551234',
+        },
       },
       receiver: {
-        nif: '900800700',
+        taxId: {
+          countryCode: 'CV',
+          value: '900800700',
+        },
         name: 'Receiver',
+        address: {
+          countryCode: 'CV',
+          addressDetail: 'Receiver address',
+        },
+        contacts: {
+          email: 'receiver@example.cv',
+          telephone: '5554321',
+        },
       },
       lines: [
         {
-          description: 'Item',
-          quantity: 1,
-          unitPrice: 1000,
-          total: 1000,
+          lineTypeCode: 'N',
+          quantity: {
+            value: 1,
+            unitCode: 'EA',
+          },
+          price: 1000,
+          priceExtension: 1000,
+          netTotal: 1000,
           taxes: [
             {
-              type: 'IVA',
-              rate: 15,
-              amount: 150,
+              taxTypeCode: 'IVA',
+              taxPercentage: 15,
+              taxTotal: 150,
             },
           ],
+          item: {
+            description: 'Item',
+            emitterIdentification: 'ITEM1',
+          },
         },
       ],
       totals: {
-        subtotal: 1000,
-        taxTotal: 150,
-        grandTotal: 1150,
+        priceExtensionTotalAmount: 1000,
+        chargeTotalAmount: 0,
+        discountTotalAmount: 0,
+        netTotalAmount: 1000,
+        taxTotalAmount: 150,
+        payableAmount: 1150,
       },
     },
     overrides,

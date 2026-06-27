@@ -2,34 +2,43 @@ import type { DocumentType } from '../../domain/enums/document-type';
 import type { InvoiceData } from '../../domain/value-objects/invoice-data';
 
 export type PartyInput = {
-  nif: string;
+  taxId: {
+    countryCode: string;
+    value: string;
+  };
   name: string;
-  address?: string | null;
-  city?: string | null;
-  country?: string | null;
-  email?: string | null;
-  phone?: string | null;
+  address?: Record<string, unknown> | null;
+  contacts?: Record<string, unknown> | null;
 };
 
 export type TaxInput = {
-  type: string;
-  rate: number;
-  amount: number;
-  exemptionReason?: string | null;
+  taxTypeCode: string;
+  stampTaxCode?: string | null;
+  taxPercentage?: number | null;
+  taxAmount?: number | null;
+  taxExemptionReasonCode?: string | null;
+  taxTotal?: number | null;
 };
 
 export type LineItemInput = {
-  description: string;
-  quantity: number;
-  unitPrice: number;
-  total: number;
+  quantity: Record<string, unknown>;
+  price?: number | null;
+  priceExtension?: number | null;
+  netTotal?: number | null;
   taxes?: TaxInput[];
+  item: Record<string, unknown>;
 };
 
 export type TotalsInput = {
-  subtotal: number;
-  taxTotal: number;
-  grandTotal: number;
+  priceExtensionTotalAmount: number;
+  chargeTotalAmount?: number | null;
+  discountTotalAmount?: number | null;
+  netTotalAmount: number;
+  taxTotalAmount: number;
+  withholdingTaxTotalAmount?: number | null;
+  payableRoundingAmount?: number | null;
+  payableAmount: number;
+  payableAlternativeAmounts?: Record<string, unknown>[];
 };
 
 type InvoiceRecord = Record<string, unknown> & {
@@ -92,14 +101,14 @@ export class InvoiceBuilder {
     return this;
   }
 
-  originalIud(originalIud: string): this {
-    this.data.originalIud = originalIud;
+  issueReasonCode(issueReasonCode: string): this {
+    this.data.issueReasonCode = issueReasonCode;
 
     return this;
   }
 
-  creditNoteReason(creditNoteReason: string): this {
-    this.data.creditNoteReason = creditNoteReason;
+  references(references: Record<string, unknown>[]): this {
+    this.data.references = references;
 
     return this;
   }

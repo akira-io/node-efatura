@@ -6,8 +6,8 @@ import { EfaturaValidationError } from '../src/domain/errors';
 function makeConfig(overrides: EfaturaConfig = {}): EfaturaConfig {
   return {
     transmitterNif: '100200300',
-    transmitterLed: 'LED123',
-    softwareCode: 'SW-001',
+    transmitterLed: '123',
+    softwareCode: 'SW001',
     softwareName: 'Efatura Suite',
     softwareVersion: '1.0.0',
     middlewareBaseUrl: 'https://middleware.example',
@@ -39,8 +39,8 @@ describe('resolveConfig', () => {
     const config = resolveConfig(makeConfig({ environment: Environment.Homologation }));
 
     expect(config.transmitterNif).toBe('100200300');
-    expect(config.transmitterLed).toBe('LED123');
-    expect(config.softwareCode).toBe('SW-001');
+    expect(config.transmitterLed).toBe('123');
+    expect(config.softwareCode).toBe('SW001');
     expect(config.middlewareBaseUrl).toBe('https://middleware.example');
     expect(config.dfaBaseUrl).toBe('https://pe.efatura.cv/dfe/view');
     expect(config.environment).toBe(Environment.Homologation);
