@@ -60,8 +60,8 @@ import { InMemoryGoldenVectorRepository } from './infrastructure/golden-vectors/
 import { FetchMiddlewareTransport } from './infrastructure/middleware/fetch-middleware-transport';
 import { FetchPlatformTransport } from './infrastructure/middleware/fetch-platform-transport';
 import { InMemorySequenceStore } from './infrastructure/sequence/in-memory-sequence-store';
-import { MissingXadesBesSigner } from './infrastructure/signing/missing-xml-signer';
-import { MissingOfficialXsdValidator } from './infrastructure/validation/missing-xsd-validator';
+import { XadesBesSigner } from './infrastructure/signing/xades-bes-signer';
+import { XmllintXsdValidator } from './infrastructure/validation/xmllint-xsd-validator';
 
 export type {
   EfaturaBuildDfeXmlOptions,
@@ -90,8 +90,8 @@ export class Efatura {
     this.documentTypePolicy = dependencies.documentTypePolicy ?? new DefaultDocumentTypePolicy();
     this.clock = dependencies.clock ?? new SystemClock();
     this.sequenceStore = dependencies.sequenceStore ?? new InMemorySequenceStore();
-    this.xsdValidator = dependencies.xsdValidator ?? new MissingOfficialXsdValidator();
-    this.xmlSigner = dependencies.xmlSigner ?? new MissingXadesBesSigner();
+    this.xsdValidator = dependencies.xsdValidator ?? new XmllintXsdValidator();
+    this.xmlSigner = dependencies.xmlSigner ?? new XadesBesSigner();
     this.dfaRenderer = dependencies.dfaRenderer ?? new PdfDfaRenderer();
     this.middlewareTransport = dependencies.middlewareTransport ?? new FetchMiddlewareTransport();
     this.platformTransport = dependencies.platformTransport ?? new FetchPlatformTransport();
@@ -269,9 +269,9 @@ export class Efatura {
       iud: options.iud,
       qrCodeUrl: this.dfaQrCodeUrl(options.iud),
       title: options.title,
-      issuerName: options.invoice?.emitter.name,
-      customerName: options.invoice?.receiver?.name,
-      total: options.invoice?.totals.grandTotal,
+      issuerName: options.invoice?.emitter.name ?? undefined,
+      customerName: options.invoice?.receiver?.name ?? undefined,
+      total: options.invoice?.totals?.payableAmount,
       currency: options.currency,
       emissionMode: options.emissionMode ?? 'Online',
     });

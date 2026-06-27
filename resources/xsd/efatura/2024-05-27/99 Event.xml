@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Id = CVRepositórioAnoMêsDiaHoraMinutoSegundoNif
+	EventTypeCode:
+		FDC = Fiscal Document Cancellation - Cancelamento/Anulação de DFE;
+		UDN = Unused Document Number       - Inutilização de Número de Documento;
+-->
+<Event Id="CV1210805181011123456789" Version="1.0" EventTypeCode="FDC" xmlns="urn:cv:efatura:xsd:v1.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="urn:cv:efatura:xsd:v1.0 EnvelopedSignature.xsd">
+	<EmitterTaxId CountryCode="CV">123456789</EmitterTaxId>
+	<IssueDateTime>2021-01-01T01:02:03</IssueDateTime>
+	<IssueReasonDescription>Descrição do motivo de emissão do evento</IssueReasonDescription>
+	<!-- Para o evento FDC deve indicar apenas o IUD -->
+	<!-- <IUD>CV1200520123456789000112345678901112345678904</IUD> -->
+	<!-- Para o evento UDN deve indicar -->
+	<Year>2021</Year>
+	<LedCode>1</LedCode>
+	<Serie>ABC</Serie>
+	<DocumentTypeCode>1</DocumentTypeCode>
+	<DocumentNumberStart>1</DocumentNumberStart>
+	<DocumentNumberEnd>10</DocumentNumberEnd>
+	<Transmission>
+		<IssueMode>1</IssueMode>
+		<TransmitterTaxId CountryCode="CV">123456789</TransmitterTaxId>
+		<Software>
+			<Code>CODE</Code>
+			<Name>Nome do Software usado pelo Contribuinte</Name>
+			<Version>1.2.3.4</Version>
+		</Software>
+	</Transmission>
+	<RepositoryCode>1</RepositoryCode>
+	<ds:Signature Id="EmitterPartySignatureId" xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
+		<ds:SignedInfo>
+			<ds:CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"/>
+			<ds:SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"/>
+			<ds:Reference Id="DataReferenceId" URI="#CV1200520123456789000112345678901112345678904">
+				<ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/>
+				<ds:DigestValue>ozcoAydr6KqHP+OtogQTxJIByzCzzWm8gNAOkpwBLMs=</ds:DigestValue>
+			</ds:Reference>
+			<ds:Reference URI="#SignedPropertiesId"
+				Type="http://uri.etsi.org/01903#SignedProperties">
+				<ds:Transforms>
+					<ds:Transform Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"/>
+				</ds:Transforms>
+				<ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/>
+				<ds:DigestValue>xtFg15YLHtpf7KIhN0naU80wzSr99+17PXcVobbqEjc=</ds:DigestValue>
+			</ds:Reference>
+		</ds:SignedInfo>
+		<ds:SignatureValue>U2lnbmF0dXJlVmFsdWU=</ds:SignatureValue>
+		<ds:KeyInfo>
+			<ds:X509Data>
+				<ds:X509Certificate>WDUwOUNlcnRpZmljYXRl</ds:X509Certificate>
+			</ds:X509Data>
+		</ds:KeyInfo>
+		<ds:Object>
+			<xades:QualifyingProperties xmlns:xades="http://uri.etsi.org/01903/v1.3.2#"
+				Target="#EmitterPartySignatureId">
+				<xades:SignedProperties Id="SignedPropertiesId">
+					<xades:SignedSignatureProperties>
+						<xades:SigningTime>2020-11-06T11:01:02</xades:SigningTime>
+						<xades:SigningCertificate>
+							<xades:Cert>
+								<xades:CertDigest>
+									<ds:DigestMethod
+										Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/>
+									<ds:DigestValue>RGlnZXN0VmFsdWU=</ds:DigestValue>
+								</xades:CertDigest>
+								<xades:IssuerSerial>
+									<ds:X509IssuerName>Emitter Party Name</ds:X509IssuerName>
+									<ds:X509SerialNumber>1234567890</ds:X509SerialNumber>
+								</xades:IssuerSerial>
+							</xades:Cert>
+						</xades:SigningCertificate>
+						<xades:SignatureProductionPlace>
+							<xades:City>Praia</xades:City>
+							<xades:StateOrProvince>Santiago</xades:StateOrProvince>
+							<xades:PostalCode>7600</xades:PostalCode>
+							<xades:CountryName>Cabo Verde</xades:CountryName>
+						</xades:SignatureProductionPlace>
+					</xades:SignedSignatureProperties>
+					<xades:SignedDataObjectProperties>
+						<xades:DataObjectFormat ObjectReference="#DataReferenceId">
+							<xades:MimeType>text/xml</xades:MimeType>
+						</xades:DataObjectFormat>
+					</xades:SignedDataObjectProperties>
+				</xades:SignedProperties>
+			</xades:QualifyingProperties>
+		</ds:Object>
+	</ds:Signature>
+</Event>

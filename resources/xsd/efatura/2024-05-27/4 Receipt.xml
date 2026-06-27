@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Dfe xmlns="urn:cv:efatura:xsd:v1.0" Version="1.0"
+	Id="CV1200520123456789000112345678901112345678904" DocumentTypeCode="4"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="urn:cv:efatura:xsd:v1.0 EnvelopedSignature.xsd">
+
+	<Receipt>
+		<SelfBilling>
+			<AuthorizationId>cdb85a77-dda9-4bed-9b49-42ccbf516476</AuthorizationId>
+			<AuthorizationCode>123456</AuthorizationCode>
+		</SelfBilling>
+		<LedCode>1</LedCode>
+		<Serie>A2020</Serie>
+		<DocumentNumber>12345</DocumentNumber>
+		<IssueDate>2021-01-01</IssueDate>
+		<IssueTime>11:01:02</IssueTime>
+
+		<EmitterParty>
+			<TaxId CountryCode="CV">123456789</TaxId>
+			<Name>Nome do Emissor</Name>
+			<Address CountryCode="CV">
+				<City>Praia</City>
+				<Region>Região</Region>
+				<Street>Rua XPTO</Street>
+				<StreetDetail>Ao lado Bar X</StreetDetail>
+				<BuildingName>Nome</BuildingName>
+				<BuildingNumber>12345</BuildingNumber>
+				<PostalCode>12345</PostalCode>
+				<AddressDetail>Ao lado da padaria</AddressDetail>
+				<AddressCode>CV774741741037410321</AddressCode>
+			</Address>
+			<Contacts>
+				<Telephone>1234567</Telephone>
+				<Mobilephone>9123456</Mobilephone>
+				<Telefax>3123456</Telefax>
+				<Email>email@empresa.cv</Email>
+				<Website>https://www.empresa.cv/a/b/c?a=b#abc</Website>
+			</Contacts>
+		</EmitterParty>
+
+		<ReceiverParty>
+			<TaxId CountryCode="PT">123456789</TaxId>
+			<Name>Nome do Destinatário</Name>
+			<Address CountryCode="PT">
+				<City>Praia</City>
+				<Region>Região</Region>
+				<Street>Rua XPTO</Street>
+				<StreetDetail>Ao lado Bar X</StreetDetail>
+				<BuildingName>Nome</BuildingName>
+				<BuildingNumber>12345</BuildingNumber>
+				<PostalCode>12345</PostalCode>
+				<AddressDetail>Ao lado da padaria</AddressDetail>
+			</Address>
+			<Contacts>
+				<Telephone>1234567</Telephone>
+				<Mobilephone>9123456</Mobilephone>
+				<Telefax>3123456</Telefax>
+				<Email>email@empresa.cv</Email>
+			</Contacts>
+		</ReceiverParty>
+
+		<!-- Entidade Pagadora -->
+		<!--<PaymentParty>
+			<TaxId CountryCode="CV">123456789</TaxId>
+			<Name>Nome da entidade pagadora</Name>
+			<Address CountryCode="CV">
+				<AddressDetail>Perto da farmcia universal</AddressDetail>
+				<AddressCode>CV774741741037410321</AddressCode>
+			</Address>
+			<Contacts>
+				<Telephone>1234567</Telephone>
+				<Mobilephone>9123456</Mobilephone>
+				<Telefax>3123456</Telefax>
+				<Email>email@empresa.cv</Email>
+				<Website>www.exemplo.cv</Website>
+			</Contacts>
+		</PaymentParty>-->
+
+		<ReceiptTypeCode>1</ReceiptTypeCode>
+
+		<RentReceipt>
+			<AssetId>123/12</AssetId>
+			<RentPurposeTypeCode>1</RentPurposeTypeCode>
+			<ContractTypeCode>1</ContractTypeCode>
+			<RentTypeCode>1</RentTypeCode>
+			<ReferencePeriod>2020-06</ReferencePeriod>
+			<Address CountryCode="CV">
+				<AddressDetail>Ao lado da padaria</AddressDetail>
+				<AddressCode>CV774741741037410321</AddressCode>
+			</Address>
+		</RentReceipt>
+
+		<References>
+			<Reference>
+				<FiscalDocument IsOldDocument="true">1/2010/SERIE1/12345</FiscalDocument>
+				<InnerDocumentNumber>123456789012345678901234567890</InnerDocumentNumber>
+				<PaymentAmount>1000</PaymentAmount>
+				<Tax TaxTypeCode="NA">
+					<TaxExemptionReasonCode>1</TaxExemptionReasonCode>
+				</Tax>
+			</Reference>
+			<Reference>
+				<FiscalDocument IsOldDocument="false">CV2211004999999999000010500000000194937284751</FiscalDocument>
+				<PaymentAmount>1000</PaymentAmount>
+				<Tax TaxTypeCode="NA">
+					<TaxExemptionReasonCode>1</TaxExemptionReasonCode>
+				</Tax>
+			</Reference>
+		</References>
+
+		<!-- Meio de Pagamento -->
+		<!--
+		Permite vários meios de pagamento, ou seja, pagamentos mistos.
+		Harmonizar com o SAFT. Campo PaymentMechanism.
+		Criar campos de pagamento em prestação e referencia do acordo de pagamento em prestação.
+		-->
+		<Payments>
+			<Payment>
+				<PaymentMeansCode>31</PaymentMeansCode>
+				<PaymentReference>1234567890</PaymentReference>
+				<PaymentDate>2021-01-01</PaymentDate>
+				<PaymentAmount>1000</PaymentAmount>
+				<PayeeFinancialAccount>
+					<NIB>123456789012345678901</NIB>
+					<Name>Nome</Name>
+				</PayeeFinancialAccount>
+			</Payment>
+			<Payment>
+				<PaymentMeansCode>1</PaymentMeansCode>
+				<PaymentReference>1234567891</PaymentReference>
+				<PaymentDate>2021-01-01</PaymentDate>
+				<PaymentAmount>2000</PaymentAmount>
+				<PayeeFinancialAccount>
+					<NIB>123456789012345678901</NIB>
+					<Name>Nome da Conta de Pagamento no Banco</Name>
+				</PayeeFinancialAccount>
+			</Payment>
+		</Payments>
+
+		<Note>Notas/Observações opcionais</Note>
+	</Receipt>
+
+	<Transmission>
+		<IssueMode>3</IssueMode>
+		<TransmitterTaxId CountryCode="CV">123456789</TransmitterTaxId>
+		<Software>
+			<Code>CODE</Code>
+			<Name>Nome do Software usado pelo Contribuinte</Name>
+			<Version>1.2.3.4</Version>
+		</Software>
+		<Contingency>
+			<LedCode>1</LedCode>
+			<IUC>2020/1</IUC>
+			<IssueDate>2021-01-01</IssueDate>
+			<IssueTime>01:02:03</IssueTime>
+			<ReasonTypeCode>1</ReasonTypeCode>
+		</Contingency>
+	</Transmission>
+
+	<RepositoryCode>1</RepositoryCode>
+
+	<ds:Signature Id="EmitterPartySignatureId" xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
+		<ds:SignedInfo>
+			<ds:CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"/>
+			<ds:SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"/>
+			<ds:Reference Id="DataReferenceId" URI="#CV1200520123456789000112345678901112345678904">
+				<ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/>
+				<ds:DigestValue>ozcoAydr6KqHP+OtogQTxJIByzCzzWm8gNAOkpwBLMs=</ds:DigestValue>
+			</ds:Reference>
+			<ds:Reference URI="#SignedPropertiesId"
+				Type="http://uri.etsi.org/01903#SignedProperties">
+				<ds:Transforms>
+					<ds:Transform Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"/>
+				</ds:Transforms>
+				<ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/>
+				<ds:DigestValue>xtFg15YLHtpf7KIhN0naU80wzSr99+17PXcVobbqEjc=</ds:DigestValue>
+			</ds:Reference>
+		</ds:SignedInfo>
+		<ds:SignatureValue>U2lnbmF0dXJlVmFsdWU=</ds:SignatureValue>
+		<ds:KeyInfo>
+			<ds:X509Data>
+				<ds:X509Certificate>WDUwOUNlcnRpZmljYXRl</ds:X509Certificate>
+			</ds:X509Data>
+		</ds:KeyInfo>
+		<ds:Object>
+			<xades:QualifyingProperties xmlns:xades="http://uri.etsi.org/01903/v1.3.2#"
+				Target="#EmitterPartySignatureId">
+				<xades:SignedProperties Id="SignedPropertiesId">
+					<xades:SignedSignatureProperties>
+						<xades:SigningTime>2020-11-06T11:01:02</xades:SigningTime>
+						<xades:SigningCertificate>
+							<xades:Cert>
+								<xades:CertDigest>
+									<ds:DigestMethod
+										Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/>
+									<ds:DigestValue>RGlnZXN0VmFsdWU=</ds:DigestValue>
+								</xades:CertDigest>
+								<xades:IssuerSerial>
+									<ds:X509IssuerName>Emitter Party Name</ds:X509IssuerName>
+									<ds:X509SerialNumber>1234567890</ds:X509SerialNumber>
+								</xades:IssuerSerial>
+							</xades:Cert>
+						</xades:SigningCertificate>
+						<xades:SignatureProductionPlace>
+							<xades:City>Praia</xades:City>
+							<xades:StateOrProvince>Santiago</xades:StateOrProvince>
+							<xades:PostalCode>7600</xades:PostalCode>
+							<xades:CountryName>Cabo Verde</xades:CountryName>
+						</xades:SignatureProductionPlace>
+					</xades:SignedSignatureProperties>
+					<xades:SignedDataObjectProperties>
+						<xades:DataObjectFormat ObjectReference="#DataReferenceId">
+							<xades:MimeType>text/xml</xades:MimeType>
+						</xades:DataObjectFormat>
+					</xades:SignedDataObjectProperties>
+				</xades:SignedProperties>
+			</xades:QualifyingProperties>
+		</ds:Object>
+	</ds:Signature>
+</Dfe>

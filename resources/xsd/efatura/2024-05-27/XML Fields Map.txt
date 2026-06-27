@@ -1,0 +1,300 @@
+######################################## Legenda #########################################
+ ?    Opcional.
+ *    0 ou mais ocorrências.
+ +    1 ou mais ocorrências.
+ |    Um dos elementos listados.
+ @    Atributo XML.
+{1}   Obrigatório. Ocorre exatamente uma vez.
+{1}?  Obrigatório com exceção em alguma situação. Ocorre exatamente uma vez.
+{#,}  Ocorre no mínimo # vezes e sem limite máximo de ocorrências.
+[X]   Referência à estrutura X.
+R()   Regras.
+A#    Alfanumérico com no máximo # carateres.
+N#    Número inteiro com no máximo # dígitos.
+
+D5    Número decimal com no máximo 5 casas decimais e +/-.
+D5G0  Número decimal com no máximo 5 casas decimais e > 0.
+D5GE0 Número decimal com no máximo 5 casas decimais e >= 0.
+PERC  Número decimal entre 0 a 100 com no máximo 3 casas decimais.
+ENUM  Enumeração com valores pré-definidos.
+BOOL  (false|true).
+DESC  Descrição. Alfanumérico com mínimo de 1 e máximo de 300 carateres.
+PERI  Período no formato AAAA-MM.
+D     Data no formato AAAA-MM-DD.
+T     Hora no formato HH:MM:SS.
+DT    Data/Hora no formato AAAA-MM-DDTHH:MM:SS.
+ID    Alfanumérico com mínimo de 1 e máximo de 50 carateres sem espaços.
+CODE  Alfanumérico com mínimo de 1 e máximo de 50 carateres sem espaços.
+NIF   Alfanumérico com mínimo de 1 e máximo de 50 carateres sem espaços.
+NIB   Número inteiro com exatamente 21 dígitos.
+NAME  Alfanumérico com mínimo de 3 e máximo de 150 carateres.
+TEL   Número inteiro com no máximo 20 dígitos.
+IUD   Alfanumérico com exatamente 45 carateres.
+SWVER Alfanumérico com mínimo de 1 e máximo de 50 carateres e sem espaços extras.
+REGX  Valor validado por Expressão Regular definida no XSD.
+UUID  Universal Unique Identifier
+ANY   Qualquer estrutura de texto limpo ou XML.
+
+##########################################################################################
+Campo XML                      Obr? Tipo  Referência                        Regras
+##########################################################################################
+Dfe@Version                    {1}  REGX
+Dfe@Id                         {1}  IUD
+Dfe@DocumentTypeCode           {1}  ENUM
+
+IsIsolatedAct                  ?    BOOL
+SelfBilling                    ?          [SelfBilling]                     R(Apenas FTE, FRE, RCE, NCE, NDE, DVE)
+LedCode                        {1}  N5
+Serie                          {1}  REGX
+DocumentNumber                 {1}  N9
+InnerDocumentNumber            ?    CODE
+IssueDate                      {1}  D
+IssueTime                      {1}  T
+
+DueDate                        ?    D                                       R(Apenas FTE)
+OrderReference                 ?          [OrderReference]                  R(Apenas FTE e FRE)
+TaxPointDate                   ?    D                                       R(Apenas FTE e FRE)
+
+IssueReasonCode                {1}? ENUM                                    R(Apenas NCE, NDE, DVE)
+IssueReasonDescription         ?    A500                                    R(Apenas DVE. Min10. Max500)
+RappelPeriod                   ?    [DatePeriod]                            R(Apenas NCE)
+
+ReceiverTypeCode               ?    ENUM                                    R(Apenas DTE)
+TransportDocumentTypeCode      {1}? ENUM                                    R(Apenas DTE)
+
+EmitterParty                   {1}        [Party]
+ReceiverParty                  {1}?       [Party]                           R(Opcional no TVE, mas obrigatório se >= 20000)
+PaymentParty                   ?          [Party]                           R(Apenas FRE, RCE e NLE)
+TransportServiceProviderParty  ?          [Party]                           R(Apenas DTE)
+
+ReceiptTypeCode                {1}? ENUM                                    R(Apenas RCE)
+RentReceipt                    ?          [RentReceipt]                     R(Apenas RCE)
+
+Lines                          {1}?       [Lines]                           R(RCE não tem)
+
+Totals                         {1}?       [Totals]                          R(RCE e DTE não tem)
+
+TransportRoute                 {1}?       [TransportRoute]                  R(Apenas DTE)
+
+References                     {1}?       [References]                      R(Apenas FTE, FRE, RCE, NCE, NDE e DVE. Opcional na FTE e FRE)
+
+Payments                       ?          [PaymentsInvoice|PaymentsPayment] R(Apenas FTE, FRE, TVE, RCE e NLE)
+
+Delivery                       ?          [Delivery]                        R(Apenas FTE, FRE, TVE)
+
+Note                           ?    A500                                    R(Min10. Max500)
+
+ExtraFields                    ?          [ExtraFields]
+
+Transmission                   {1}        [Transmission]
+
+RepositoryCode                 {1}  ENUM
+
+Signature                      {1}        [Signature]
+
+##### Referências #####
+
+SelfBilling
+    AuthorizationId            {1}  UUID
+    AuthorizationCode          {1}  A10
+
+OrderReference
+    Id                         {1}  ID
+
+Party
+    TaxId                      {1}        [TaxId]
+    Name                       {1}  NAME
+    Address                    {1}?       [Address]                         R(Opcional no TVE)
+    Contacts                   {1}?       [Contacts]                        R(Opcional no TVE)
+
+TaxId
+    @CountryCode               {1}  ENUM
+    .Value                     {1}  REGX
+
+Address
+    @CountryCode               {1}  ENUM
+    State                      ?    A100
+    City                       ?    A100
+    Region                     ?    A100
+    Street                     ?    A100
+    StreetDetail               ?    A100
+    BuildingName               ?    A100
+    BuildingNumber             ?    A100
+    BuildingFloor              ?    A100
+    PostalCode                 ?    A100
+    AddressDetail              {1}  A100
+    AddressCode                ?    REGX
+
+Contacts
+    Telephone                  ?    TEL
+    Mobilephone                ?    TEL
+    Telefax                    ?    TEL
+    Email                      ?    EMAIL
+    Website                    ?    URL
+
+Lines
+    Line                       +          [Line]
+
+Line
+    @LineTypeCode              {1}  ENUM
+    Id                         ?    ID
+    LineReferenceId            ?    ID
+    OrderLineReference         ?    N5
+    Quantity                   {1}        [Quantity]
+    Price                      {1}? D5GE0                                    R(Opcional no DTE)
+    PriceExtension             {1}? D5GE0                                    R(Opcional no DTE)
+    Discount                   ?          [Discount]
+    NetTotal                   {1}? D5GE0                                    R(Opcional no DTE)
+    Tax                        *          [Tax]                              R(Opcional no DTE, NCE, DVE)
+    Item                       {1}        [Item]
+
+Quantity
+    @UnitCode                  {1}  REGX
+    .Value                     {1}  D5GE0
+
+Discount
+    @ValueType                 ?    ENUM
+    .Value                     {1}  D5GE0
+
+Tax
+    @TaxTypeCode               {1}  ENUM
+    StampTaxCode               ?    ENUM
+    (
+        TaxPercentage |             PERC
+        TaxAmount |                 D5G0
+        TaxExemptionReasonCode      ENUM
+    )                          {1}
+
+Item
+    Description                {1}  DESC
+    PackQuantity               ?          [Quantity]
+    Name                       ?    NAME
+    BrandName                  ?    NAME
+    ModelName                  ?    NAME
+    EmitterIdentification      {1}  A50
+    StandardIdentification     ?          [StandardIdentification]
+    HazardousRiskIndicator     ?    BOOL
+    ExtraProperties            ?          [ExtraProperties]
+
+StandardIdentification
+    (
+        GTIN |                      A50
+        EAN |                       A50
+        UPC |                       A50
+        Pharmacode                  A50
+    )                          {1}
+
+ExtraProperties
+    Property                   +          [Property]
+
+Property
+    @Name                      {1}  CODE
+    .Value                     {1}  ANY
+
+ExtraFields
+    ANY                        +
+
+Totals
+    PriceExtensionTotalAmount  {1}  D5GE0
+    ChargeTotalAmount          {1}  D5GE0
+    DiscountTotalAmount        {1}  D5GE0
+    NetTotalAmount             {1}  D5GE0
+    Discount                   ?    PERC
+    TaxTotalAmount             {1}  D5GE0
+    WithholdingTaxTotalAmount  {1}? D5GE0
+    PayableRoundingAmount      ?    D5
+    PayableAmount              {1}  D5GE0
+    PayableAlternativeAmount   *    D5GE0 [PayableAlternativeAmount]
+
+PayableAlternativeAmount
+    @CurrencyCode              {1}  ENUM
+    @ExchangeRate              {1}  D5G0
+    .Value                     {1}  D5GE0
+
+PaymentsInvoice
+    PaymentDueDate             ?    D                                        R(Apenas FTE)
+    PaymentTerms               ?          [PaymentTerms]                     R(Apenas FTE)
+    PayeeFinancialAccount      ?          [PayeeFinancialAccount]            R(Apenas FTE)
+
+PaymentsPayment
+    Payment                    +          [Payment]
+
+Payment
+    PaymentMeansCode           ?    ENUM
+    PaymentReference           ?    CODE
+    PaymentDate                ?    D
+    PaymentAmount              ?    D5G0
+    PayeeFinancialAccount      ?          [PayeeFinancialAccount]
+
+PaymentTerms
+    Note                       {1}  A500
+
+PayeeFinancialAccount
+    (
+        AccountNumber |             A15
+        NIB                         NIB
+    )                          {1}
+    Name                       {1}  NAME
+
+Delivery
+    DeliveryDate               {1}  D
+    Address                    {1}        [Address]
+
+Transmission
+    IssueMode                  {1}  ENUM
+    TransmitterTaxId           {1}        [TaxId]
+    Software                   {1}        [Software]
+    Contingency                {1}?       [Contingency]                      R(Indicado se IssueMode!=1)
+
+Software
+    Code                       {1}  A10
+    Name                       {1}  NAME
+    Version                    {1}  SWVER
+
+Contingency
+    LedCode                    ?
+    IUC                        {1}?                                          R(Indicado se IssueMode=3)
+    IssueDate                  {1}  D
+    IssueTime                  ?    T                                        R(Opcional se IssueMode=3)
+    ReasonTypeCode             {1}  ENUM
+    ReasonDescription          ?    A500
+
+References
+    Reference                  +          [Reference]
+
+Reference
+    FiscalDocument             ?          [FiscalDocument]
+    InnerDocumentNumber        ?    CODE
+    PaymentAmount              ?    D5G0
+    Tax                        ?          [Tax]
+
+FiscalDocument
+    @IsOldDocument             ?    BOOL
+    .Value                     {1}  REGX
+
+RentReceipt
+    AssetId                    {1}  ID
+    RentPurposeTypeCode        {1}  ENUM
+    ContractTypeCode           {1}  ENUM
+    RentTypeCode               {1}  ENUM
+    ReferencePeriod            {1}  PERI
+    Address                    {1}        [Address]
+
+TransportRoute
+    TransportLocation          {2,}       [TransportLocation]
+
+TransportLocation
+    Address                    {1}        [Address]
+    Duration                   {1}        [Duration]
+    TransportModeCode          {1}  ENUM
+    VehicleRegistrationCode    ?    CODE
+
+Duration
+    StartDate                  {1}  D
+    StartTime                  {1}  T
+    EndDate                    ?    D
+    EndTime                    ?    T
+
+DatePeriod
+    StartDate                  {1}  D
+    EndDate                    {1}  D

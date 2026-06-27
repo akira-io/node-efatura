@@ -3,6 +3,10 @@ export interface XmlSigningOptions {
   privateKey?: string | Buffer;
   keyId?: string;
   referenceUri?: string;
+  signatureId?: string;
+  dataReferenceId?: string;
+  signedPropertiesId?: string;
+  signingTime?: string | Date;
 }
 
 export interface SignedXmlResult {

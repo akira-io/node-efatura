@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<x:schema
+	version="1.0"
+	elementFormDefault="unqualified"
+	attributeFormDefault="unqualified"
+	xmlns:x="http://www.w3.org/2001/XMLSchema"
+	xmlns:ds="http://www.w3.org/2000/09/xmldsig#"
+	xmlns:ef="urn:cv:efatura:xsd:v1.0">
+
+	<x:import schemaLocation="common/CV_EFatura_MainElements_v1.0.xsd" namespace="urn:cv:efatura:xsd:v1.0" />
+
+	<x:import  schemaLocation="common/W3C_XMLDSig.xsd"    namespace="http://www.w3.org/2000/09/xmldsig#" />
+	<x:import  schemaLocation="common/ETSI_XAdESv132.xsd" namespace="http://uri.etsi.org/01903/v1.3.2#" />
+	<x:import  schemaLocation="common/ETSI_XAdESv141.xsd" namespace="http://uri.etsi.org/01903/v1.4.1#" />
+
+	<x:element name="internally-detached">
+		<x:complexType>
+			<x:sequence>
+				<x:element ref="ds:Signature" minOccurs="0" />
+				<x:choice>
+					<x:element ref="ef:Dfe" />
+					<x:element ref="ef:Event" />
+				</x:choice>
+			</x:sequence>
+		</x:complexType>
+	</x:element>
+</x:schema>

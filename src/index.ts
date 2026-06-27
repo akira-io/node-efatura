@@ -113,11 +113,17 @@ export {
   FileSequenceStore,
   InMemoryGoldenVectorRepository,
   InMemorySequenceStore,
+  KnexSequenceStore,
   MissingOfficialXsdValidator,
   MissingXadesBesSigner,
+  normalizePlatformSubmissionResult,
+  normalizeSubmissionResult,
   PdfDfaRenderer,
   parseServiceBody,
+  resolveDefaultSchemaPath,
   SystemClock,
+  XadesBesSigner,
+  XmllintXsdValidator,
 } from './infrastructure';
 export type { DfeXmlRequest, DfeZipRequest } from './presentation/shared/schemas';
 export {

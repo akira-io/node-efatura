@@ -1,0 +1,680 @@
+<?xml version="1.0" encoding="utf-8"?>
+<x:schema version="1.0" elementFormDefault="qualified" attributeFormDefault="unqualified"
+	targetNamespace="urn:cv:efatura:xsd:v1.0" xmlns:ef="urn:cv:efatura:xsd:v1.0"
+	xmlns:x="http://www.w3.org/2001/XMLSchema"
+	xmlns:unece-pmc="urn:un:unece:uncefact:codelist:standard:UNECE:PaymentMeansCode:D19B"
+	xmlns:iso-crc="urn:un:unece:uncefact:codelist:standard:ISO:ISO3AlphaCurrencyCode:2012-08-31">
+
+	<x:import
+		namespace="urn:un:unece:uncefact:codelist:standard:ISO:ISO3AlphaCurrencyCode:2012-08-31"
+		schemaLocation="ISO_ISO3AlphaCurrencyCode_2012-08-31.xsd"/>
+
+	<x:import namespace="urn:un:unece:uncefact:codelist:standard:UNECE:PaymentMeansCode:D19B"
+		schemaLocation="UNECE_PaymentMeansCode_D19B.xsd"/>
+
+	<x:include schemaLocation="CV_EFatura_TaxExemptionReason_v1.0.xsd"/>
+
+	<x:include schemaLocation="CV_EFatura_Types_v1.0.xsd"/>
+
+	<x:element name="IsSpecimen">
+		<x:simpleType>
+			<x:restriction base="x:string">
+				<x:enumeration value="true" />
+			</x:restriction>
+		</x:simpleType>
+	</x:element>
+
+	<x:element name="Version" type="ef:stDocVersion"/>
+
+	<x:element name="Name" type="ef:stName"/>
+
+	<x:element name="TaxId" type="ef:stTaxId"/>
+
+	<x:element name="RepositoryCode" type="ef:stRepositoryCode"/>
+
+	<x:element name="IssueMode" type="ef:stIssueMode"/>
+
+	<x:element name="Year" type="ef:stYear"/>
+
+	<x:element name="LedCode" type="ef:stLedCode"/>
+
+	<x:element name="Serie" type="ef:stSerie"/>
+
+	<x:element name="OrderLineReference">
+		<x:simpleType>
+			<x:restriction base="x:positiveInteger">
+				<x:minInclusive value="1" />
+				<x:maxInclusive value="99999" />
+			</x:restriction>
+		</x:simpleType>
+	</x:element>
+
+	<x:element name="LineReferenceId" type="ef:stId"/>
+
+	<x:element name="FiscalDocument" type="ef:ctFiscalDocument"/>
+
+	<x:element name="References">
+		<x:complexType>
+			<x:sequence>
+				<x:element name="Reference" maxOccurs="unbounded">
+					<x:complexType>
+						<x:sequence>
+							<x:element ref="ef:FiscalDocument" minOccurs="0"/>
+							<x:element ref="ef:InnerDocumentNumber" minOccurs="0" />
+							<x:element name="PaymentAmount" type="ef:stDecimal5MinExc0" minOccurs="0"/>
+							<x:element ref="ef:Tax" minOccurs="0" maxOccurs="2"/>
+						</x:sequence>
+					</x:complexType>
+				</x:element>
+			</x:sequence>
+		</x:complexType>
+	</x:element>
+
+	<x:element name="DocumentNumber" type="ef:stDocumentNumber"/>
+
+	<x:element name="InnerDocumentNumber" type="ef:stCode"/>
+
+	<x:element name="TaxPointDate" type="ef:stDate"/>
+
+	<x:element name="IssueDateTime" type="ef:stDateTime"/>
+
+	<x:element name="IssueDate" type="ef:stDate"/>
+
+	<x:element name="IssueTime" type="x:time"/>
+
+	<x:element name="DueDate" type="ef:stDate"/>
+
+	<x:element name="Id" type="ef:stId" />
+
+	<x:element name="OrderReference">
+		<x:complexType>
+			<x:sequence>
+				<x:element ref="ef:Id"/>
+			</x:sequence>
+		</x:complexType>
+	</x:element>
+
+	<x:element name="DeliveryDate" type="ef:stDate"/>
+
+	<x:element name="IUD" type="ef:stDfeId"/>
+	<x:element name="IUC" type="ef:stIUC"/>
+
+	<x:element name="Description" type="ef:stDescription"/>
+
+	<x:element name="BrandName" type="ef:stName"/>
+
+	<x:element name="ModelName" type="ef:stName"/>
+
+	<x:element name="EmitterIdentification" type="ef:stCode" />
+
+	<x:element name="NIB" type="ef:stNIB"/>
+	<x:element name="AccountNumber" type="ef:stAccountNumber"/>
+
+	<x:element name="Note" type="ef:stNote" />
+
+	<x:element name="CurrencyCode">
+		<x:complexType>
+			<x:simpleContent>
+				<x:extension base="iso-crc:ISO3AlphaCurrencyCodeContentType">
+					<x:attribute name="Rate" type="x:decimal" use="required"/>
+				</x:extension>
+			</x:simpleContent>
+		</x:complexType>
+	</x:element>
+
+	<x:element name="Software">
+		<x:complexType>
+			<x:sequence>
+				<x:element name="Code" type="ef:stSoftwareCode"/>
+				<x:element ref="ef:Name"/>
+				<x:element name="Version" type="ef:stSoftwareVersion"/>
+			</x:sequence>
+		</x:complexType>
+	</x:element>
+
+	<x:element name="PayeeFinancialAccount">
+		<x:complexType>
+			<x:sequence>
+				<x:choice>
+					<x:element ref="ef:AccountNumber"/>
+					<x:element ref="ef:NIB"/>
+				</x:choice>
+				<x:element ref="ef:Name"/>
+			</x:sequence>
+		</x:complexType>
+	</x:element>
+
+	<x:element name="Payment">
+		<x:complexType>
+			<x:sequence>
+				<x:element name="PaymentMeansCode" type="unece-pmc:PaymentMeansCodeContentType" minOccurs="0"/>
+				<x:element name="PaymentReference" type="ef:stId" minOccurs="0"/>
+				<x:element name="PaymentDate" type="ef:stDate" minOccurs="0"/>
+				<x:element name="PaymentAmount" type="ef:stDecimal5MinExc0" minOccurs="0"/>
+				<x:element ref="ef:PayeeFinancialAccount" minOccurs="0"/>
+			</x:sequence>
+		</x:complexType>
+	</x:element>
+
+	<x:element name="PaymentTerms">
+		<x:complexType>
+			<x:sequence>
+				<x:element ref="ef:Note"/>
+			</x:sequence>
+		</x:complexType>
+	</x:element>
+
+	<x:complexType name="ctPaymentsInvoice">
+		<x:sequence>
+			<x:element name="PaymentDueDate" type="ef:stDate" minOccurs="0"/>
+			<x:element ref="ef:PaymentTerms" minOccurs="0"/>
+			<x:element ref="ef:PayeeFinancialAccount" minOccurs="0" maxOccurs="unbounded"/>
+		</x:sequence>
+	</x:complexType>
+
+	<x:complexType name="ctPaymentsPayment">
+		<x:sequence>
+			<x:element ref="ef:Payment" minOccurs="1" maxOccurs="unbounded"/>
+		</x:sequence>
+	</x:complexType>
+
+	<x:element name="Address" type="ef:ctAddressBase">
+		<!--<x:alternative test="@CountryCode='CV'" type="ef:ctAddressCV"/>-->
+	</x:element>
+
+	<x:element name="Contacts">
+		<x:complexType>
+			<x:sequence>
+				<x:element name="Telephone" type="ef:stTelephone" minOccurs="0" maxOccurs="1"/>
+				<x:element name="Mobilephone" type="ef:stTelephone" minOccurs="0" maxOccurs="1"/>
+				<x:element name="Telefax" type="ef:stTelephone" minOccurs="0" maxOccurs="1"/>
+				<x:element name="Email" type="ef:stEmail" minOccurs="0" maxOccurs="1"/>
+				<x:element name="Website" type="ef:stWebsite" minOccurs="0" maxOccurs="1"/>
+			</x:sequence>
+		</x:complexType>
+	</x:element>
+
+	<x:complexType name="ctParty">
+		<x:choice>
+			<x:sequence>
+				<x:element ref="ef:TaxId"/>
+				<x:element ref="ef:Name"/>
+				<x:element ref="ef:Address" minOccurs="0"/>
+				<x:element ref="ef:Contacts" minOccurs="0"/>
+			</x:sequence>
+			<x:element name="Reference">
+				<x:simpleType>
+					<x:restriction base="x:string">
+						<!--
+							EP = EmitterParty;
+							RP = ReceiverParty;
+						-->
+						<x:enumeration value="EP" />
+						<x:enumeration value="RP" />
+					</x:restriction>
+				</x:simpleType>
+			</x:element>
+		</x:choice>
+	</x:complexType>
+
+	<x:element name="EmitterParty" type="ef:ctParty"/>
+
+	<x:element name="ReceiverParty" type="ef:ctParty"/>
+
+	<x:element name="PaymentParty" type="ef:ctParty"/>
+
+	<x:element name="TransportServiceProviderParty" type="ef:ctParty"/>
+
+	<x:element name="Delivery">
+		<x:complexType>
+			<x:sequence>
+				<x:element ref="ef:DeliveryDate"/>
+				<x:element ref="ef:Address"/>
+			</x:sequence>
+		</x:complexType>
+	</x:element>
+
+	<x:element name="ReasonDescription" type="ef:stNote"/>
+
+	<x:element name="Contingency">
+		<x:complexType>
+			<x:sequence>
+				<x:element ref="ef:LedCode" minOccurs="0"/>
+				<x:element ref="ef:IUC" minOccurs="0"/>
+				<x:element ref="ef:IssueDate"/>
+				<x:element ref="ef:IssueTime" minOccurs="0"/>
+				<x:element name="ReasonTypeCode">
+					<x:simpleType>
+						<x:restriction base="x:string">
+							<!--
+								1 = Indisponibilidade do serviço de autorização de DFEs; OFFLINE
+								2 = Falta de energia elétrica no estabelecimento do contribuinte; OFF
+								3 = Indisponibilidade do sistema do contribuinte; OFF
+								4 = Indisponibilidade de conexão Internet; OFFLINE
+								5 = Indisponibilidade do serviço de TimeStamp; OFFLINE
+								0 = Outro.
+							-->
+							<x:enumeration value="0"/>
+							<x:enumeration value="1"/>
+							<x:enumeration value="2"/>
+							<x:enumeration value="3"/>
+							<x:enumeration value="4"/>
+							<x:enumeration value="5"/>
+						</x:restriction>
+					</x:simpleType>
+				</x:element>
+				<x:element ref="ef:ReasonDescription" minOccurs="0"/>
+			</x:sequence>
+		</x:complexType>
+	</x:element>
+
+	<x:element name="Transmission">
+		<x:complexType>
+			<x:sequence>
+				<x:element ref="ef:IssueMode"/>
+				<x:element name="TransmitterTaxId" type="ef:stTaxId"/>
+				<x:element ref="ef:Software"/>
+				<x:element ref="ef:Contingency" minOccurs="0"/>
+			</x:sequence>
+		</x:complexType>
+	</x:element>
+
+	<x:element name="StandardIdentification">
+		<x:complexType>
+			<x:choice>
+				<x:element name="GTIN" type="ef:stCode"/>
+				<x:element name="EAN" type="ef:stCode"/>
+				<x:element name="UPC" type="ef:stCode"/>
+				<x:element name="Pharmacode" type="ef:stCode"/>
+				<!-- TODO: Acrescentar nomenclatura das Alfandegas -->
+				<!-- TODO: Acrescentar código padrão para produtos internos CV -->
+			</x:choice>
+		</x:complexType>
+	</x:element>
+
+	<x:element name="HazardousRiskIndicator" type="ef:stBoolean"/>
+
+	<x:element name="Quantity" type="ef:ctQuantity"/>
+
+	<x:element name="PackQuantity" type="ef:ctQuantity"/>
+
+	<x:element name="PackSizeNumeric" type="x:decimal"/>
+
+	<x:element name="Price" type="ef:stDecimal5MinInc0"/>
+
+	<x:element name="PriceExtension" type="ef:stDecimal5MinInc0"/>
+
+	<x:element name="PriceExtensionTotalAmount" type="ef:stDecimal5MinInc0"/>
+
+	<x:element name="Discount">
+		<x:complexType>
+			<x:simpleContent>
+				<x:extension base="ef:stDecimal5MinInc0">
+					<x:attribute name="ValueType" use="optional" default="P">
+						<x:simpleType>
+							<!--
+								A = Amount
+								P = Percentage
+							-->
+							<x:restriction base="x:string">
+								<x:enumeration value="A" />
+								<x:enumeration value="P" />
+							</x:restriction>
+						</x:simpleType>
+					</x:attribute>
+				</x:extension>
+			</x:simpleContent>
+		</x:complexType>
+	</x:element>
+
+	<x:element name="Charge" type="ef:stDecimal5MinInc0"/>
+
+	<x:element name="NetTotal" type="ef:stDecimal5MinInc0"/>
+
+	<x:element name="NetTotalAmount" type="ef:stDecimal5MinInc0"/>
+
+	<x:element name="DiscountTotalAmount" type="ef:stDecimal5MinInc0"/>
+
+	<x:element name="ChargeTotalAmount" type="ef:stDecimal5MinInc0"/>
+
+	<x:element name="TaxTotalAmount" type="ef:stDecimal5MinInc0"/>
+
+	<x:element name="WithholdingTaxTotalAmount" type="ef:stDecimal5MinInc0"/>
+
+	<x:element name="PayableRoundingAmount" type="ef:stDecimal5"/>
+
+	<x:element name="PayableAmount" type="ef:stDecimal5MinInc0"/>
+
+	<x:element name="PayableAlternativeAmount">
+		<x:complexType>
+			<x:simpleContent>
+				<x:extension base="ef:stDecimal5MinInc0">
+					<x:attribute name="CurrencyCode" type="iso-crc:ISO3AlphaCurrencyCodeContentType"
+						use="required"/>
+					<x:attribute name="ExchangeRate" type="ef:stDecimal5MinExc0" use="required"/>
+				</x:extension>
+			</x:simpleContent>
+		</x:complexType>
+	</x:element>
+
+	<!-- <x:element name="TaxTypeCode" type="ef:stTaxTypeCode"/> -->
+
+	<x:element name="TaxPercentage">
+		<x:simpleType>
+			<x:restriction base="ef:stPercentage">
+				<x:minExclusive value="0" />
+			</x:restriction>
+		</x:simpleType>
+	</x:element>
+	<x:element name="TaxAmount" type="ef:stDecimal5MinExc0"/>
+	<x:element name="TaxExemptionReasonCode" type="ef:stTaxExemptionReason"/>
+	<x:element name="StampTaxCode" type="ef:stStampTaxCode"/>
+	<x:element name="TaxTotal" type="ef:stDecimal5MinExc0"/>
+
+	<x:element name="Tax">
+		<x:complexType>
+			<x:sequence>
+				<x:element ref="ef:StampTaxCode" minOccurs="0"/>
+				<x:choice>
+					<x:element ref="ef:TaxPercentage"/>
+					<x:element ref="ef:TaxAmount"/>
+					<x:element ref="ef:TaxExemptionReasonCode"/>
+				</x:choice>
+				<x:element ref="ef:TaxTotal" minOccurs="0"/>
+			</x:sequence>
+			<x:attribute name="TaxTypeCode" type="ef:stTaxTypeCode" use="required"/>
+		</x:complexType>
+	</x:element>
+
+	<x:element name="ExtraProperties">
+		<x:complexType>
+			<x:sequence>
+				<x:element name="Property" maxOccurs="unbounded">
+					<x:complexType>
+						<x:complexContent>
+							<x:extension base="x:anyType">
+								<x:attribute name="Name" type="ef:stCode" use="required"/>
+							</x:extension>
+						</x:complexContent>
+					</x:complexType>
+				</x:element>
+			</x:sequence>
+		</x:complexType>
+	</x:element>
+
+	<x:element name="Item">
+		<x:complexType>
+			<x:sequence>
+				<x:element ref="ef:Description"/>
+				<x:element ref="ef:PackQuantity" minOccurs="0"/>
+				<x:element ref="ef:Name" minOccurs="0"/>
+				<x:element ref="ef:BrandName" minOccurs="0"/>
+				<x:element ref="ef:ModelName" minOccurs="0"/>
+				<x:element ref="ef:EmitterIdentification"/>
+				<!-- ReceiverIdentification -->
+				<x:element ref="ef:StandardIdentification" minOccurs="0"/>
+				<x:element ref="ef:HazardousRiskIndicator" minOccurs="0"/>
+				<x:element ref="ef:ExtraProperties" minOccurs="0"/>
+			</x:sequence>
+		</x:complexType>
+	</x:element>
+
+	<x:element name="Lines">
+		<x:complexType>
+			<x:sequence>
+				<x:element name="Line" maxOccurs="unbounded">
+					<x:complexType>
+						<x:sequence>
+							<x:element ref="ef:Id" minOccurs="0"/>
+							<x:element ref="ef:LineReferenceId" minOccurs="0"/>
+							<x:element ref="ef:OrderLineReference" minOccurs="0"/>
+							<x:element ref="ef:Quantity"/>
+							<x:element ref="ef:Price" minOccurs="0"/>
+							<x:element ref="ef:PriceExtension" minOccurs="0"/>
+							<x:element ref="ef:Discount" minOccurs="0"/>
+							<x:element ref="ef:NetTotal" minOccurs="0"/>
+							<x:element ref="ef:Tax" minOccurs="0" maxOccurs="2"/>
+							<x:element ref="ef:Item"/>
+						</x:sequence>
+						<x:attribute name="LineTypeCode" type="ef:stLineTypeCode" use="optional" default="N"/>
+					</x:complexType>
+				</x:element>
+			</x:sequence>
+		</x:complexType>
+	</x:element>
+
+	<x:element name="Totals">
+		<x:complexType>
+			<x:sequence>
+				<x:element ref="ef:PriceExtensionTotalAmount" minOccurs="1" maxOccurs="1"/>
+				<x:element ref="ef:ChargeTotalAmount" minOccurs="0" maxOccurs="1"/>
+				<x:element ref="ef:DiscountTotalAmount" minOccurs="0" maxOccurs="1"/>
+				<x:element ref="ef:NetTotalAmount" minOccurs="1" maxOccurs="1"/>
+				<x:element ref="ef:Discount" minOccurs="0" maxOccurs="1"/>
+				<x:element ref="ef:TaxTotalAmount" minOccurs="1" maxOccurs="1"/>
+				<x:element ref="ef:WithholdingTaxTotalAmount" minOccurs="0" maxOccurs="1"/>
+				<x:element ref="ef:PayableRoundingAmount" minOccurs="0" maxOccurs="1"/>
+				<x:element ref="ef:PayableAmount" minOccurs="1" maxOccurs="1"/>
+				<x:element ref="ef:PayableAlternativeAmount" minOccurs="0" maxOccurs="unbounded"/>
+			</x:sequence>
+		</x:complexType>
+	</x:element>
+
+	<x:element name="DiscrepancyResponse">
+		<x:simpleType>
+			<x:restriction base="ef:stNoExtraSpaces">
+				<x:minLength value="10"/>
+			</x:restriction>
+		</x:simpleType>
+	</x:element>
+
+	<x:element name="ExtraFields">
+		<x:complexType>
+			<x:sequence>
+				<x:any maxOccurs="unbounded" namespace="##any" processContents="lax"/>
+			</x:sequence>
+		</x:complexType>
+	</x:element>
+
+	<x:element name="ReceiptTypeCode">
+		<x:simpleType>
+			<x:restriction base="x:string">
+				<!--
+					1 = Comercial
+					2 = Serviço
+					3 = Comercial e Serviço
+					4 = Renda
+				-->
+				<x:enumeration value="1"/>
+				<x:enumeration value="2"/>
+				<x:enumeration value="3"/>
+				<x:enumeration value="4"/>
+			</x:restriction>
+		</x:simpleType>
+	</x:element>
+
+	<x:element name="TransportModeCode">
+		<x:simpleType>
+			<x:restriction base="x:string">
+				<!--
+					0 = Modo de transporte não especificado. Este código pode ser usado
+						quando o modo de transporte não é conhecido ou quando a informação
+						não está disponível no momento de emissão do documento.
+
+					1 = Marítimo
+					2 = Ferroviário
+					3 = Rodoviário
+					4 = Aéreo
+					5 = Correio
+					6 = Multimodal
+					7 = Instalações Fixas (oleodutos, teleféricos e linhas de energia elétrica)
+					8 = Rio
+				-->
+				<x:enumeration value="0"/>
+				<x:enumeration value="1"/>
+				<x:enumeration value="2"/>
+				<x:enumeration value="3"/>
+				<x:enumeration value="4"/>
+				<x:enumeration value="5"/>
+				<x:enumeration value="6"/>
+				<x:enumeration value="7"/>
+				<x:enumeration value="8"/>
+			</x:restriction>
+		</x:simpleType>
+	</x:element>
+
+	<x:element name="VehicleRegistrationCode" type="ef:stId" />
+
+	<x:element name="ReceiverTypeCode">
+		<x:simpleType>
+			<x:restriction base="x:string">
+				<!--
+					1 = Destinatário determinado (sujeito passivo)
+					2 = Destinatário determinado (não sujeito passivo)
+					3 = Destinatário não determinado (guia global)
+				-->
+				<x:enumeration value="1"/>
+				<x:enumeration value="2"/>
+				<x:enumeration value="3"/>
+			</x:restriction>
+		</x:simpleType>
+	</x:element>
+
+	<x:element name="TransportDocumentTypeCode">
+		<x:simpleType>
+			<x:restriction base="x:string">
+				<!--
+					1 = Guia de Remessa
+					2 = Guia de Transporte
+					3 = Guia de Movimentação de Ativos Próprios
+					4 = Guia de Consignação
+					5 = Guia ou Nota de Devolução Efetuada pelo Cliente
+				-->
+				<x:enumeration value="1"/>
+				<x:enumeration value="2"/>
+				<x:enumeration value="3"/>
+				<x:enumeration value="4"/>
+				<x:enumeration value="5"/>
+			</x:restriction>
+		</x:simpleType>
+	</x:element>
+
+	<x:element name="AssetId" type="ef:stId"/>
+
+	<x:complexType name="ctTransportLocation">
+		<x:sequence>
+			<x:element ref="ef:Address"/>
+			<x:element name="Duration" type="ef:ctDuration"/>
+			<x:element ref="ef:TransportModeCode"/>
+			<x:element ref="ef:VehicleRegistrationCode" minOccurs="0"/>
+		</x:sequence>
+	</x:complexType>
+
+	<x:element name="TransportRoute">
+		<x:complexType>
+			<x:sequence>
+				<x:element name="TransportLocation" type="ef:ctTransportLocation" minOccurs="2"
+					maxOccurs="unbounded"/>
+			</x:sequence>
+		</x:complexType>
+	</x:element>
+
+	<x:element name="RentPurposeTypeCode">
+		<x:simpleType>
+			<x:restriction base="x:string">
+				<!--
+					1 = Comercial
+					2 = Residencial/Habitacional
+					3 = Industrial
+				-->
+				<x:enumeration value="1"/>
+				<x:enumeration value="2"/>
+				<x:enumeration value="3"/>
+			</x:restriction>
+		</x:simpleType>
+	</x:element>
+
+	<x:element name="RentTypeCode">
+		<x:simpleType>
+			<x:restriction base="x:string">
+				<!--
+					1 = Renda
+					2 = Caução
+					3 = Adiantamento
+				-->
+				<x:enumeration value="1"/>
+				<x:enumeration value="2"/>
+				<x:enumeration value="3"/>
+			</x:restriction>
+		</x:simpleType>
+	</x:element>
+
+	<x:element name="ContractTypeCode">
+		<x:simpleType>
+			<x:restriction base="x:string">
+				<!--
+					1 = Arrendamento
+					2 = Subarrendamento
+					3 = Cedência de uso do prédio ou de parte dele, que não arrendamento
+					4 = Aluguer de maquinismos e mobiliário instalados no imóvel locado
+				-->
+				<x:enumeration value="1"/>
+				<x:enumeration value="2"/>
+				<x:enumeration value="3"/>
+				<x:enumeration value="4"/>
+			</x:restriction>
+		</x:simpleType>
+	</x:element>
+
+	<x:element name="ReferencePeriod" type="ef:stReferencePeriod"/>
+
+	<x:element name="RentReceipt">
+		<x:complexType>
+			<x:sequence>
+				<x:element ref="ef:AssetId"/>
+				<x:element ref="ef:RentPurposeTypeCode"/>
+				<x:element ref="ef:ContractTypeCode"/>
+				<x:element ref="ef:RentTypeCode"/>
+				<x:element ref="ef:ReferencePeriod"/>
+				<x:element ref="ef:Address"/>
+			</x:sequence>
+		</x:complexType>
+	</x:element>
+
+	<x:element name="SelfBilling">
+		<x:complexType>
+			<x:sequence>
+				<x:element name="AuthorizationId" type="ef:stUUID"/>
+				<x:element name="AuthorizationCode" type="ef:stSelfBillingAuthorizationCode"/>
+			</x:sequence>
+		</x:complexType>
+	</x:element>
+
+	<x:group name="grDfeHeaderCommon">
+		<x:sequence>
+			<x:element name="IsIsolatedAct" type="ef:stBoolean" minOccurs="0"/>
+			<x:element ref="ef:SelfBilling" minOccurs="0"/>
+			<x:element ref="ef:LedCode"/>
+			<x:element ref="ef:Serie"/>
+			<x:element ref="ef:DocumentNumber"/>
+			<x:element ref="ef:InnerDocumentNumber" minOccurs="0"/>
+			<x:element ref="ef:IssueDate"/>
+			<x:element ref="ef:IssueTime"/>
+		</x:sequence>
+	</x:group>
+
+	<x:group name="grDfeFooterCommon">
+		<x:sequence>
+			<x:element ref="ef:Note" minOccurs="0"/>
+			<x:element ref="ef:ExtraFields" minOccurs="0"/>
+		</x:sequence>
+	</x:group>
+
+	<x:group name="grDfeLinesTotals">
+		<x:sequence>
+			<x:element ref="ef:Lines"/>
+			<x:element ref="ef:Totals"/>
+		</x:sequence>
+	</x:group>
+
+</x:schema>

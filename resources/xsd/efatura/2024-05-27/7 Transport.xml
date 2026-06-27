@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Dfe xmlns="urn:cv:efatura:xsd:v1.0" Version="1.0"
+	Id="CV1200520123456789000112345678901112345678904" DocumentTypeCode="7"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="urn:cv:efatura:xsd:v1.0 EnvelopedSignature.xsd">
+
+	<Transport>
+		<LedCode>1</LedCode>
+		<Serie>A2020</Serie>
+		<DocumentNumber>12345</DocumentNumber>
+		<IssueDate>2021-01-01</IssueDate>
+		<IssueTime>11:01:02</IssueTime>
+
+		<!-- Se for 3, o destinatário não será indicado. Transporte Global -->
+		<ReceiverTypeCode>1</ReceiverTypeCode>
+
+		<TransportDocumentTypeCode>1</TransportDocumentTypeCode>
+
+		<!-- Emissor - Remetente das Mercadorias -->
+		<EmitterParty>
+			<TaxId CountryCode="CV">123456789</TaxId>
+			<Name>Nome do Remetente</Name>
+			<Address CountryCode="CV">
+				<AddressDetail>Ao lado da padaria</AddressDetail>
+				<AddressCode>CV774741741037410321</AddressCode>
+			</Address>
+			<Contacts>
+				<Telephone>1234567</Telephone>
+				<Mobilephone>9123456</Mobilephone>
+				<Telefax>3123456</Telefax>
+				<Email>email@empresa.cv</Email>
+				<Website>https://www.empresa.cv/a/b/c?a=b#abc</Website>
+			</Contacts>
+		</EmitterParty>
+
+		<!--
+			Destinatário - Adquirente das Mercadorias
+			Apenas se for diferente do remetente
+		-->
+		<ReceiverParty>
+			<TaxId CountryCode="BR">123456789</TaxId>
+			<Name>Nome do Destinatário</Name>
+			<Address CountryCode="BR">
+				<City>Praia</City>
+				<Region>Região</Region>
+				<Street>Rua XPTO</Street>
+				<StreetDetail>Ao lado Bar X</StreetDetail>
+				<BuildingName>Nome</BuildingName>
+				<BuildingNumber>12345</BuildingNumber>
+				<PostalCode>12345</PostalCode>
+				<AddressDetail>Ao lado da padaria</AddressDetail>
+			</Address>
+			<Contacts>
+				<Telephone>1234567</Telephone>
+				<Mobilephone>9123456</Mobilephone>
+				<Telefax>3123456</Telefax>
+				<Email>email@empresa.cv</Email>
+			</Contacts>
+		</ReceiverParty>
+
+		<!-- Prestador do Serviço de Transporte -->
+		<TransportServiceProviderParty>
+			<!--
+				Se a entidade for a mesma que o emissor, pode indicar <Reference>EP</Reference>
+				Se a entidade for a mesma que o recetor, pode indicar <Reference>RP</Reference>
+				Se a entidade for outra, deve indicar todos os campos de identificação de uma entidade.
+			-->
+			<Reference>RP</Reference>
+		</TransportServiceProviderParty>
+
+		<!-- Mercadorias -->
+		<Lines>
+			<Line>
+				<Id>1</Id>
+				<Quantity UnitCode="EA">1</Quantity>
+				<Price>30000</Price>
+				<PriceExtension>30000</PriceExtension>
+				<Discount>0</Discount>
+				<NetTotal>30000</NetTotal>
+				<Tax TaxTypeCode="IVA">
+					<TaxPercentage>15</TaxPercentage>
+				</Tax>
+				<Item>
+					<Description>Produto 1</Description>
+					<EmitterIdentification>P1</EmitterIdentification>
+					<HazardousRiskIndicator>false</HazardousRiskIndicator>
+					<ExtraProperties>
+						<Property Name="Cor">Preto</Property>
+						<Property Name="Peso">12</Property>
+					</ExtraProperties>
+				</Item>
+			</Line>
+		</Lines>
+
+		<!-- Percurso do Transporte -->
+		<TransportRoute>
+			<TransportLocation>
+				<Address CountryCode="CV">
+					<AddressDetail>Super Mercado X</AddressDetail>
+					<AddressCode>CV774741741037410321</AddressCode>
+				</Address>
+				<Duration>
+					<StartDate>2021-01-01</StartDate>
+					<StartTime>12:00:00</StartTime>
+					<EndDate>2021-01-01</EndDate>
+					<EndTime>12:30:00</EndTime>
+				</Duration>
+				<TransportModeCode>1</TransportModeCode>
+				<VehicleRegistrationCode>ST-01-02</VehicleRegistrationCode>
+			</TransportLocation>
+			<TransportLocation>
+				<Address CountryCode="CV">
+					<AddressDetail>Armazem X</AddressDetail>
+					<AddressCode>CV774741741037410319</AddressCode>
+				</Address>
+				<Duration>
+					<StartDate>2021-01-01</StartDate>
+					<StartTime>13:00:00</StartTime>
+					<EndDate>2021-01-01</EndDate>
+					<EndTime>13:30:00</EndTime>
+				</Duration>
+				<TransportModeCode>3</TransportModeCode>
+			</TransportLocation>
+			<TransportLocation>
+				<Address CountryCode="CV">
+					<AddressDetail>Armazem X</AddressDetail>
+					<AddressCode>CV774741741037410319</AddressCode>
+				</Address>
+				<Duration>
+					<StartDate>2021-01-01</StartDate>
+					<StartTime>13:00:00</StartTime>
+					<EndDate>2021-01-01</EndDate>
+					<EndTime>13:30:00</EndTime>
+				</Duration>
+				<TransportModeCode>4</TransportModeCode>
+			</TransportLocation>
+		</TransportRoute>
+
+		<Note>Notas/Observações opcionais</Note>
+
+		<ExtraFields>
+			<QualquerCampo QualquerAtributo="Qualquer Valor"> Campo com quarquer estrutura </QualquerCampo>
+			<Segredo>Valor encriptado...</Segredo>
+		</ExtraFields>
+	</Transport>
+
+	<Transmission>
+		<IssueMode>3</IssueMode>
+		<TransmitterTaxId CountryCode="CV">123456789</TransmitterTaxId>
+		<Software>
+			<Code>CODE</Code>
+			<Name>Nome do Software usado pelo Contribuinte</Name>
+			<Version>1.2.3.4</Version>
+		</Software>
+		<Contingency>
+			<LedCode>1</LedCode>
+			<IUC>2020/1</IUC>
+			<IssueDate>2021-01-01</IssueDate>
+			<IssueTime>01:02:03</IssueTime>
+			<ReasonTypeCode>1</ReasonTypeCode>
+		</Contingency>
+	</Transmission>
+
+	<RepositoryCode>1</RepositoryCode>
+
+	<ds:Signature Id="EmitterPartySignatureId" xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
+		<ds:SignedInfo>
+			<ds:CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"/>
+			<ds:SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"/>
+			<ds:Reference Id="DataReferenceId" URI="#CV1200520123456789000112345678901112345678904">
+				<ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/>
+				<ds:DigestValue>ozcoAydr6KqHP+OtogQTxJIByzCzzWm8gNAOkpwBLMs=</ds:DigestValue>
+			</ds:Reference>
+			<ds:Reference URI="#SignedPropertiesId"
+				Type="http://uri.etsi.org/01903#SignedProperties">
+				<ds:Transforms>
+					<ds:Transform Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"/>
+				</ds:Transforms>
+				<ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/>
+				<ds:DigestValue>xtFg15YLHtpf7KIhN0naU80wzSr99+17PXcVobbqEjc=</ds:DigestValue>
+			</ds:Reference>
+		</ds:SignedInfo>
+		<ds:SignatureValue>U2lnbmF0dXJlVmFsdWU=</ds:SignatureValue>
+		<ds:KeyInfo>
+			<ds:X509Data>
+				<ds:X509Certificate>WDUwOUNlcnRpZmljYXRl</ds:X509Certificate>
+			</ds:X509Data>
+		</ds:KeyInfo>
+		<ds:Object>
+			<xades:QualifyingProperties xmlns:xades="http://uri.etsi.org/01903/v1.3.2#"
+				Target="#EmitterPartySignatureId">
+				<xades:SignedProperties Id="SignedPropertiesId">
+					<xades:SignedSignatureProperties>
+						<xades:SigningTime>2020-11-06T11:01:02</xades:SigningTime>
+						<xades:SigningCertificate>
+							<xades:Cert>
+								<xades:CertDigest>
+									<ds:DigestMethod
+										Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/>
+									<ds:DigestValue>RGlnZXN0VmFsdWU=</ds:DigestValue>
+								</xades:CertDigest>
+								<xades:IssuerSerial>
+									<ds:X509IssuerName>Emitter Party Name</ds:X509IssuerName>
+									<ds:X509SerialNumber>1234567890</ds:X509SerialNumber>
+								</xades:IssuerSerial>
+							</xades:Cert>
+						</xades:SigningCertificate>
+						<xades:SignatureProductionPlace>
+							<xades:City>Praia</xades:City>
+							<xades:StateOrProvince>Santiago</xades:StateOrProvince>
+							<xades:PostalCode>7600</xades:PostalCode>
+							<xades:CountryName>Cabo Verde</xades:CountryName>
+						</xades:SignatureProductionPlace>
+					</xades:SignedSignatureProperties>
+					<xades:SignedDataObjectProperties>
+						<xades:DataObjectFormat ObjectReference="#DataReferenceId">
+							<xades:MimeType>text/xml</xades:MimeType>
+						</xades:DataObjectFormat>
+					</xades:SignedDataObjectProperties>
+				</xades:SignedProperties>
+			</xades:QualifyingProperties>
+		</ds:Object>
+	</ds:Signature>
+</Dfe>

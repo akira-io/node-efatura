@@ -1,0 +1,563 @@
+<?xml version="1.0" encoding="utf-8"?>
+<x:schema
+	version="1.0"
+	elementFormDefault="qualified"
+	attributeFormDefault="unqualified"
+	targetNamespace="urn:cv:efatura:xsd:v1.0"
+	xmlns:x="http://www.w3.org/2001/XMLSchema"
+	xmlns:ef="urn:cv:efatura:xsd:v1.0"
+	xmlns:m="urn:cv:metadata"
+	xmlns:iso-ctc="urn:un:unece:uncefact:identifierlist:standard:ISO:ISOTwo-letterCountryCode:SecondEdition2006">
+
+	<x:import namespace="urn:un:unece:uncefact:identifierlist:standard:ISO:ISOTwo-letterCountryCode:SecondEdition2006"
+		schemaLocation="ISO_ISOTwo-letterCountryCode_SecondEdition2006.xsd" />
+
+	<x:simpleType name="stDigits">
+		<x:restriction base="x:string">
+			<x:whiteSpace value="preserve" />
+			<x:pattern value="\d+" />
+			<x:maxLength value="50"/>
+		</x:restriction>
+	</x:simpleType>
+
+	<x:simpleType name="stNoSpaces">
+		<x:restriction base="x:string">
+			<x:whiteSpace value="preserve" />
+			<x:pattern value="[^\s]+" />
+		</x:restriction>
+	</x:simpleType>
+
+	<x:simpleType name="stCode">
+		<x:restriction base="ef:stNoSpaces">
+			<x:minLength value="1"/>
+			<x:maxLength value="50"/>
+		</x:restriction>
+	</x:simpleType>
+
+	<x:simpleType name="stId">
+		<x:restriction base="ef:stCode" />
+	</x:simpleType>
+
+	<x:simpleType name="stDocVersion">
+		<x:restriction base="ef:stNoSpaces">
+			<x:minLength value="3" />
+			<x:maxLength value="20" />
+			<x:pattern value="(\d+\.\d+)(\.\d+)?(\.\d+)?" />
+		</x:restriction>
+	</x:simpleType>
+
+	<x:simpleType name="stNoExtraSpaces">
+		<x:restriction base="x:string">
+			<x:minLength value="1" />
+			<x:whiteSpace value="preserve" />
+			<x:pattern value="(([^\s]*)|([^\s]+( [^\s]+)*))" />
+		</x:restriction>
+	</x:simpleType>
+
+	<x:simpleType name="stLedCode">
+		<x:restriction base="x:positiveInteger">
+			<x:minInclusive value="1"/>
+			<x:maxInclusive value="99999" />
+		</x:restriction>
+	</x:simpleType>
+
+	<x:simpleType name="stSoftwareCode">
+		<x:restriction base="x:string">
+			<x:whiteSpace value="preserve" />
+			<x:maxLength value="10" />
+			<x:pattern value="[A-Z0-9]+" />
+		</x:restriction>
+	</x:simpleType>
+
+	<x:simpleType name="stSoftwareVersion">
+		<x:restriction base="ef:stNoExtraSpaces">
+			<x:whiteSpace value="preserve" />
+			<x:minLength value="1" />
+			<x:maxLength value="50" />
+		</x:restriction>
+	</x:simpleType>
+
+	<x:simpleType name="stXmlId">
+		<x:restriction base="x:ID" />
+	</x:simpleType>
+
+	<x:simpleType name="stEventId">
+		<x:restriction base="ef:stXmlId">
+			<x:length value="24" />
+			<x:pattern
+				value="(CV(\d)(\d{2})(0[1-9]|1[012])(0[1-9]|[12][0-9]|3[01])(\d{6})([1-9]\d{8}))" />
+		</x:restriction>
+	</x:simpleType>
+
+	<x:simpleType name="stDfeId">
+		<x:restriction base="ef:stXmlId">
+			<x:length value="45" />
+			<x:pattern
+				value="(CV(\d)(\d{2})(0[1-9]|1[012])(0[1-9]|[12][0-9]|3[01])([1-9]\d{8})\d{27})" />
+		</x:restriction>
+	</x:simpleType>
+
+	<x:simpleType name="stFiscalDocument">
+		<x:restriction base="x:string">
+			<x:pattern value="(CV(\d)(\d{2})(0[1-9]|1[012])(0[1-9]|[12][0-9]|3[01])([1-9]\d{8})\d{27})|([1-9][/]\d{4}[/]([aA-zZ0-9]+([_-][aA-zZ0-9]+)*)[/]\d{1,9})" />
+		</x:restriction>
+	</x:simpleType>
+
+	<x:simpleType name="stSerie">
+		<x:restriction base="x:string">
+			<x:minLength value="1" />
+			<x:maxLength value="20" />
+			<x:pattern value="[aA-zZ0-9]+([_-][aA-zZ0-9]+)*" />
+		</x:restriction>
+	</x:simpleType>
+
+	<x:simpleType name="stDate">
+		<x:restriction base="x:date">
+			<x:minInclusive value="2021-01-01" />
+		</x:restriction>
+	</x:simpleType>
+
+	<x:simpleType name="stDateTime">
+		<x:restriction base="x:dateTime">
+			<x:minInclusive value="2021-01-01T00:00:00" />
+		</x:restriction>
+	</x:simpleType>
+
+	<x:simpleType name="stMonth">
+		<x:restriction base="x:unsignedShort">
+			<x:minInclusive value="1" />
+			<x:maxInclusive value="12" />
+		</x:restriction>
+	</x:simpleType>
+
+	<x:simpleType name="stYear">
+		<x:restriction base="x:gYear">
+			<x:minExclusive value="2020" />
+			<x:maxInclusive value="2099" />
+		</x:restriction>
+	</x:simpleType>
+
+	<x:simpleType name="stPercentage">
+		<x:restriction base="x:decimal">
+			<x:minInclusive value="0" />
+			<x:maxInclusive value="100" />
+			<x:fractionDigits value="3" />
+		</x:restriction>
+	</x:simpleType>
+
+	<x:simpleType name="stDiscountPercentage">
+		<x:restriction base="ef:stPercentage" />
+	</x:simpleType>
+
+	<x:simpleType name="stDiscountAmount">
+		<x:restriction base="x:decimal">
+			<x:minExclusive value="0" />
+		</x:restriction>
+	</x:simpleType>
+
+	<x:simpleType name="stNIB">
+		<x:restriction base="x:string">
+			<x:length value="21" />
+			<x:pattern value="\d+" />
+		</x:restriction>
+	</x:simpleType>
+
+	<x:simpleType name="stAccountNumber">
+		<x:restriction base="x:string">
+			<x:maxLength value="15" />
+			<x:pattern value="\d+" />
+		</x:restriction>
+	</x:simpleType>
+
+	<x:simpleType name="stBoolean">
+		<x:restriction base="x:boolean">
+			<x:pattern value="false|true" />
+		</x:restriction>
+	</x:simpleType>
+
+	<x:simpleType name="stFiscalBranchCode">
+		<x:restriction base="x:unsignedShort">
+			<x:enumeration value="112" />
+			<x:enumeration value="113" />
+			<x:enumeration value="114" />
+			<x:enumeration value="121" />
+			<x:enumeration value="135" />
+			<x:enumeration value="146" />
+			<x:enumeration value="157" />
+			<x:enumeration value="210" />
+			<x:enumeration value="211" />
+			<x:enumeration value="223" />
+			<x:enumeration value="224" />
+			<x:enumeration value="225" />
+			<x:enumeration value="226" />
+			<x:enumeration value="232" />
+			<x:enumeration value="233" />
+			<x:enumeration value="240" />
+		</x:restriction>
+	</x:simpleType>
+
+	<x:simpleType name="stTaxIdValue">
+		<x:restriction base="ef:stNoSpaces">
+			<x:minLength value="5" />
+			<x:maxLength value="20" />
+		</x:restriction>
+	</x:simpleType>
+
+	<x:simpleType name="stTaxIdCV">
+		<x:restriction base="ef:stTaxIdValue">
+			<x:pattern value="[1-9][0-9]{8}"
+				m:msg="{name} deve ter 9 dígitos e o primeiro dígito entre 1 a 9." />
+		</x:restriction>
+	</x:simpleType>
+
+	<x:simpleType name="stTelephone">
+		<x:restriction base="ef:stNoSpaces">
+			<x:maxLength value="20" />
+			<x:pattern value="\d+" />
+		</x:restriction>
+	</x:simpleType>
+
+	<x:simpleType name="stEmail">
+		<x:restriction base="ef:stNoSpaces">
+			<!-- Deve ser um email válido (Exemplo: name@domain.com). -->
+			<x:pattern value="\w+((-|\.|_)\w+)*@\w+((-|\.|_)\w+)*\.\w+(\.\w+)*" />
+			<x:maxLength value="256" />
+		</x:restriction>
+	</x:simpleType>
+
+	<x:simpleType name="stWebsite">
+		<x:restriction base="ef:stNoSpaces">
+			<!-- Deve ser um URL válido (Exemplo: www.domain.com). -->
+			<x:pattern value="((https?[:][/][/])?[aA-zZ0-9_-]+(\.[aA-zZ0-9_-]+)*([:]\d+)?([/][-._aA-zZ0-9]+)*(\?([aA-zZ0-9_-]+=[+%aA-zZ0-9_-]*)(&amp;[aA-zZ0-9_-]+=[+%aA-zZ0-9_-]*)*)?(#.*)?)" />
+			<x:maxLength value="256" />
+		</x:restriction>
+	</x:simpleType>
+
+	<x:simpleType name="stName">
+		<x:restriction base="ef:stNoExtraSpaces">
+			<x:minLength value="3" />
+			<x:maxLength value="150" />
+		</x:restriction>
+	</x:simpleType>
+
+	<x:simpleType name="stAddressText">
+		<x:restriction base="ef:stNoExtraSpaces">
+			<x:minLength value="1" />
+			<x:maxLength value="100" />
+		</x:restriction>
+	</x:simpleType>
+
+	<x:simpleType name="stDescription">
+		<x:restriction base="ef:stNoExtraSpaces">
+			<x:minLength value="1" />
+			<x:maxLength value="300" />
+		</x:restriction>
+	</x:simpleType>
+
+	<x:simpleType name="stDocumentNumber">
+		<x:restriction base="x:positiveInteger">
+			<x:minInclusive value="1" />
+			<x:maxInclusive value="999999999" />
+		</x:restriction>
+	</x:simpleType>
+
+	<x:simpleType name="stDocumentTypeCode">
+		<!--
+		1 = Invoice          - FTE;
+		2 = InvoiceReceipt   - FRE;
+		3 = SalesReceipt     - TVE;
+		4 = Receipt          - RCE;
+		5 = CreditNote       - NCE;
+		6 = DebitNote        - NDE;
+		7 = Transport        - DTE;
+		8 = ReturnNote       - DVE;
+		9 = RegistrationNote - NLE;
+		-->
+		<x:restriction base="x:integer">
+			<x:enumeration value="1" />
+			<x:enumeration value="2" />
+			<x:enumeration value="3" />
+			<x:enumeration value="4" />
+			<x:enumeration value="5" />
+			<x:enumeration value="6" />
+			<x:enumeration value="7" />
+			<x:enumeration value="8" />
+			<x:enumeration value="9" />
+		</x:restriction>
+	</x:simpleType>
+
+	<x:simpleType name="stEventTypeCode">
+		<!--
+		FDC = Fiscal Document Cancelation - Cancelamento/Anulação de DFE
+		UDN = Unused Document Number      - Inutilização de Número de Documento
+		-->
+		<x:restriction base="x:string">
+			<x:enumeration value="FDC" />
+			<x:enumeration value="UDN" />
+		</x:restriction>
+	</x:simpleType>
+
+	<x:simpleType name="stRepositoryCode">
+		<x:restriction base="x:integer">
+			<!--
+				1 = Principal
+				2 = Homologação
+				3 = Teste
+			-->
+			<x:enumeration value="1" />
+			<x:enumeration value="2" />
+			<x:enumeration value="3" />
+		</x:restriction>
+	</x:simpleType>
+
+	<x:simpleType name="stIssueMode">
+		<x:restriction base="x:integer">
+			<!--
+				1 = Online
+				2 = Offline (Os documentos com IssueDate entre 2021-07-01 e 2021-10-31 têm validação simplificada)
+				3 = Off
+			-->
+			<x:enumeration value="1" />
+			<x:enumeration value="2" />
+			<x:enumeration value="3" />
+		</x:restriction>
+	</x:simpleType>
+
+	<x:simpleType name="stIssueModeAlfa">
+		<x:restriction base="x:string">
+			<x:enumeration value="ONLINE" />
+			<x:enumeration value="OFFLINE" />
+			<x:enumeration value="OFF" />
+		</x:restriction>
+	</x:simpleType>
+
+	<x:simpleType name="stIUC">
+		<x:restriction base="ef:stNoSpaces">
+			<x:pattern value="\d{4}[/]\d+" />
+		</x:restriction>
+	</x:simpleType>
+
+	<x:simpleType name="stTaxTypeCode">
+		<!--
+			NA  = Não se aplica;
+			IVA = Imposto sobre o Valor Acrescentado;
+			IS  = Imposto de Selo;
+			TEU = Tributo Especial Unificado;
+			IR  = Imposto sobre o Rendimento;
+		-->
+		<x:restriction base="x:string">
+			<x:enumeration value="NA" />
+			<x:enumeration value="IVA" />
+			<x:enumeration value="IS" />
+			<x:enumeration value="IR" />
+			<!--
+			<x:enumeration value="TEU" />
+			-->
+		</x:restriction>
+	</x:simpleType>
+
+	<x:simpleType name="stStampTaxCode">
+		<!--
+			1 = Operações de crédito (0,5%)
+			2 = Juros, prémios, comissões ou contraprestações de serviços financeiros (3,5%)
+			3 = Garantias (0,5%)
+			4 = Seguros (3,5%)
+			5 = Letras, livranças, títulos de crédito, ordens de pagamento (0,5%)
+			6 = Operações societárias (0,5%)
+			7 = Actos notariais, do registo e processuais (15%)
+			8 = Actos administrativos (1 000 $00)
+			9 = Escritos de contratos (1 000 $00)
+		-->
+		<x:restriction base="x:positiveInteger">
+			<x:enumeration value="1" />
+			<x:enumeration value="2" />
+			<x:enumeration value="3" />
+			<x:enumeration value="4" />
+			<x:enumeration value="5" />
+			<x:enumeration value="6" />
+			<x:enumeration value="7" />
+			<x:enumeration value="8" />
+			<x:enumeration value="9" />
+		</x:restriction>
+	</x:simpleType>
+
+	<x:simpleType name="stLineTypeCode">
+		<!--
+			N = Normal;
+			C = Charge;
+			D = Deduction;
+			I = Information;
+		-->
+		<x:restriction base="x:string">
+			<x:enumeration value="N" />
+			<x:enumeration value="C" />
+			<x:enumeration value="D" />
+			<x:enumeration value="I" />
+		</x:restriction>
+	</x:simpleType>
+
+	<x:simpleType name="stIssueReasonCode">
+		<x:restriction base="x:string">
+			<!--
+				0   = Outro                (DVE)
+				2   = Art.º 65, n.º 2 CIVA (NCE, NDE e DVE)
+				3   = Art.º 65, n.º 3 CIVA (NCE, NDE e DVE)
+				4   = Art.º 65, n.º 4 CIVA (NDE)
+				6   = Art.º 65, n.º 6 CIVA (NCE, NDE e DVE)
+				7   = Art.º 65, n.º 7 CIVA (NCE e DVE)
+				8   = Art.º 65, n.º 8 CIVA (NCE, NDE e DVE)
+				9   = Art.º 65, n.º 9 CIVA (NCE, NDE e DVE)
+				DD  = Débito de Despesas   (NDE)
+				IN  = Indisponível         (NCE, NDE e DVE) <Transição>
+				DRP = Desconto por Rappel  (NCE)
+			-->
+			<x:enumeration value="0" />
+			<x:enumeration value="2" />
+			<x:enumeration value="3" />
+			<x:enumeration value="4" />
+			<x:enumeration value="6" />
+			<x:enumeration value="7" />
+			<x:enumeration value="8" />
+			<x:enumeration value="9" />
+			<x:enumeration value="DD" />
+			<x:enumeration value="IN" />
+			<x:enumeration value="DRP" />
+		</x:restriction>
+	</x:simpleType>
+
+	<x:simpleType name="stReferencePeriod">
+		<x:restriction base="x:string">
+			<x:pattern value="2\d{3}-(0[1-9]|1[012])" />
+		</x:restriction>
+	</x:simpleType>
+
+	<x:simpleType name="stCVAddressCode">
+		<x:restriction base="x:string">
+			<x:length value="20" />
+			<x:pattern value="CV\d+" />
+		</x:restriction>
+	</x:simpleType>
+
+	<x:simpleType name="stUnitOfMeasure">
+		<x:restriction base="x:string">
+			<x:whiteSpace value="preserve" />
+			<x:pattern value="[aA-zZ0-9]+" />
+			<x:maxLength value="10"/>
+		</x:restriction>
+	</x:simpleType>
+
+	<x:simpleType name="stDecimal5">
+		<x:restriction base="x:decimal">
+			<x:fractionDigits value="5" />
+		</x:restriction>
+	</x:simpleType>
+
+	<x:simpleType name="stDecimal5MinInc0">
+		<x:restriction base="ef:stDecimal5">
+			<x:minInclusive value="0" />
+		</x:restriction>
+	</x:simpleType>
+
+	<x:simpleType name="stDecimal5MinExc0">
+		<x:restriction base="ef:stDecimal5">
+			<x:minExclusive value="0" />
+		</x:restriction>
+	</x:simpleType>
+
+	<x:simpleType name="stNote">
+		<x:restriction base="ef:stNoExtraSpaces">
+			<x:minLength value="10" />
+			<x:maxLength value="500" />
+		</x:restriction>
+	</x:simpleType>
+
+	<x:simpleType name="stSelfBillingAuthorizationCode">
+		<x:restriction base="ef:stDigits">
+			<x:minLength value="4" />
+			<x:maxLength value="10" />
+		</x:restriction>
+	</x:simpleType>
+
+	<x:simpleType name="stUUID">
+		<x:restriction base="x:string">
+			<x:whiteSpace value="preserve" />
+			<x:length value="36" />
+			<x:pattern value="\w{8}-(\w{4}-){3}\w{12}" />
+		</x:restriction>
+	</x:simpleType>
+
+	<x:complexType name="ctQuantity">
+		<x:simpleContent>
+			<x:extension base="ef:stDecimal5MinInc0">
+				<x:attribute name="UnitCode" type="ef:stUnitOfMeasure" use="required" />
+				<x:attribute name="IsStandardUnitCode" type="ef:stBoolean" use="optional" default="false" />
+			</x:extension>
+		</x:simpleContent>
+	</x:complexType>
+
+	<x:complexType name="stTaxId">
+		<x:simpleContent>
+			<x:extension base="ef:stTaxIdValue">
+				<x:attribute name="CountryCode"
+					type="iso-ctc:ISOTwoletterCountryCodeContentType"
+					use="required"/>
+			</x:extension>
+		</x:simpleContent>
+	</x:complexType>
+
+	<x:complexType name="ctAddressBase">
+		<x:sequence>
+			<x:element name="State" type="ef:stAddressText" minOccurs="0" />
+			<x:element name="City" type="ef:stAddressText" minOccurs="0" />
+			<x:element name="Region" type="ef:stAddressText" minOccurs="0" />
+			<x:element name="Street" type="ef:stAddressText" minOccurs="0" />
+			<x:element name="StreetDetail" type="ef:stAddressText" minOccurs="0" />
+			<x:element name="BuildingName" type="ef:stAddressText" minOccurs="0" />
+			<x:element name="BuildingNumber" type="ef:stAddressText" minOccurs="0" />
+			<x:element name="BuildingFloor" type="ef:stAddressText" minOccurs="0" />
+			<x:element name="PostalCode" type="ef:stAddressText" minOccurs="0" />
+			<x:element name="AddressDetail" type="ef:stAddressText" minOccurs="1" />
+			<x:element name="AddressCode" type="ef:stCVAddressCode" minOccurs="0" />
+		</x:sequence>
+		<x:attribute name="CountryCode"
+			type="iso-ctc:ISOTwoletterCountryCodeContentType"
+			use="required"/>
+	</x:complexType>
+
+	<!--<x:complexType name="ctAddressCV">
+		<x:complexContent>
+			<x:extension base="ef:ctAddressBase">
+				<x:sequence>
+					<x:element name="AddressCode" type="ef:stCVAddressCode" />
+				</x:sequence>
+			</x:extension>
+		</x:complexContent>
+	</x:complexType>-->
+
+	<x:complexType name="ctDuration">
+		<x:sequence>
+			<x:element name="StartDate" type="ef:stDate" />
+			<x:element name="StartTime" type="x:time" />
+			<x:sequence minOccurs="0">
+				<x:element name="EndDate" type="ef:stDate" />
+				<x:element name="EndTime" type="x:time" />
+			</x:sequence>
+		</x:sequence>
+	</x:complexType>
+
+	<x:complexType name="ctDatePeriod">
+		<x:sequence>
+			<x:element name="StartDate" type="ef:stDate" />
+			<x:element name="EndDate" type="ef:stDate" />
+		</x:sequence>
+	</x:complexType>
+
+	<x:complexType name="ctFiscalDocument">
+		<x:simpleContent>
+			<x:extension base="ef:stFiscalDocument">
+				<x:attribute name="IsOldDocument" type="ef:stBoolean" use="optional" />
+			</x:extension>
+		</x:simpleContent>
+	</x:complexType>
+
+</x:schema>

@@ -3,8 +3,15 @@ export { PdfDfaRenderer } from './dfa/pdf-dfa-renderer';
 export { InMemoryGoldenVectorRepository } from './golden-vectors/in-memory-golden-vector-repository';
 export { FetchMiddlewareTransport } from './middleware/fetch-middleware-transport';
 export { FetchPlatformTransport } from './middleware/fetch-platform-transport';
-export { parseServiceBody } from './middleware/response-parser';
+export {
+  normalizePlatformSubmissionResult,
+  normalizeSubmissionResult,
+  parseServiceBody,
+} from './middleware/response-parser';
 export { FileSequenceStore } from './sequence/file-sequence-store';
 export { InMemorySequenceStore } from './sequence/in-memory-sequence-store';
+export { KnexSequenceStore } from './sequence/knex-sequence-store';
 export { MissingXadesBesSigner } from './signing/missing-xml-signer';
+export { XadesBesSigner } from './signing/xades-bes-signer';
 export { MissingOfficialXsdValidator } from './validation/missing-xsd-validator';
+export { resolveDefaultSchemaPath, XmllintXsdValidator } from './validation/xmllint-xsd-validator';

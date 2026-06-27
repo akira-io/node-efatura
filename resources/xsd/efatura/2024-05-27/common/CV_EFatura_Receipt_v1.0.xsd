@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<x:schema
+	version="1.0"
+	elementFormDefault="qualified"
+	attributeFormDefault="unqualified"
+	targetNamespace="urn:cv:efatura:xsd:v1.0"
+	xmlns:x="http://www.w3.org/2001/XMLSchema"
+	xmlns:ef="urn:cv:efatura:xsd:v1.0">
+
+	<x:include schemaLocation="CV_EFatura_Elements_v1.0.xsd" />
+
+	<x:element name="Receipt">
+		<x:complexType>
+			<x:sequence>
+				<x:group ref="ef:grDfeHeaderCommon" />
+
+				<x:element ref="ef:EmitterParty" />
+				<x:element ref="ef:ReceiverParty" />
+				<x:element ref="ef:PaymentParty" minOccurs="0" />
+
+				<x:element ref="ef:ReceiptTypeCode" />
+				<x:element ref="ef:RentReceipt" minOccurs="0" />
+
+				<x:element ref="ef:References" minOccurs="0" />
+
+				<x:element name="Payments" type="ef:ctPaymentsPayment" minOccurs="0" />
+
+				<x:group ref="ef:grDfeFooterCommon" />
+			</x:sequence>
+		</x:complexType>
+	</x:element>
+</x:schema>

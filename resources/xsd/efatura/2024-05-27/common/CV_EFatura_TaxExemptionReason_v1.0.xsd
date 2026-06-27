@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<x:schema
+	version="1.0"
+	elementFormDefault="qualified"
+	attributeFormDefault="unqualified"
+	targetNamespace="urn:cv:efatura:xsd:v1.0"
+	xmlns:x="http://www.w3.org/2001/XMLSchema">
+
+	<x:simpleType name="stTaxExemptionReason">
+		<x:restriction base="x:string">
+			<x:whiteSpace value="preserve" />
+			<x:enumeration value="1">
+				<x:annotation>
+					<x:documentation>
+						<Description>Regime da margem de lucro - Bens em segunda mão,
+							objetos de arte, de coleção ou antiguidades</Description>
+						<Mention>Isento Regime da Margem de Lucro</Mention>
+					</x:documentation>
+				</x:annotation>
+			</x:enumeration>
+			<x:enumeration value="2">
+				<x:annotation>
+					<x:documentation>
+						<Description>Bens da Lista Anexa</Description>
+						<Mention>Isento Bens da Lista Anexa Art.º 9.º CIVA</Mention>
+					</x:documentation>
+				</x:annotation>
+			</x:enumeration>
+			<x:enumeration value="3">
+				<x:annotation>
+					<x:documentation>
+						<Description>Isenções nas operações internas - Transmissões de bens
+							e prestações de serviços isentas</Description>
+						<Mention>Isento Art.º 9.º CIVA</Mention>
+					</x:documentation>
+				</x:annotation>
+			</x:enumeration>
+			<x:enumeration value="4">
+				<x:annotation>
+					<x:documentation>
+						<Description>Isenções na exportação, operações assimiladas e
+							transportes internacionais</Description>
+						<Mention>Isento Art.º 13.º CIVA</Mention>
+					</x:documentation>
+				</x:annotation>
+			</x:enumeration>
+			<x:enumeration value="5">
+				<x:annotation>
+					<x:documentation>
+						<Description>Outras isenções</Description>
+						<Mention>Isento Art.º 14.º CIVA</Mention>
+					</x:documentation>
+				</x:annotation>
+			</x:enumeration>
+			<x:enumeration value="6">
+				<x:annotation>
+					<x:documentation>
+						<Description>Quantias excluídas do valor tributável</Description>
+						<Mention>Não Sujeito Art.º 15.º n.º 6 CIVA</Mention>
+					</x:documentation>
+				</x:annotation>
+			</x:enumeration>
+			<x:enumeration value="7">
+				<x:annotation>
+					<x:documentation>
+						<Description>Estado e demais pessoas colectivas de direito público -
+							poder de autoridade e operações a favor das populações, sem
+							contrapartida directa</Description>
+						<Mention>Não Sujeito Art.º 2.º n.º 3 CIVA</Mention>
+					</x:documentation>
+				</x:annotation>
+			</x:enumeration>
+			<x:enumeration value="8">
+				<x:annotation>
+					<x:documentation>
+						<Description>Amostras e ofertas de pequenos valores</Description>
+						<Mention>Não Sujeito Amostras e Ofertas de Pequenos
+							Valores</Mention>
+					</x:documentation>
+				</x:annotation>
+			</x:enumeration>
+			<x:enumeration value="9">
+				<x:annotation>
+					<x:documentation>
+						<Description>Mercadorias Transmitidas unicamente para
+							demonstração</Description>
+						<Mention>Não Sujeito Mercadorias Para Demonstração</Mention>
+					</x:documentation>
+				</x:annotation>
+			</x:enumeration>
+			<x:enumeration value="10">
+				<x:annotation>
+					<x:documentation>
+						<Description>Mercadorias Enviadas à Consignação </Description>
+						<Mention>Não Sujeito Mercadorias Enviadas à Consignação</Mention>
+					</x:documentation>
+				</x:annotation>
+			</x:enumeration>
+			<x:enumeration value="11">
+				<x:annotation>
+					<x:documentation>
+						<Description>Operações efetuadas no território nacional por não
+							residentes sem representante legal, quando o adquirente não seja
+							sujeito passivo de IVA</Description>
+						<Mention>Não Sujeito Art.º 26 n.º 3 CIVA a Contrario Sensu</Mention>
+					</x:documentation>
+				</x:annotation>
+			</x:enumeration>
+			<x:enumeration value="12">
+				<x:annotation>
+					<x:documentation>
+						<Description>Autoconsumos e operações gratuitas, que não tenham
+							havido dedução total ou parcial do imposto - Outras: art.os: 3.º,
+							n.º 3, e) e f); 4.º, n.º 2, al.b);</Description>
+						<Mention>Não Sujeito Autoconsumos e Op. Gratuitas</Mention>
+					</x:documentation>
+				</x:annotation>
+			</x:enumeration>
+			<x:enumeration value="13">
+				<x:annotation>
+					<x:documentation>
+						<Description>Prestação de serviços localizados fora do território
+							nacional</Description>
+						<Mention>Não Sujeito P. Serviços Localiz. Fora do T.
+							Nacional</Mention>
+					</x:documentation>
+				</x:annotation>
+			</x:enumeration>
+			<x:enumeration value="14">
+				<x:annotation>
+					<x:documentation>
+						<Description>IVA – autoliquidação - nº 12 do art.º 32º do
+							CIVA</Description>
+						<Mention>IVA – Autoliquidação</Mention>
+					</x:documentation>
+				</x:annotation>
+			</x:enumeration>
+			<x:enumeration value="15">
+				<x:annotation>
+					<x:documentation>
+						<Description>Cessão a título oneroso ou gratuito de um
+							estabelecimento comercial, ou de um património</Description>
+						<Mention>IVA - Não Devido Nem Exigível</Mention>
+					</x:documentation>
+				</x:annotation>
+			</x:enumeration>
+			<x:enumeration value="16">
+				<x:annotation>
+					<x:documentation>
+						<Description>Regime da margem de lucro - Bens em segunda
+							mão</Description>
+						<Mention>IVA - Bens em Segunda Mão</Mention>
+					</x:documentation>
+				</x:annotation>
+			</x:enumeration>
+			<x:enumeration value="17">
+				<x:annotation>
+					<x:documentation>
+						<Description>Regime da margem de lucro - Objetos de arte, de coleção
+							ou antiguidades</Description>
+						<Mention>IVA - Objetos de Arte de Coleção ou Antiguidades</Mention>
+					</x:documentation>
+				</x:annotation>
+			</x:enumeration>
+			<x:enumeration value="18">
+				<x:annotation>
+					<x:documentation>
+						<Description>Exigibilidade de caixa - Empreitadas ao
+							Estado</Description>
+						<Mention>IVA Exigível e Dedutível no Pagamento</Mention>
+					</x:documentation>
+				</x:annotation>
+			</x:enumeration>
+			<x:enumeration value="19">
+				<x:annotation>
+					<x:documentation>
+						<Description>Regime da margem de lucro - Agências operadoras
+							turísticas</Description>
+						<Mention>IVA Incluído - Não Confere Direito a Dedução</Mention>
+					</x:documentation>
+				</x:annotation>
+			</x:enumeration>
+			<x:enumeration value="20">
+				<x:annotation>
+					<x:documentation>
+						<Description>IVA - não confere direito a dedução
+							(REMPE)</Description>
+						<Mention>Tributo Especial Unificado</Mention>
+					</x:documentation>
+				</x:annotation>
+			</x:enumeration>
+			<x:enumeration value="21">
+				<x:annotation>
+					<x:documentation>
+						<Description>Isenções do Orçamento do Estado</Description>
+						<Mention>Isento OE</Mention>
+					</x:documentation>
+				</x:annotation>
+			</x:enumeration>
+		</x:restriction>
+	</x:simpleType>
+</x:schema>

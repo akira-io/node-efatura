@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<x:schema
+	version="1.0"
+	elementFormDefault="qualified"
+	attributeFormDefault="unqualified"
+	targetNamespace="urn:cv:efatura:xsd:v1.0"
+	xmlns:x="http://www.w3.org/2001/XMLSchema"
+	xmlns:ds="http://www.w3.org/2000/09/xmldsig#"
+	xmlns:ef="urn:cv:efatura:xsd:v1.0">
+
+	<x:include schemaLocation="common/CV_EFatura_MainTypes_v1.0.xsd" />
+
+	<x:import  schemaLocation="common/W3C_XMLDSig.xsd"    namespace="http://www.w3.org/2000/09/xmldsig#" />
+	<x:import  schemaLocation="common/ETSI_XAdESv132.xsd" namespace="http://uri.etsi.org/01903/v1.3.2#" />
+	<x:import  schemaLocation="common/ETSI_XAdESv141.xsd" namespace="http://uri.etsi.org/01903/v1.4.1#" />
+
+	<x:element name="Dfe">
+		<x:complexType>
+			<x:complexContent>
+				<x:extension base="ef:ctDfe">
+					<x:sequence>
+						<x:element ref="ds:Signature" minOccurs="0" />
+					</x:sequence>
+				</x:extension>
+			</x:complexContent>
+		</x:complexType>
+	</x:element>
+
+	<x:element name="Event">
+		<x:complexType>
+			<x:complexContent>
+				<x:extension base="ef:ctEvent">
+					<x:sequence>
+						<x:element ref="ds:Signature" minOccurs="0" />
+					</x:sequence>
+				</x:extension>
+			</x:complexContent>
+		</x:complexType>
+	</x:element>
+</x:schema>

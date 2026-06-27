@@ -1,0 +1,235 @@
+2020-08-26
+1) Disponibilização dos ficheiros XML e XSD.
+
+2020-09-02
+1) Atributo ID na raiz dos XML foi renomeado para IUD.
+
+2) Elemento Tax nos itens suporta indicar os detalhes (Nome da Lei, Artigo,
+	Número, Alínea, Subalínea, Data de Publicação) da legislação do Motivo de
+	não Liquidação de Imposto para os eventuais casos que não constam na lista
+	disponibilizada pela DNRE.
+
+2020-09-15
+1) Elemento GrossTotal foi renomeado para GrandTotal.
+2) Elemento ArticleNumber foi renomeado para Number.
+
+2020-09-27
+1) Reordenação de campos comuns.
+2) Elemento Supplier renomeado para Emitter.
+3) Elemento Customer renomeado para Receiver.
+4) Elemento TaxPointDate removido do Recibo.
+5) Elemento SupplierIdentification renomeado para EmitterIdentification.
+6) Elemento DiscrepancyResponse removido das Notas de Crédito/Débito.
+		A razão de emissão da NCE/NDE fica no elemento Note.
+7) Atributo unitCode renomeado para UnitCode.
+8) Atributo Country da estrutura Address renomeado para CountryCode.
+9) Elemento Code da estrutura Address renomeado para AddressCode.
+10) Elemento Tax alterado para suportar os códigos
+		de "Motivos de Não Liquidação de Impostos"
+		acordados com os Contribuintes Piloto.
+11) Ficheiro "CV_EFatura_TaxExemptionReason_v1.0.xsd" atualizado com os
+		códigos de "Motivos de Não Liquidação de Impostos"
+		acordados com os Contribuintes Piloto.
+12) Ficheiro "UNECE_UnitsOfMeasure_Rev15e_2020.xsd" adicionado
+		com as Unidades de Medidas recomendadas pelas Nações Unidas.
+13) Ducumento de Transporte Eletrónico (DTE) adicionado.
+
+2020-10-11
+1) Ficheiros XSD comuns renomeados.
+2) Unificação de namespaces.
+3) Elemento OrderReferenceItemNumber adicionado na estrutura de Item.
+4) Elementos ReasonTypeCode e Reason adicionados na estrutura de contingência.
+5) Elemento PriceTotal renomeado para TotalPrice
+6) Elemento TaxExemptionReason renomeado para TaxExemptionReasonCode
+
+2020-11-26
+1) Tipo boolean alterado de 0|1 para false|true.
+2) Namespace "urn:cv:efatura:dfe:xsd:v1" alterado para "urn:cv:efatura:xsd:v1.0".
+3) Elemento Version transformado como atributo do elemento raiz dos DFEs.
+4) IssueDateTime transformado em 2 elementos: IssueDate e IssueTime.
+5) Elemento CurrencyCode removido do cabeçalho e colocado no total a pagar.
+6) Elemento Emitter renomeado para EmitterParty.
+7) Elemento Receiver renomeado para ReceiverParty.
+8) Elemento Items renomeado para Lines.
+9) Elemento Item renomeado para Line.
+10) Elemento TotalPrice renomeado para PriceExtension.
+10) Propriedades de Produto/Serviço incluidas em um elemento Item dentro do elemento Line.
+11) Atributo IUD na raiz dos XML foi renomeado para Id.
+
+2021-03-10
+1) Elemento Repository adicionado na estrutura de todos os DFEs.
+2) Elemento LED renomeado para LedCode.
+3) Elemento IncomeReceipt renomeado para RentReceipt.
+4) Elemento IncomeTypeCode renomeado para RentTypeCode.
+5) Elemento AssetPurposeTypeCode renomeado para RentPurposeTypeCode.
+6) Elemento TransportServiceProvider renomeado para TransportServiceProviderParty.
+7) Elemento TransportLocations renomeado para TransportRoute.
+8) Elemento Location renomeado para TransportLocation.
+9) Elemento VehicleRegistration renomeado para VehicleRegistrationCode.
+10) Elemento Period renomeado para Duration.
+11) ID renomeado para Id.
+12) Atributo CountryCode adicionado ao elemento TaxId.
+13) Códigos do elemento ReceiptTypeCode alterados para valores numéricos.
+14) Códigos do elemento AssetPurposeTypeCode alterados para valores numéricos.
+15) Códigos do elemento RentTypeCode alterados para valores numéricos.
+
+2021-04-07
+1) LedCode suporta até 5 dígitos.
+2) Elemento Code adicionado na estrutura de Software.
+3) Estrutura Contacts deixa de suportar vários contatos do mesmo tipo.
+4) Elemento TaxType deve ser indicado sempre na estrutura Tax.
+5) Elemento AddressDetail deve ser indicado sempre na estrutura Address.
+
+2021-05-31
+1) Elemento TaxAmount adicionado na estrutura de Tax.
+2) Elemento PriceExtensionTotalAmount adicionado na estrutura de Totals.
+3) Elemento PaymentMeans da estrutura de pagamento renomeado para Payments.
+4) Elemento AlreadyPaid renomeado para IsPaid.
+5) Elemento AllowanceAmountBeforeDueDate adicionado na estrutura de Payments.
+6) Possibilidade de indicar vários meios de pagamento.
+7) Elemento Repository renomeado para RepositoryCode.
+8) Elemento IssueReasonCode adicionado nas estruturas da CreditNote e DebitNote.
+9) Elemento LineTypeCode adicionado na estrutura da Line.
+10) Elemento LineReferenceId adicionado na estrutura da Line.
+11) Elemento DueDate adicionado nas estruturas dos DFEs.
+12) Elemento Charge removido da estrutura da Line.
+13) Elemento PriceExtensionTotalAmount adicionado na estrutura de Totals.
+14) Elemento Allowance adicionado na estrutura de Totals.
+15) Elemento TaxType renomeado para TaxTypeCode.
+
+2021-07-07
+1) Elemento internally-detached criado para ser a raiz de um XML DFE quando a correspondente assinatura for detached.
+2) Elemento Dfe criado para agrupar os dados de um DFE (FE, FRE, TVE, NCE, NDE, DTE),
+        dados relativos à transmissão e o repositório onde armazenar o DFE.
+3) Atributo DocumentTypeCode adicionado no elemento Dfe para indicar o tipo de DFE.
+4) Elemento Transmission criado para agrupar os dados relativos à transmissão.
+5) Elementos (IssueMode, Software, Contingency) foram movidos para o elemento Transmission.
+6) Elemento RepositoryCode foi movido para o final do elemento Dfe.
+7) Elemento InvoiceReceipt criado para representar uma FRE.
+8) Elemento SalesReceipt criado para representar um TVE.
+9) Único XSD (EnvelopedSignature.xsd ou InternallyDetachedSignature.xsd) como ponto de partida de validação.
+        Os outros XSDs foram movidos para a pasta common.
+
+2021-07-13
+1) Elemento PaymentMeansCode colocado como primeiro descendente da estrutura Payment.
+2) Elemento PaymentReference da estrutura Payment fica opcional para suportar os meios de pagamentos que não têm referência.
+3) Elemento Version da estrutura Software aceita qualquer string.
+
+2021-07-14
+1) Elemento ReturnNote criado para suportar Nota de Devolução.
+
+2021-07-15
+1) Elemento FinalConsumerIndicator removido porque não é mais necessário.
+
+2021-07-27
+1) Atributo IsOldDocument adicionado na estrutura FiscalDocumentReference para suportar
+        referências a documentos antigos antes da entrada da Fatura Eletrónica.
+2) Elemento Reason renomeado para ReasonDescription na estrutua de Contingency.
+3) Elemento RegistrationNote criado para suportar Nota de Lançamento (utilizada principalmente pelos Bancos).
+4) Elemento AdditionalProperties renomeado para ExtraProperties.
+5) Elemento CustomFields renomeado para ExtraFields.
+6) Estrutura PaymentParty criada para suportar cenários em que o beneficiário e quem paga são entidades diferentes.
+7) Elemento ReceiverParty removido do TVE.
+8) Estrutura References criada no RCE para suportar referências a DFEs com indicação de pagamento e imposto.
+9) Elemento AllowanceBeforeDueDate renomeado para AllowancePercentageBeforeDueDate.
+
+2021-08-06
+1) Namespace "urn:cv:efatura:dfe:xsd:v1.0" alterado para "urn:cv:efatura:xsd:v1.0".
+2) Indicação de Meio de Pagamento fica opcional.
+3) Elemento LineTypeCode colocado como atributo na estrutura Line. Se o atributo não for indicado, a linha é assumida como Normal.
+4) Elemento TaxTypeCode colocado como atributo na estrutura Tax.
+5) Termo Allowance alterado para Discount.
+6) Elemento AllowancePercentageBeforeDueDate foi removido.
+7) Elemento AllowanceAmountBeforeDueDate foi removido.
+8) Elemento PaymentChannelCode foi removido.
+9) Elemento FiscalDocumentReference foi removido. O elemento References passa a ser usado em todos os DFEs sempre que houver referências a outros DFEs.
+10) Estrutura Event criada para suportar eventos (Cancelamento/Anulação de DFE, etc) na PE.
+
+2021-08-13
+1) Elemento AddressCode fica opcional na estrutura de Address.
+2) Elementos Address e Contacts ficam opcionais para o TVE.
+3) Atributo ExchangeRate suporta 3 casas decimais na estrutura de PayableAlternativeAmount.
+4) Correção de nº de ocorrências do elemento IUD na estrutura de Event.
+5) Suporte a LineTypeCode="D" para qualquer linha de dedução nas linhas de Produtos/Serviços. Lembrando que
+    LineTypeCode="C" é para qualquer linha de adição nas linhas de Produtos/Serviços.
+
+2021-08-24
+1) Elemento NetTotal na estrutura de Line aceita valor 0.
+2) Elemento NetTotalAmount na estrutura de Totals aceita valor 0.
+3) Campos Quantity e PackQuantity de unidades de medidas aceitam unidades usadas internamente pelos contribuintes.
+4) Atributo opcional IsStandardUnitCode adicionado na estrutura de Quantity para assinalar que o contribuinte
+    usa unidades padrões aceites pela DNRE. Se o atributo IsStandardUnitCode for omitido, assume-se o valor false.
+5) Elemento IUD removido da estrutura de Contingency, porquê seria redundante uma vez que seria igual ao Id do DFE.
+6) Quantidade suporta no máximo 6 casas decimais.
+7) Campos com percentagens suportam no máximo 3 casas decimais.
+
+2021-08-25
+1) Número de casas decimais aumentado de 2 para 5.
+
+2021-09-15
+1) Elemento <FiscalDocument IsOldDocument="true"> permite referenciar + NC, ND e DV.
+2) Elemento ReceiverTypeCode fica opcional no DTE.
+
+2021-09-17
+1) Elemento opcional InnerDocumentNumber adicionado na estrutura de todos os DFEs para permitir indicar
+    um Nº de Documento utilizado internamente na empresa. O elemento DocumentNumber já existente,
+    continua a ser obrigatório e deve conter apenas a parte do número dentro da série, tipo de documento e ano.
+2) Elementos Price, PriceExtension e PriceExtensionTotalAmount passam a aceitar valor ZERO.
+3) Opção (5 = Salário) removida do campo ReceiptTypeCode.
+
+2021-10-15
+1) Elemento opcional IsSpecimen adicionado para permitir testes no repositório principal.
+2) Opção IssueReasonCode=IN adicionada para suportar ausência do motivo de emissão das NCE, NDE, DVE na fase de transição.
+3) Elemento DocumentTypeCode adicionado na estrutura de Event do tipo EventTypeCode="UDN".
+
+2021-11-04
+1) Elemento References fica opcional quando IssueReasonCode=IN nas NCE, NDE, DVE na fase de transição.
+
+2021-11-16
+1) Evento FDC permite indicar mais que 1 IUD.
+2) Elemento FiscalDocument@IsOldDocument="true" permite referenciar qualquer tipo de documento.
+
+2021-11-26
+1) Elemento <References> fica opcional para Recibo do tipo Renda.
+2) NLE permite indicar o elemento <References>.
+3) Elemento <References> fica obrigatório no DTE quando
+    TransportDocumentTypeCode=5 - "Guia ou Nota de Devolução Efetuada pelo Cliente".
+4) Elemento <LedCode> fica opcional na estrutura de <Contingency>. Se não for indicado é assumido o LedCode do DFE.
+5) Suporte a quantidade = 0.
+
+2021-12-19
+1) Suporte a LineTypeCode="I". I=Informação. PriceExtension e NetTotal da linha não afetam os respetivos totais.
+
+2022-01-27
+1) Tamanho do campo série aumentado para 20 carateres.
+
+2022-01-28
+1) InnerDocumentNumber aceita até 50 carateres, exceto espaços.
+
+2022-01-29
+1) Elemento <Year> adicionado na estrutura do evento UDN.
+    Foi adicionado como opcional, mas vai ficar obrigatório a partir de 01-03-2022.
+    Para os XML submetidos sem este campo, será assumido o ano da IssueDateTime do evento.
+
+2022-02-19
+1) Elemento <WithholdingTaxTotalAmount> adicionado na estrutura de Totals.
+    O seu valor corresponde à soma dos impostos IR e é subtraido em PayableAmount.
+2) Elemento <Tax> passou a ter maxOccurs="2" em vez de maxOccurs="unbounded".
+3) TaxTypeCode="TEU" deixou de ser uma opção na lista de Tipos de Imposto.
+
+2022-02-23
+1) Elemento <TaxTotal> adicionado como opcional na estrutura de Tax.
+    Caso não for indicado, o sistema calcula/valida o imposto de acordo com os 2 modos anteriores.
+    Caso for indicado, o sistema assume o valor como o imposto da linha. Entretanto, esse valor é validado
+    se está entre floor(X) e ceil(X), onde X = NetTotal * TaxPercentage / 100.
+
+2022-03-10
+1) Correção do código de país da INDONESIA que estava Id em vez de ID.
+2) Correção da regex do elemento Dfe/Receipt/RentReceipt/ReferencePeriod que excluia o mês 10.
+
+2023-12-15
+1) Elemento <SelfBilling> de autofaturação adicionado na estrutura dos DFEs.
+
+2024-05-27
+1) Opção IssueReasonCode=DRP adicionada para suportar "Desconto por Rappel" como motivo de emissão da NCE.
+2) Elemento <RappelPeriod> adicionado na estrutura da NCE para indicar o período do Desconto por Rappel.

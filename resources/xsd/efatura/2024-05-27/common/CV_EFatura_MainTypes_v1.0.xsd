@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<x:schema
+	version="1.0"
+	elementFormDefault="qualified"
+	attributeFormDefault="unqualified"
+	targetNamespace="urn:cv:efatura:xsd:v1.0"
+	xmlns:x="http://www.w3.org/2001/XMLSchema"
+	xmlns:ef="urn:cv:efatura:xsd:v1.0">
+
+	<x:include schemaLocation="CV_EFatura_Invoice_v1.0.xsd" />
+	<x:include schemaLocation="CV_EFatura_InvoiceReceipt_v1.0.xsd" />
+	<x:include schemaLocation="CV_EFatura_SalesReceipt_v1.0.xsd" />
+	<x:include schemaLocation="CV_EFatura_Receipt_v1.0.xsd" />
+	<x:include schemaLocation="CV_EFatura_CreditNote_v1.0.xsd" />
+	<x:include schemaLocation="CV_EFatura_DebitNote_v1.0.xsd" />
+	<x:include schemaLocation="CV_EFatura_ReturnNote_v1.0.xsd" />
+	<x:include schemaLocation="CV_EFatura_RegistrationNote_v1.0.xsd" />
+	<x:include schemaLocation="CV_EFatura_Transport_v1.0.xsd" />
+
+	<x:complexType name="ctDfe">
+		<x:sequence>
+			<x:element ref="ef:IsSpecimen" minOccurs="0" />
+			<x:choice>
+				<x:element ref="ef:Invoice" />
+				<x:element ref="ef:InvoiceReceipt" />
+				<x:element ref="ef:SalesReceipt" />
+				<x:element ref="ef:Receipt" />
+				<x:element ref="ef:CreditNote" />
+				<x:element ref="ef:DebitNote" />
+				<x:element ref="ef:ReturnNote" />
+				<x:element ref="ef:RegistrationNote" />
+				<x:element ref="ef:Transport" />
+			</x:choice>
+			<x:element ref="ef:Transmission" />
+			<x:element ref="ef:RepositoryCode" />
+		</x:sequence>
+		<x:attribute name="Version" type="ef:stDocVersion" use="required" />
+		<x:attribute name="Id" type="ef:stDfeId" use="required" />
+		<x:attribute name="DocumentTypeCode" type="ef:stDocumentTypeCode" use="required" />
+	</x:complexType>
+
+	<x:complexType name="ctEvent">
+		<x:sequence>
+			<x:element name="EmitterTaxId" type="ef:stTaxId"/>
+			<x:element ref="ef:IssueDateTime" />
+			<x:element name="IssueReasonDescription" type="ef:stNote" />
+
+			<x:choice>
+				<x:element ref="ef:IUD" maxOccurs="unbounded" />
+				<x:sequence>
+					<x:element ref="ef:Year" minOccurs="0" />
+					<x:element ref="ef:LedCode" />
+					<x:element ref="ef:Serie"/>
+					<x:element name="DocumentTypeCode" type="ef:stDocumentTypeCode"/>
+					<x:element name="DocumentNumberStart" type="ef:stDocumentNumber"/>
+					<x:element name="DocumentNumberEnd" type="ef:stDocumentNumber"/>
+				</x:sequence>
+			</x:choice>
+
+			<x:element ref="ef:Transmission" />
+			<x:element ref="ef:RepositoryCode" />
+		</x:sequence>
+		<x:attribute name="Id" type="ef:stEventId" use="required" />
+		<x:attribute name="Version" type="ef:stDocVersion" use="required" />
+		<x:attribute name="EventTypeCode" type="ef:stEventTypeCode" use="required" />
+	</x:complexType>
+
+</x:schema>

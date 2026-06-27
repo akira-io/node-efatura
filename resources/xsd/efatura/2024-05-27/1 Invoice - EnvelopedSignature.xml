@@ -1,0 +1,299 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Dfe
+	xmlns="urn:cv:efatura:xsd:v1.0"
+	Version="1.0"
+	Id="CV1200520123456789000112345678901112345678904"
+	DocumentTypeCode="1"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="urn:cv:efatura:xsd:v1.0 EnvelopedSignature.xsd">
+
+	<!--
+		Amostra de DFE no ambiente efetivo de produção.
+		Os DFEs marcados com <IsSpecimen>true</IsSpecimen> serão eliminados depois de 24 horas.
+	-->
+	<IsSpecimen>true</IsSpecimen>
+
+	<Invoice>
+		<!-- Indicação de Autofaturação -->
+		<SelfBilling>
+			<!-- ID do pedido de autorização retornado pela PE no endpoint "/v1/dfe/self-billing/authorize" -->
+			<AuthorizationId>cdb85a77-dda9-4bed-9b49-42ccbf516476</AuthorizationId>
+			<!-- Código de autorização enviado para o email/telemóvel do contribuinte emissor -->
+			<AuthorizationCode>123456</AuthorizationCode>
+		</SelfBilling>
+
+		<!-- Identificação do DFE -->
+		<LedCode>1</LedCode>
+		<Serie>XYZ</Serie>
+		<DocumentNumber>123456789</DocumentNumber>
+		<!--
+			DE     = Data de Emissão.
+			DT     = Data de Transmissão para a DNRE.
+			TR     = Tempo de Resposta.
+			TT_MAX = Tempo de Transmissão Máximo. TT_MAX = 1 minuto.
+			TR_MAX = Tempo de Resposta Máximo. TR_MAX = 5 segundos.
+
+			TR        > TT_MAX => Contingência
+			(DT - DE) > TT_MAX => Contingência
+		-->
+		<IssueDate>2021-01-01</IssueDate>
+		<IssueTime>11:01:02</IssueTime>
+
+		<DueDate>2021-01-01</DueDate>
+		<OrderReference>
+			<Id>12345</Id>
+		</OrderReference>
+		<TaxPointDate>2021-01-01</TaxPointDate>
+
+		<!-- Incluir campo para indicar o user do sistema do contribunite -->
+
+		<!--
+		TransportIndicator
+		InvoiceTypeCode
+		LineCountNumeric
+		InvoicePeriod
+
+		DespatchDocumentReference
+		ContractDocumentReference
+		ProjectReference
+
+		PrepaidPayment
+		PayeeParty
+		TaxRepresentativeParty
+		-->
+
+		<!-- Emissor (AccountingSupplierParty) -->
+		<EmitterParty>
+			<TaxId CountryCode="CV">123456789</TaxId>
+			<Name>Nome do Emissor</Name>
+			<Address CountryCode="CV">
+				<AddressDetail>Detalhe de endereço do contribuinte emissor</AddressDetail>
+				<AddressCode>CV774741741037410321</AddressCode>
+			</Address>
+			<Contacts>
+				<Telephone>1234567</Telephone>
+				<Mobilephone>9123456</Mobilephone>
+				<Telefax>3123456</Telefax>
+				<Email>email@empresa.cv</Email>
+				<Website>https://www.empresa.cv/a/b/c?a=b#abc</Website>
+			</Contacts>
+		</EmitterParty>
+
+		<!-- Recetor/Destinatário (AccountingCustomerParty) -->
+		<ReceiverParty>
+			<TaxId CountryCode="BR">1-2345-6789</TaxId>
+			<Name>Nome do Recestor</Name>
+			<Address CountryCode="CV">
+				<AddressDetail>Detalhe de endereço do contribuinte recetor</AddressDetail>
+				<AddressCode>CV774741741037410321</AddressCode>
+			</Address>
+			<Contacts>
+				<Telephone>1234567</Telephone>
+				<Mobilephone>9123456</Mobilephone>
+				<Telefax>3123456</Telefax>
+				<Email>email@empresa.cv</Email>
+				<Website>www.exemplo.cv</Website>
+			</Contacts>
+		</ReceiverParty>
+
+		<!-- Criar estrutura do fornecedor para DGA (SellerSupplierParty) -->
+
+		<!-- Produtos/Serviços -->
+		<Lines>
+			<!-- Linha de tipo normal -->
+			<Line LineTypeCode="N">
+				<Id>1</Id>
+				<Quantity UnitCode="EA" IsStandardUnitCode="true">1.12345</Quantity>
+				<Price>30000</Price>
+				<PriceExtension>30000</PriceExtension>
+				<Discount ValueType="A">100</Discount>
+				<NetTotal>30000</NetTotal>
+				<Tax TaxTypeCode="IVA">
+					<TaxPercentage>15</TaxPercentage>
+					<TaxTotal>4500</TaxTotal>
+				</Tax>
+				<Tax TaxTypeCode="IR">
+					<TaxPercentage>10</TaxPercentage>
+				</Tax>
+				<!-- TaxPointDate -->
+				<Item>
+					<Description>Produto 1</Description>
+					<EmitterIdentification>P1</EmitterIdentification>
+					<HazardousRiskIndicator>false</HazardousRiskIndicator>
+					<ExtraProperties>
+						<Property Name="Cor">Preto</Property>
+						<Property Name="Peso">12</Property>
+					</ExtraProperties>
+				</Item>
+			</Line>
+			<!-- Linha de tipo encargo -->
+			<Line LineTypeCode="C">
+				<Id>2</Id>
+				<LineReferenceId>1</LineReferenceId>
+				<Quantity UnitCode="EA">1</Quantity>
+				<Price>150</Price>
+				<PriceExtension>150</PriceExtension>
+				<NetTotal>150</NetTotal>
+				<Tax TaxTypeCode="IS">
+					<StampTaxCode>2</StampTaxCode>
+					<TaxPercentage>3.5</TaxPercentage>
+				</Tax>
+				<Item>
+					<Description>Juros Mensal</Description>
+					<EmitterIdentification>JM</EmitterIdentification>
+				</Item>
+			</Line>
+			<!-- Linha de tipo dedução -->
+			<Line LineTypeCode="D">
+				<Quantity UnitCode="EA">20</Quantity>
+				<Price>40</Price>
+				<PriceExtension>800</PriceExtension>
+				<NetTotal>800</NetTotal>
+				<Item>
+					<Description>Comissão Butano 12,5 Kgs</Description>
+					<EmitterIdentification>COLGZ70005</EmitterIdentification>
+				</Item>
+			</Line>
+		</Lines>
+
+		<!-- Totais -->
+		<Totals>
+			<PriceExtensionTotalAmount>1000</PriceExtensionTotalAmount>
+			<ChargeTotalAmount>0</ChargeTotalAmount>
+			<DiscountTotalAmount>180</DiscountTotalAmount>
+			<NetTotalAmount>3000</NetTotalAmount>
+			<Discount>10</Discount>
+			<TaxTotalAmount>450</TaxTotalAmount>
+			<WithholdingTaxTotalAmount>10</WithholdingTaxTotalAmount>
+			<PayableRoundingAmount>-10</PayableRoundingAmount>
+			<!-- GrossTotal no SAFT -->
+			<PayableAmount>5000</PayableAmount>
+			<PayableAlternativeAmount CurrencyCode="USD" ExchangeRate="93.15"
+				>53.67</PayableAlternativeAmount>
+			<PayableAlternativeAmount CurrencyCode="EUR" ExchangeRate="110"
+				>29.65</PayableAlternativeAmount>
+		</Totals>
+
+		<!-- Meio de Pagamento -->
+		<Payments>
+			<PaymentDueDate>2021-01-01</PaymentDueDate>
+			<PaymentTerms>
+				<Note>Juros de 10% a partir da data de vencimento</Note>
+			</PaymentTerms>
+			<PayeeFinancialAccount>
+				<NIB>123456789012345678901</NIB>
+				<Name>Opção de conta de pagamento 1</Name>
+			</PayeeFinancialAccount>
+			<PayeeFinancialAccount>
+				<NIB>123456789012345678902</NIB>
+				<Name>Opção de conta de pagamento 2</Name>
+			</PayeeFinancialAccount>
+		</Payments>
+
+		<!-- Entrega -->
+		<Delivery>
+			<DeliveryDate>2021-01-01</DeliveryDate>
+			<Address CountryCode="CV">
+				<City>Cidade</City>
+				<Region>Região</Region>
+				<Street>Rua</Street>
+				<StreetDetail>Detalhes da Rua</StreetDetail>
+				<BuildingNumber>12345</BuildingNumber>
+				<PostalCode>12345</PostalCode>
+				<AddressDetail>Detalhes do endereço</AddressDetail>
+				<AddressCode>CV774741741037410321</AddressCode>
+			</Address>
+		</Delivery>
+
+		<Note>Notas/Observações opcionais</Note>
+
+		<!-- Campos Extras -->
+		<ExtraFields>
+			<QualquerCampo QualquerAtributo="Qualquer Valor">Campo com quarquer estrutura</QualquerCampo>
+			<Segredo>Valor encriptado...</Segredo>
+		</ExtraFields>
+	</Invoice>
+
+	<Transmission>
+		<IssueMode>3</IssueMode>
+		<TransmitterTaxId CountryCode="CV">123456789</TransmitterTaxId>
+		<Software>
+			<Code>EMIPUB</Code>
+			<Name>DNRE Emissor Público</Name>
+			<Version>Build #53 12-07-2021 14:00:47 CVT - master</Version>
+		</Software>
+		<Contingency>
+			<LedCode>1</LedCode>
+			<!-- IUC deve ser indicado apenas em IssueMode=OFF -->
+			<IUC>2020/1</IUC>
+			<IssueDate>2021-01-01</IssueDate>
+			<IssueTime>01:02:03</IssueTime>
+			<ReasonTypeCode>1</ReasonTypeCode>
+		</Contingency>
+	</Transmission>
+
+	<RepositoryCode>1</RepositoryCode>
+
+	<ds:Signature
+		Id="EmitterPartySignatureId"
+		xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
+		<ds:SignedInfo>
+			<ds:CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315" />
+			<ds:SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256" />
+			<ds:Reference Id="DataReferenceId" URI="#CV1200520123456789000112345678901112345678904">
+				<ds:Transforms>
+					<ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature" />
+				</ds:Transforms>
+				<ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256" />
+				<ds:DigestValue>ozcoAydr6KqHP+OtogQTxJIByzCzzWm8gNAOkpwBLMs=</ds:DigestValue>
+			</ds:Reference>
+			<ds:Reference URI="#SignedPropertiesId" Type="http://uri.etsi.org/01903#SignedProperties">
+				<ds:Transforms>
+					<ds:Transform Algorithm="http://www.w3.org/2001/10/xml-exc-c14n"/>
+				</ds:Transforms>
+				<ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256" />
+				<ds:DigestValue>xtFg15YLHtpf7KIhN0naU80wzSr99+17PXcVobbqEjc=</ds:DigestValue>
+			</ds:Reference>
+		</ds:SignedInfo>
+		<ds:SignatureValue>U2lnbmF0dXJlVmFsdWU=</ds:SignatureValue>
+		<ds:KeyInfo>
+			<ds:X509Data>
+				<ds:X509Certificate>WDUwOUNlcnRpZmljYXRl</ds:X509Certificate>
+			</ds:X509Data>
+		</ds:KeyInfo>
+		<ds:Object>
+			<xades:QualifyingProperties
+				xmlns:xades="http://uri.etsi.org/01903/v1.3.2#"
+				Target="#EmitterPartySignatureId">
+				<xades:SignedProperties Id="SignedPropertiesId">
+					<xades:SignedSignatureProperties>
+						<xades:SigningTime>2020-11-06T11:01:02</xades:SigningTime>
+						<xades:SigningCertificate>
+							<xades:Cert>
+								<xades:CertDigest>
+									<ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></ds:DigestMethod>
+									<ds:DigestValue>RGlnZXN0VmFsdWU=</ds:DigestValue>
+								</xades:CertDigest>
+								<xades:IssuerSerial>
+									<ds:X509IssuerName>Emitter Party Name</ds:X509IssuerName>
+									<ds:X509SerialNumber>1234567890</ds:X509SerialNumber>
+								</xades:IssuerSerial>
+							</xades:Cert>
+						</xades:SigningCertificate>
+						<xades:SignatureProductionPlace>
+							<xades:City>Praia</xades:City>
+							<xades:StateOrProvince>Santiago</xades:StateOrProvince>
+							<xades:PostalCode>7600</xades:PostalCode>
+							<xades:CountryName>Cabo Verde</xades:CountryName>
+						</xades:SignatureProductionPlace>
+					</xades:SignedSignatureProperties>
+					<xades:SignedDataObjectProperties>
+						<xades:DataObjectFormat ObjectReference="#DataReferenceId">
+							<xades:MimeType>text/xml</xades:MimeType>
+						</xades:DataObjectFormat>
+					</xades:SignedDataObjectProperties>
+				</xades:SignedProperties>
+			</xades:QualifyingProperties>
+		</ds:Object>
+	</ds:Signature>
+</Dfe>

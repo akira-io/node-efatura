@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<x:schema
+	version="1.0"
+	elementFormDefault="qualified"
+	attributeFormDefault="unqualified"
+	targetNamespace="urn:cv:efatura:xsd:v1.0"
+	xmlns:x="http://www.w3.org/2001/XMLSchema"
+	xmlns:ef="urn:cv:efatura:xsd:v1.0">
+
+	<x:include schemaLocation="CV_EFatura_MainTypes_v1.0.xsd" />
+
+	<x:element name="Dfe" type="ef:ctDfe" />
+
+	<x:element name="Event" type="ef:ctEvent" />
+
+</x:schema>
