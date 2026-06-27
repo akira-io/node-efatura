@@ -1,0 +1,5 @@
+{
+  "source": "internal-package-baseline",
+  "official": false,
+  "note": "Profile fixture only. Signature bytes depend on certificate and private key material."
+}

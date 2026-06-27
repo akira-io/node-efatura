@@ -1,0 +1,13 @@
+{
+  "source": "internal-package-baseline",
+  "official": false,
+  "input": {
+    "repositoryCode": 3,
+    "issueDate": "2026-02-08",
+    "emitterNif": "100200300",
+    "led": "123",
+    "documentType": "FTE",
+    "documentNumber": 1,
+    "randomCode": "1234567890"
+  }
+}
