@@ -17,27 +17,27 @@ Cabo Verde e-Fatura fiscal document validation engine for Node.js. It provides a
 
 ```sh
 # npm
-npm install @akira-io/efatura@0.1.0-beta.0
+npm install @akira-io/efatura
 
 # pnpm
-pnpm add @akira-io/efatura@0.1.0-beta.0
+pnpm add @akira-io/efatura
 
 # yarn
-yarn add @akira-io/efatura@0.1.0-beta.0
+yarn add @akira-io/efatura
 
 # bun
-bun add @akira-io/efatura@0.1.0-beta.0
+bun add @akira-io/efatura
 ```
 
 ```json
 {
   "dependencies": {
-    "@akira-io/efatura": "0.1.0-beta.0"
+    "@akira-io/efatura": "latest"
   }
 }
 ```
 
-This is beta software. Pin exact versions in production and review [CHANGELOG.md](CHANGELOG.md) before upgrading.
+Review [CHANGELOG.md](CHANGELOG.md) before upgrading production systems.
 
 ## Quick start
 
