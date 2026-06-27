@@ -6,6 +6,17 @@ import { DocumentType, TaxTypeCode, createEfatura } from '@akira-io/efatura';
 const efatura = createEfatura({
   transmitterNif: '100200300',
   transmitterLed: '123',
+  emitter: {
+    name: 'Emitter',
+    address: {
+      countryCode: 'CV',
+      addressDetail: 'Emitter address',
+    },
+    contacts: {
+      email: 'issuer@example.cv',
+      telephone: '5551234',
+    },
+  },
   softwareCode: 'SW001',
   softwareName: 'Efatura Suite',
   softwareVersion: '1.0.0',
@@ -18,7 +29,6 @@ const invoice = efatura
   .invoice()
   .type(DocumentType.ElectronicInvoice)
   .issueDate('2026-02-08')
-  .emitter({ taxId: { countryCode: 'CV', value: '100200300' }, name: 'Emitter' })
   .receiver({ taxId: { countryCode: 'CV', value: '900800700' }, name: 'Receiver' })
   .line({
     quantity: { value: 1, unitCode: 'EA' },
@@ -41,3 +51,5 @@ const invoice = efatura
 ```
 
 `invoice.id` is generated as a UUID when no id is provided.
+
+`emitter` in `createEfatura` is the default issuer. Call `.emitter(...)` on an invoice only when that document must be issued by another taxpayer.

@@ -42,8 +42,11 @@ export { buildEventXml } from './application/xml/event-xml';
 export type {
   EfaturaConfig,
   EfaturaConfigArray,
+  EfaturaEmitterConfig,
+  EfaturaEmitterTaxIdConfig,
   EfaturaGenerators,
   ResolvedEfaturaConfig,
+  ResolvedEfaturaEmitter,
 } from './config';
 export {
   configAsArray,

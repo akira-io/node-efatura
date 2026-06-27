@@ -24,6 +24,17 @@ const efatura = createEfatura({
   transmitterNif: process.env.EFATURA_TRANSMITTER_NIF,
   transmitterLed: process.env.EFATURA_TRANSMITTER_LED,
   transmitterKey: process.env.EFATURA_TRANSMITTER_KEY,
+  emitter: {
+    name: process.env.EFATURA_EMITTER_NAME,
+    address: {
+      countryCode: 'CV',
+      addressDetail: process.env.EFATURA_EMITTER_ADDRESS,
+    },
+    contacts: {
+      email: process.env.EFATURA_EMITTER_EMAIL,
+      telephone: process.env.EFATURA_EMITTER_PHONE,
+    },
+  },
   softwareCode: process.env.EFATURA_SOFTWARE_CODE,
   softwareName: process.env.EFATURA_SOFTWARE_NAME,
   softwareVersion: process.env.EFATURA_SOFTWARE_VERSION,
@@ -36,7 +47,6 @@ const invoice = efatura
   .invoice()
   .type(DocumentType.ElectronicInvoice)
   .issueDate('2026-02-08')
-  .emitter({ taxId: { countryCode: 'CV', value: '100200300' }, name: 'Emitter' })
   .receiver({ taxId: { countryCode: 'CV', value: '900800700' }, name: 'Receiver' })
   .line({
     quantity: { value: 1, unitCode: 'EA' },
@@ -59,6 +69,8 @@ const invoice = efatura
 
 console.log(invoice.id); // UUID
 ```
+
+`config.emitter` is the default issuer for every document. Omit `.emitter(...)` when the configured issuer is the document emitter. Pass `.emitter(...)` only to override the default, for example when the same Efatura instance emits for another taxpayer.
 
 ## Current Scope
 

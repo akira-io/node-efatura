@@ -7,6 +7,7 @@
 | `transmitterNif` | Issuer tax identifier |
 | `transmitterLed` | Numeric issuer LED code assigned by DNRE, up to 5 digits |
 | `transmitterKey` | Middleware credential or shared key |
+| `emitter` | Default issuer party used when a document does not pass `.emitter(...)` |
 | `softwareCode` | Registered software code. The official XSD accepts uppercase letters and digits |
 | `softwareName` | Software name sent to middleware |
 | `softwareVersion` | Software version sent to middleware |
@@ -16,6 +17,34 @@
 | `environment` | `PRODUCTION`, `HOMOLOGATION`, `TEST`, or repository code `1`, `2`, `3` |
 
 Empty `environment` values resolve to `TEST`.
+
+## Default Emitter
+
+Use `config.emitter` for the taxpayer that usually issues documents through this Efatura instance. Its `taxId.value` defaults to `transmitterNif`, so the invoice builder does not need `.emitter(...)` for the normal case.
+
+```ts
+const efatura = createEfatura({
+  transmitterNif: '100200300',
+  transmitterLed: '123',
+  emitter: {
+    name: 'Emitter',
+    address: {
+      countryCode: 'CV',
+      addressDetail: 'Emitter address',
+    },
+    contacts: {
+      email: 'issuer@example.cv',
+      telephone: '5551234',
+    },
+  },
+  softwareCode: 'SW001',
+  softwareName: 'Efatura Suite',
+  softwareVersion: '1.0.0',
+  middlewareBaseUrl: 'https://localhost:3443',
+});
+```
+
+Call `.emitter(...)` on a document only when this Efatura instance is issuing for another taxpayer. The document emitter overrides `config.emitter`.
 
 ## Dependencies
 

@@ -47,6 +47,22 @@ describe('resolveConfig', () => {
     expect(config.repositoryCode).toBe(2);
   });
 
+  it('resolves configured emitter defaults from transmitter values', () => {
+    const config = resolveConfig(
+      makeConfig({
+        emitter: {
+          name: 'Emitter',
+          contacts: { email: 'issuer@example.cv', telephone: '5551234' },
+        },
+      }),
+    );
+
+    expect(config.emitter?.taxId.value).toBe('100200300');
+    expect(config.emitter?.taxId.countryCode).toBe('CV');
+    expect(config.emitter?.name).toBe('Emitter');
+    expect(configAsArray(config).emitter?.taxId.value).toBe('100200300');
+  });
+
   it('allows the DFA QR Code base URL to be configured', () => {
     const config = resolveConfig(makeConfig({ dfaBaseUrl: 'https://efatura.example/dfe' }));
 

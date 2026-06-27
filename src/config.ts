@@ -2,7 +2,7 @@ import { Environment, environmentCode, environmentFromValue } from './domain/enu
 import { EfaturaValidationError } from './domain/errors';
 import { generateUuid } from './support/generators';
 import { messages } from './support/messages';
-import { optionalText, requiredText } from './support/normalizers';
+import { isRecord, optionalText, requiredText } from './support/normalizers';
 
 export const DEFAULT_DFA_BASE_URL = 'https://pe.efatura.cv/dfe/view';
 export const DEFAULT_PLATFORM_BASE_URL = 'https://services.efatura.cv';
@@ -13,10 +13,31 @@ export interface EfaturaGenerators {
   batchId: () => string;
 }
 
+export interface EfaturaEmitterTaxIdConfig {
+  countryCode?: string | number | null;
+  value?: string | number | null;
+}
+
+export interface EfaturaEmitterConfig {
+  reference?: string | number | null;
+  taxId?: EfaturaEmitterTaxIdConfig | null;
+  name?: string | number | null;
+  address?: Record<string, unknown> | null;
+  contacts?: Record<string, unknown> | null;
+}
+
+export type ResolvedEfaturaEmitter = Record<string, unknown> & {
+  taxId: {
+    countryCode: string;
+    value: string;
+  };
+};
+
 export interface EfaturaConfig {
   transmitterNif?: string | number | null;
   transmitterLed?: string | number | null;
   transmitterKey?: string | number | null;
+  emitter?: EfaturaEmitterConfig | null;
   softwareCode?: string | number | null;
   softwareName?: string | number | null;
   softwareVersion?: string | number | null;
@@ -31,6 +52,7 @@ export interface ResolvedEfaturaConfig {
   transmitterNif: string;
   transmitterLed: string;
   transmitterKey: string | null;
+  emitter: ResolvedEfaturaEmitter | null;
   softwareCode: string;
   softwareName: string;
   softwareVersion: string;
@@ -48,6 +70,7 @@ export interface EfaturaConfigArray {
     led: string;
     key: string | null;
   };
+  emitter: ResolvedEfaturaEmitter | null;
   software: {
     code: string;
     name: string;
@@ -68,21 +91,24 @@ export interface EfaturaConfigArray {
 
 export function resolveConfig(config: EfaturaConfig): ResolvedEfaturaConfig {
   const environment = resolveEnvironment(config.environment);
+  const transmitterNif = requiredText(
+    config.transmitterNif,
+    'transmitter.nif',
+    messages.config.transmitterNifRequired,
+    'config.transmitter_nif_required',
+  );
+  const transmitterLed = requiredText(
+    config.transmitterLed,
+    'transmitter.led',
+    messages.config.transmitterLedRequired,
+    'config.transmitter_led_required',
+  );
 
   return {
-    transmitterNif: requiredText(
-      config.transmitterNif,
-      'transmitter.nif',
-      messages.config.transmitterNifRequired,
-      'config.transmitter_nif_required',
-    ),
-    transmitterLed: requiredText(
-      config.transmitterLed,
-      'transmitter.led',
-      messages.config.transmitterLedRequired,
-      'config.transmitter_led_required',
-    ),
+    transmitterNif,
+    transmitterLed,
     transmitterKey: optionalText(config.transmitterKey),
+    emitter: defaultEmitterFrom(config.emitter, transmitterNif),
     softwareCode: requiredText(
       config.softwareCode,
       'software.code',
@@ -126,6 +152,7 @@ export function configAsArray(config: ResolvedEfaturaConfig): EfaturaConfigArray
       led: config.transmitterLed,
       key: config.transmitterKey,
     },
+    emitter: config.emitter,
     software: {
       code: config.softwareCode,
       name: config.softwareName,
@@ -141,6 +168,25 @@ export function configAsArray(config: ResolvedEfaturaConfig): EfaturaConfigArray
     },
     dfa: {
       base_url: config.dfaBaseUrl,
+    },
+  };
+}
+
+function defaultEmitterFrom(
+  value: EfaturaConfig['emitter'],
+  transmitterNif: string,
+): ResolvedEfaturaEmitter | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  const taxId = isRecord(value.taxId) ? value.taxId : {};
+
+  return {
+    ...value,
+    taxId: {
+      countryCode: optionalText(taxId.countryCode) ?? 'CV',
+      value: optionalText(taxId.value) ?? transmitterNif,
     },
   };
 }

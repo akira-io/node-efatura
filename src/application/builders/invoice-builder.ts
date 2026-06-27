@@ -51,6 +51,7 @@ export class InvoiceBuilder {
   constructor(
     private readonly validator: (data: Record<string, unknown>) => InvoiceData,
     private readonly generateId: () => string,
+    private readonly defaultData: Record<string, unknown> = {},
   ) {}
 
   id(id: string): this {
@@ -115,6 +116,7 @@ export class InvoiceBuilder {
 
   toRecord(): Record<string, unknown> {
     return {
+      ...this.defaultData,
       id: this.data.id ?? this.generateId(),
       ...this.data,
     };

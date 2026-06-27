@@ -25,50 +25,79 @@ export class EfaturaDocuments {
     return new InvoiceBuilder(
       (data) => this.validateInvoice(data),
       () => this.generateDocumentId(),
+      this.config.emitter === null ? {} : { emitter: this.config.emitter },
     );
   }
 
   validateInvoice(data: Record<string, unknown>): InvoiceData {
-    return invoiceDataFrom(data, { documentTypePolicy: this.documentTypePolicy });
+    return invoiceDataFrom(this.withConfiguredEmitter(data), {
+      documentTypePolicy: this.documentTypePolicy,
+    });
   }
 
   electronicInvoice(data: Record<string, unknown>): WrappedInvoiceData {
-    return electronicInvoiceDataFrom(data, { documentTypePolicy: this.documentTypePolicy });
+    return electronicInvoiceDataFrom(this.withConfiguredEmitter(data), {
+      documentTypePolicy: this.documentTypePolicy,
+    });
   }
 
   receiptInvoice(data: Record<string, unknown>): WrappedInvoiceData {
-    return receiptInvoiceDataFrom(data, { documentTypePolicy: this.documentTypePolicy });
+    return receiptInvoiceDataFrom(this.withConfiguredEmitter(data), {
+      documentTypePolicy: this.documentTypePolicy,
+    });
   }
 
   salesReceipt(data: Record<string, unknown>): WrappedInvoiceData {
-    return salesReceiptDataFrom(data, { documentTypePolicy: this.documentTypePolicy });
+    return salesReceiptDataFrom(this.withConfiguredEmitter(data), {
+      documentTypePolicy: this.documentTypePolicy,
+    });
   }
 
   electronicReceipt(data: Record<string, unknown>): WrappedInvoiceData {
-    return electronicReceiptDataFrom(data, { documentTypePolicy: this.documentTypePolicy });
+    return electronicReceiptDataFrom(this.withConfiguredEmitter(data), {
+      documentTypePolicy: this.documentTypePolicy,
+    });
   }
 
   creditNote(data: Record<string, unknown>): WrappedInvoiceData {
-    return creditNoteDataFrom(data, { documentTypePolicy: this.documentTypePolicy });
+    return creditNoteDataFrom(this.withConfiguredEmitter(data), {
+      documentTypePolicy: this.documentTypePolicy,
+    });
   }
 
   debitNote(data: Record<string, unknown>): WrappedInvoiceData {
-    return debitNoteDataFrom(data, { documentTypePolicy: this.documentTypePolicy });
+    return debitNoteDataFrom(this.withConfiguredEmitter(data), {
+      documentTypePolicy: this.documentTypePolicy,
+    });
   }
 
   transportDocument(data: Record<string, unknown>): WrappedInvoiceData {
-    return transportDocumentDataFrom(data, { documentTypePolicy: this.documentTypePolicy });
+    return transportDocumentDataFrom(this.withConfiguredEmitter(data), {
+      documentTypePolicy: this.documentTypePolicy,
+    });
   }
 
   returnNote(data: Record<string, unknown>): WrappedInvoiceData {
-    return returnNoteDataFrom(data, { documentTypePolicy: this.documentTypePolicy });
+    return returnNoteDataFrom(this.withConfiguredEmitter(data), {
+      documentTypePolicy: this.documentTypePolicy,
+    });
   }
 
   entryNote(data: Record<string, unknown>): WrappedInvoiceData {
-    return entryNoteDataFrom(data, { documentTypePolicy: this.documentTypePolicy });
+    return entryNoteDataFrom(this.withConfiguredEmitter(data), {
+      documentTypePolicy: this.documentTypePolicy,
+    });
   }
 
   generateDocumentId(): string {
     return this.config.generators.documentId();
+  }
+
+  private withConfiguredEmitter(data: Record<string, unknown>): Record<string, unknown> {
+    if (this.config.emitter === null || data.emitter !== undefined) {
+      return data;
+    }
+
+    return { ...data, emitter: this.config.emitter };
   }
 }
