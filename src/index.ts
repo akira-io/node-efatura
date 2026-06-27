@@ -110,6 +110,12 @@ export {
   eventDataSchema,
   eventDocumentRangeDataSchema,
 } from './domain/value-objects/event-data';
+export type { ExtraFieldData, ExtraFieldScalar } from './domain/value-objects/extra-fields';
+export {
+  extraFieldDataSchema,
+  extraFieldsDataFrom,
+  extraFieldsDataSchema,
+} from './domain/value-objects/extra-fields';
 export type {
   ContingencyData,
   InvoiceData,

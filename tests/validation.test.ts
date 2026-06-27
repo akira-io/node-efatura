@@ -12,7 +12,12 @@ import { invoiceDataFrom } from '../src/domain/value-objects/invoice-data';
 import { partyDataFrom } from '../src/domain/value-objects/party-data';
 import { taxDataFrom } from '../src/domain/value-objects/tax-data';
 import { totalsDataFrom } from '../src/domain/value-objects/totals-data';
-import { baseInvoicePayload } from './helpers';
+import {
+  baseInvoicePayload,
+  officialDocumentPayloads,
+  referencePayload,
+  transportRoutePayload,
+} from './helpers';
 
 function expectValidation(callback: () => unknown, field: string, message: string): void {
   try {
@@ -52,18 +57,8 @@ describe('data validation', () => {
   });
 
   it('accepts all official v11 document types', () => {
-    for (const type of [
-      DocumentType.ElectronicInvoice,
-      DocumentType.ElectronicInvoiceReceipt,
-      DocumentType.ElectronicSalesTicket,
-      DocumentType.ElectronicReceipt,
-      DocumentType.ElectronicCreditNote,
-      DocumentType.ElectronicDebitNote,
-      DocumentType.ElectronicReturnNote,
-      DocumentType.ElectronicEntryNote,
-      DocumentType.ElectronicTransportDocument,
-    ]) {
-      expect(() => invoiceDataFrom(baseInvoicePayload({ type }))).not.toThrow();
+    for (const payload of officialDocumentPayloads()) {
+      expect(() => invoiceDataFrom(payload)).not.toThrow();
     }
   });
 
@@ -119,6 +114,8 @@ describe('data validation', () => {
     const payload = baseInvoicePayload({
       type: DocumentType.ElectronicReceipt,
       receiptTypeCode: '4',
+      lines: undefined,
+      totals: undefined,
     });
 
     expectValidation(
@@ -134,6 +131,7 @@ describe('data validation', () => {
       transportDocumentTypeCode: '5',
       transportServiceProviderParty: baseInvoicePayload().emitter,
       transportRoute: transportRoutePayload(),
+      totals: undefined,
       references: [],
     });
 
@@ -151,8 +149,8 @@ describe('data validation', () => {
       references: [
         {
           fiscalDocument: {
-            value: 'CV32602081002003001234500001012345678903',
-            isOldDocument: false,
+            value: '1/2026/ABC/1',
+            isOldDocument: true,
           },
         },
       ],
@@ -170,6 +168,35 @@ describe('data validation', () => {
       () => taxDataFrom({ taxTypeCode: 'NA', taxExemptionReasonCode: null }),
       'taxExemptionReasonCode',
       'NA tax requires an exemption reason.',
+    );
+  });
+
+  it('rejects fields not allowed by the selected official document type', () => {
+    expectValidation(
+      () =>
+        invoiceDataFrom(
+          baseInvoicePayload({
+            type: DocumentType.ElectronicSalesTicket,
+            receiver: null,
+            references: [referencePayload()],
+          }),
+        ),
+      'references',
+      'references is not allowed for this document type.',
+    );
+
+    expectValidation(
+      () =>
+        invoiceDataFrom(
+          baseInvoicePayload({
+            type: DocumentType.ElectronicDebitNote,
+            issueReasonCode: '2',
+            issueReasonDescription: 'Descricao nao permitida',
+            references: [referencePayload()],
+          }),
+        ),
+      'issueReasonDescription',
+      'issueReasonDescription is not allowed for this document type.',
     );
   });
 
@@ -209,34 +236,5 @@ function validConfig() {
     softwareName: 'Efatura Suite',
     softwareVersion: '1.0.0',
     middlewareBaseUrl: 'https://middleware.example',
-  };
-}
-
-function transportRoutePayload() {
-  return {
-    locations: [
-      {
-        address: {
-          countryCode: 'CV',
-          addressDetail: 'Origem',
-        },
-        duration: {
-          startDate: '2026-02-08',
-          startTime: '10:30:00',
-        },
-        transportModeCode: '1',
-      },
-      {
-        address: {
-          countryCode: 'CV',
-          addressDetail: 'Destino',
-        },
-        duration: {
-          startDate: '2026-02-08',
-          startTime: '11:30:00',
-        },
-        transportModeCode: '1',
-      },
-    ],
   };
 }

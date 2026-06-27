@@ -1,4 +1,5 @@
 import { InvoiceBuilder } from './application/builders/invoice-builder';
+import { assertContingencyMatchesEmissionMode } from './application/contingency-validation';
 import { dfaQrCodeUrl } from './application/dfa/dfa';
 import { dfaRenderInputFrom } from './application/dfa/dfa-render-input';
 import { resolveEfaturaDependencies } from './application/efatura-dependencies';
@@ -193,6 +194,7 @@ export class Efatura {
       emissionMode,
       clock: this.clock,
     });
+    assertContingencyMatchesEmissionMode(invoice, emissionMode);
 
     const iud =
       options.iud ??

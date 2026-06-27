@@ -14,6 +14,9 @@ export function isInvoiceData(value: Record<string, unknown> | InvoiceData): val
     typeof value.emitter === 'object' &&
     Array.isArray(value.lines) &&
     'issueTime' in value &&
+    'contingency' in value &&
+    'references' in value &&
+    'payments' in value &&
     'extraFields' in value
   );
 }

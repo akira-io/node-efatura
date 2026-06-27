@@ -107,6 +107,17 @@ export function transportDocumentDataFrom(
     );
   }
 
+  if (
+    wrapped.invoice.receiverTypeCode !== null &&
+    !['1', '2', '3'].includes(wrapped.invoice.receiverTypeCode)
+  ) {
+    throw new EfaturaValidationError(
+      'invoice.receiverTypeCode',
+      'ReceiverTypeCode must be between 1 and 3.',
+      'invoice.receiver_type_code_invalid',
+    );
+  }
+
   if (!['1', '2', '3', '4', '5'].includes(wrapped.invoice.transportDocumentTypeCode)) {
     throw new EfaturaValidationError(
       'invoice.transportDocumentTypeCode',

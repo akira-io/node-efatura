@@ -9,6 +9,7 @@ import type {
   RentReceiptData,
   TransportRouteData,
 } from '../../domain/value-objects/document-structures';
+import type { ExtraFieldData, ExtraFieldScalar } from '../../domain/value-objects/extra-fields';
 import type { ContingencyData, InvoiceData } from '../../domain/value-objects/invoice-data';
 import { taxXml } from './dfe-lines-xml';
 import { addressXml } from './dfe-party-xml';
@@ -170,7 +171,7 @@ function payeeFinancialAccountXml(account: PayeeFinancialAccountData | null): st
 
   return `<PayeeFinancialAccount>${element('AccountNumber', account.accountNumber)}${element(
     'NIB',
-    account.nib,
+    account.accountNumber ? null : account.nib,
   )}${element('Name', account.name)}</PayeeFinancialAccount>`;
 }
 
@@ -197,32 +198,24 @@ function contingencyXml(contingency: ContingencyData | null, mode: EmissionMode)
   )}</Contingency>`;
 }
 
-function extraFieldsXml(fields: Record<string, unknown>): string {
-  const content = Object.entries(fields)
-    .map(([name, value]) => valueXml(name, value))
-    .join('');
+function extraFieldsXml(fields: ExtraFieldData[]): string {
+  const content = fields.map(extraFieldXml).join('');
 
   return content ? `<ExtraFields>${content}</ExtraFields>` : '';
 }
 
-function valueXml(name: string, value: unknown): string {
-  if (value === null || value === undefined || value === '') {
-    return '';
-  }
+function extraFieldXml(field: ExtraFieldData): string {
+  const attributes = Object.entries(field.attributes)
+    .map(([name, value]) => ` ${name}="${escapeXml(value)}"`)
+    .join('');
+  const content =
+    field.children.length > 0 ? field.children.map(extraFieldXml).join('') : scalarXml(field.value);
 
-  if (Array.isArray(value)) {
-    return value.map((item) => valueXml(name, item)).join('');
-  }
+  return `<${field.name}${attributes}>${content}</${field.name}>`;
+}
 
-  if (typeof value === 'object') {
-    return `<${name}>${extraFieldsXml(value as Record<string, unknown>)}</${name}>`;
-  }
-
-  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
-    return element(name, value);
-  }
-
-  return '';
+function scalarXml(value: ExtraFieldScalar | null): string {
+  return value === null ? '' : escapeXml(value);
 }
 
 function issueModeCode(mode: EmissionMode): number {

@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { createEfatura } from '../src/create-efatura';
 import { DocumentType } from '../src/domain/enums/document-type';
 import { resolveDefaultSchemaPath, XmllintXsdValidator } from '../src/infrastructure';
-import { baseInvoicePayload } from './helpers';
+import { baseInvoicePayload, generatedDocumentPayloads } from './helpers';
 
 const xsdDirectory = join(process.cwd(), 'resources/xsd/efatura/2024-05-27');
 
@@ -61,4 +61,32 @@ describe('official XSD validation', () => {
 
     expect(result).toEqual({ valid: true, errors: [] });
   });
+
+  it.each(
+    generatedDocumentPayloads(),
+  )('validates generated %s XML against the official schema', async (documentType, payload, documentNumber) => {
+    const efatura = createEfatura(config(), {
+      clock: {
+        now: () => new Date('2026-02-08T12:00:00Z'),
+      },
+    });
+    const xml = efatura.buildDfeXml(payload, {
+      documentNumber,
+      randomCode: '1234567890',
+    });
+    const result = await efatura.validateDfeXml(xml, documentType);
+
+    expect(result).toEqual({ valid: true, errors: [] });
+  });
 });
+
+function config() {
+  return {
+    transmitterNif: '100200300',
+    transmitterLed: '123',
+    softwareCode: 'SW001',
+    softwareName: 'Efatura Suite',
+    softwareVersion: '1.0.0',
+    middlewareBaseUrl: 'https://localhost:3443',
+  };
+}

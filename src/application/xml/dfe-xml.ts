@@ -99,6 +99,14 @@ function documentContentXml(
     return invoiceXml(invoice, config, documentNumber);
   }
 
+  if (invoice.type === DocumentType.ElectronicInvoiceReceipt) {
+    return invoiceReceiptXml(invoice, config, documentNumber);
+  }
+
+  if (invoice.type === DocumentType.ElectronicSalesTicket) {
+    return salesReceiptXml(invoice, config, documentNumber);
+  }
+
   if (invoice.type === DocumentType.ElectronicTransportDocument) {
     return transportXml(invoice, config, documentNumber);
   }
@@ -107,7 +115,19 @@ function documentContentXml(
     return receiptXml(invoice, config, documentNumber);
   }
 
-  return defaultDocumentXml(invoice, config, documentNumber);
+  if (invoice.type === DocumentType.ElectronicCreditNote) {
+    return creditNoteXml(invoice, config, documentNumber);
+  }
+
+  if (invoice.type === DocumentType.ElectronicDebitNote) {
+    return debitNoteXml(invoice, config, documentNumber);
+  }
+
+  if (invoice.type === DocumentType.ElectronicReturnNote) {
+    return returnNoteXml(invoice, config, documentNumber);
+  }
+
+  return registrationNoteXml(invoice, config, documentNumber);
 }
 
 function invoiceXml(
@@ -123,6 +143,36 @@ function invoiceXml(
   )}${partyXml('ReceiverParty', requiredParty(invoice.receiver, 'receiver'))}${linesTotalsXml(
     invoice,
   )}${referencesXml(invoice.references)}${paymentsInvoiceXml(invoice.payments)}${deliveryXml(
+    invoice.delivery,
+  )}${footerXml(invoice)}`;
+}
+
+function invoiceReceiptXml(
+  invoice: InvoiceData,
+  config: ResolvedEfaturaConfig,
+  documentNumber: string,
+): string {
+  return `${headerXml(invoice, config, documentNumber)}${orderReferenceXml(
+    invoice.orderReferenceId,
+  )}${element('TaxPointDate', invoice.taxPointDate)}${partyXml(
+    'EmitterParty',
+    invoice.emitter,
+  )}${partyXml('ReceiverParty', requiredParty(invoice.receiver, 'receiver'))}${optionalPartyXml(
+    'PaymentParty',
+    invoice.paymentParty,
+  )}${linesTotalsXml(invoice)}${referencesXml(invoice.references)}${paymentsPaymentXml(
+    invoice.payments,
+  )}${deliveryXml(invoice.delivery)}${footerXml(invoice)}`;
+}
+
+function salesReceiptXml(
+  invoice: InvoiceData,
+  config: ResolvedEfaturaConfig,
+  documentNumber: string,
+): string {
+  return `${headerXml(invoice, config, documentNumber)}${partyXml('EmitterParty', invoice.emitter)}${
+    invoice.receiver ? partyXml('ReceiverParty', invoice.receiver) : ''
+  }${linesTotalsXml(invoice)}${paymentsPaymentXml(invoice.payments)}${deliveryXml(
     invoice.delivery,
   )}${footerXml(invoice)}`;
 }
@@ -164,41 +214,66 @@ function receiptXml(
   )}${referencesXml(invoice.references)}${paymentsPaymentXml(invoice.payments)}${footerXml(invoice)}`;
 }
 
-function defaultDocumentXml(
+function creditNoteXml(
   invoice: InvoiceData,
   config: ResolvedEfaturaConfig,
   documentNumber: string,
 ): string {
-  return `${headerXml(invoice, config, documentNumber)}${typedMiddleXml(invoice)}${partyXml(
+  return `${headerXml(invoice, config, documentNumber)}${element(
+    'IssueReasonCode',
+    requiredValue(invoice.issueReasonCode, 'issueReasonCode'),
+  )}${datePeriodXml('RappelPeriod', invoice.rappelPeriod)}${partyXml(
     'EmitterParty',
     invoice.emitter,
-  )}${invoice.receiver ? partyXml('ReceiverParty', invoice.receiver) : ''}${optionalPartyXml(
+  )}${partyXml('ReceiverParty', requiredParty(invoice.receiver, 'receiver'))}${linesTotalsXml(
+    invoice,
+  )}${referencesXml(invoice.references)}${footerXml(invoice)}`;
+}
+
+function debitNoteXml(
+  invoice: InvoiceData,
+  config: ResolvedEfaturaConfig,
+  documentNumber: string,
+): string {
+  return `${headerXml(invoice, config, documentNumber)}${element(
+    'IssueReasonCode',
+    requiredValue(invoice.issueReasonCode, 'issueReasonCode'),
+  )}${partyXml('EmitterParty', invoice.emitter)}${partyXml(
+    'ReceiverParty',
+    requiredParty(invoice.receiver, 'receiver'),
+  )}${linesTotalsXml(invoice)}${referencesXml(invoice.references)}${footerXml(invoice)}`;
+}
+
+function returnNoteXml(
+  invoice: InvoiceData,
+  config: ResolvedEfaturaConfig,
+  documentNumber: string,
+): string {
+  return `${headerXml(invoice, config, documentNumber)}${element(
+    'IssueReasonCode',
+    requiredValue(invoice.issueReasonCode, 'issueReasonCode'),
+  )}${element('IssueReasonDescription', invoice.issueReasonDescription)}${partyXml(
+    'EmitterParty',
+    invoice.emitter,
+  )}${invoice.receiver ? partyXml('ReceiverParty', invoice.receiver) : ''}${linesTotalsXml(
+    invoice,
+  )}${referencesXml(invoice.references)}${footerXml(invoice)}`;
+}
+
+function registrationNoteXml(
+  invoice: InvoiceData,
+  config: ResolvedEfaturaConfig,
+  documentNumber: string,
+): string {
+  return `${headerXml(invoice, config, documentNumber)}${partyXml(
+    'EmitterParty',
+    invoice.emitter,
+  )}${partyXml('ReceiverParty', requiredParty(invoice.receiver, 'receiver'))}${optionalPartyXml(
     'PaymentParty',
     invoice.paymentParty,
   )}${linesTotalsXml(invoice)}${referencesXml(invoice.references)}${paymentsForTypeXml(
     invoice,
-  )}${deliveryXml(invoice.delivery)}${footerXml(invoice)}`;
-}
-
-function typedMiddleXml(invoice: InvoiceData): string {
-  if (invoice.type === DocumentType.ElectronicCreditNote) {
-    return `${element(
-      'IssueReasonCode',
-      requiredValue(invoice.issueReasonCode, 'issueReasonCode'),
-    )}${datePeriodXml('RappelPeriod', invoice.rappelPeriod)}`;
-  }
-
-  if (
-    invoice.type === DocumentType.ElectronicDebitNote ||
-    invoice.type === DocumentType.ElectronicReturnNote
-  ) {
-    return `${element(
-      'IssueReasonCode',
-      requiredValue(invoice.issueReasonCode, 'issueReasonCode'),
-    )}${element('IssueReasonDescription', invoice.issueReasonDescription)}`;
-  }
-
-  return '';
+  )}${footerXml(invoice)}`;
 }
 
 function headerXml(

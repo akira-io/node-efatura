@@ -74,6 +74,125 @@ export function baseInvoicePayload(
   );
 }
 
+export function officialDocumentPayloads(): Record<string, unknown>[] {
+  return generatedDocumentPayloads().map(([, payload]) => payload);
+}
+
+export function generatedDocumentPayloads(): Array<
+  [DocumentType, Record<string, unknown>, number]
+> {
+  return [
+    [
+      DocumentType.ElectronicInvoice,
+      baseInvoicePayload({ type: DocumentType.ElectronicInvoice }),
+      1,
+    ],
+    [
+      DocumentType.ElectronicInvoiceReceipt,
+      baseInvoicePayload({ type: DocumentType.ElectronicInvoiceReceipt }),
+      2,
+    ],
+    [
+      DocumentType.ElectronicSalesTicket,
+      baseInvoicePayload({ type: DocumentType.ElectronicSalesTicket, receiver: null }),
+      3,
+    ],
+    [
+      DocumentType.ElectronicReceipt,
+      baseInvoicePayload({
+        type: DocumentType.ElectronicReceipt,
+        receiptTypeCode: '1',
+        lines: undefined,
+        totals: undefined,
+      }),
+      4,
+    ],
+    [
+      DocumentType.ElectronicCreditNote,
+      baseInvoicePayload({
+        type: DocumentType.ElectronicCreditNote,
+        issueReasonCode: '2',
+        references: [referencePayload()],
+      }),
+      5,
+    ],
+    [
+      DocumentType.ElectronicDebitNote,
+      baseInvoicePayload({
+        type: DocumentType.ElectronicDebitNote,
+        issueReasonCode: '2',
+        references: [referencePayload()],
+      }),
+      6,
+    ],
+    [
+      DocumentType.ElectronicTransportDocument,
+      baseInvoicePayload({
+        type: DocumentType.ElectronicTransportDocument,
+        receiver: null,
+        transportDocumentTypeCode: '1',
+        transportServiceProviderParty: baseInvoicePayload().emitter,
+        transportRoute: transportRoutePayload(),
+        totals: undefined,
+      }),
+      7,
+    ],
+    [
+      DocumentType.ElectronicReturnNote,
+      baseInvoicePayload({
+        type: DocumentType.ElectronicReturnNote,
+        receiver: null,
+        issueReasonCode: '0',
+        references: [referencePayload()],
+      }),
+      8,
+    ],
+    [
+      DocumentType.ElectronicEntryNote,
+      baseInvoicePayload({ type: DocumentType.ElectronicEntryNote }),
+      9,
+    ],
+  ];
+}
+
+export function referencePayload() {
+  return {
+    fiscalDocument: {
+      value: '1/2026/ABC/1',
+      isOldDocument: true,
+    },
+  };
+}
+
+export function transportRoutePayload() {
+  return {
+    locations: [
+      {
+        address: {
+          countryCode: 'CV',
+          addressDetail: 'Origem',
+        },
+        duration: {
+          startDate: '2026-02-08',
+          startTime: '10:30:00',
+        },
+        transportModeCode: '1',
+      },
+      {
+        address: {
+          countryCode: 'CV',
+          addressDetail: 'Destino',
+        },
+        duration: {
+          startDate: '2026-02-08',
+          startTime: '11:30:00',
+        },
+        transportModeCode: '1',
+      },
+    ],
+  };
+}
+
 function deepMerge(
   base: Record<string, unknown>,
   overrides: Record<string, unknown>,

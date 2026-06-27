@@ -107,4 +107,29 @@ describe('DFE XML', () => {
       ),
     ).toThrow('Emitter email is required for e-Fatura v11.0 XML.');
   });
+
+  it('serializes official ExtraFields as typed XML blocks', () => {
+    const efatura = createEfatura(config, { clock: fixedClock });
+    const xml = efatura.buildDfeXml(
+      baseInvoicePayload({
+        issueDate: '2026-02-08',
+        issueTime: '11:30:00',
+        extraFields: [
+          {
+            name: 'CustomAudit',
+            attributes: { Source: 'POS' },
+            children: [{ name: 'TerminalId', value: 'T-01' }],
+          },
+        ],
+      }),
+      {
+        documentNumber: 1,
+        randomCode: '1234567890',
+      },
+    );
+
+    expect(xml).toContain(
+      '<ExtraFields><CustomAudit Source="POS"><TerminalId>T-01</TerminalId></CustomAudit></ExtraFields>',
+    );
+  });
 });

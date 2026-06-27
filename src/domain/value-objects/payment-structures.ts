@@ -42,6 +42,14 @@ export const payeeFinancialAccountDataSchema = z
         message: 'AccountNumber or NIB is required.',
       });
     }
+
+    if (account.accountNumber && account.nib) {
+      context.addIssue({
+        code: 'custom',
+        path: ['nib'],
+        message: 'AccountNumber and NIB cannot both be present.',
+      });
+    }
   });
 
 export const paymentDataSchema = z.object({

@@ -20,6 +20,8 @@ import {
   type TransportRouteData,
   transportRouteDataFrom,
 } from './document-structures';
+import { type ExtraFieldData, extraFieldsDataFrom } from './extra-fields';
+import { assertDocumentFieldCompatibility } from './invoice-field-compatibility';
 import { type LineItemData, lineItemDataFrom } from './line-item-data';
 import { type PartyData, partyDataFrom } from './party-data';
 import { type TotalsData, totalsDataFrom } from './totals-data';
@@ -65,7 +67,7 @@ export interface InvoiceData {
   transportRoute: TransportRouteData | null;
   note: string | null;
   contingency: ContingencyData | null;
-  extraFields: Record<string, unknown>;
+  extraFields: ExtraFieldData[];
 }
 
 export interface InvoiceValidationOptions {
@@ -102,7 +104,7 @@ export function invoiceDataFrom(
     'invoice.issue_date_required',
   );
 
-  if (!Array.isArray(data.lines) || data.lines.length === 0) {
+  if (requiresLines(type) && (!Array.isArray(data.lines) || data.lines.length === 0)) {
     throw new EfaturaValidationError(
       'lines',
       messages.validation.linesRequired,
@@ -146,7 +148,7 @@ export function invoiceDataFrom(
     );
   }
 
-  if (type !== DocumentType.ElectronicSalesTicket && data.receiver == null) {
+  if (requiresReceiver(type) && data.receiver == null) {
     throw new EfaturaValidationError(
       'receiver',
       messages.invoice.receiverRequiredForType,
@@ -154,7 +156,7 @@ export function invoiceDataFrom(
     );
   }
 
-  return {
+  const invoice: InvoiceData = {
     id: optionalText(data.id),
     type,
     issueDate,
@@ -182,7 +184,7 @@ export function invoiceDataFrom(
       : null,
     receiptTypeCode: optionalText(data.receiptTypeCode),
     rentReceipt: rentReceiptDataFrom(data.rentReceipt, 'rentReceipt'),
-    lines: data.lines
+    lines: arrayOfRecords(data.lines)
       .filter(isRecord)
       .map((line, index) => lineItemDataFrom(line, `lines.${index}`)),
     totals: isRecord(data.totals) ? totalsDataFrom(data.totals, 'totals') : null,
@@ -192,8 +194,12 @@ export function invoiceDataFrom(
     transportRoute: transportRouteDataFrom(data.transportRoute, 'transportRoute'),
     note: optionalText(data.note),
     contingency: contingencyDataFrom(data.contingency),
-    extraFields: isRecord(data.extraFields) ? data.extraFields : {},
+    extraFields: extraFieldsDataFrom(data.extraFields, 'extraFields'),
   };
+
+  assertDocumentFieldCompatibility(invoice);
+
+  return invoice;
 }
 
 function contingencyDataFrom(value: unknown): ContingencyData | null {
@@ -241,4 +247,20 @@ function requiresTotals(type: DocumentType): boolean {
   return (
     type !== DocumentType.ElectronicReceipt && type !== DocumentType.ElectronicTransportDocument
   );
+}
+
+function requiresLines(type: DocumentType): boolean {
+  return type !== DocumentType.ElectronicReceipt;
+}
+
+function requiresReceiver(type: DocumentType): boolean {
+  return (
+    type !== DocumentType.ElectronicSalesTicket &&
+    type !== DocumentType.ElectronicTransportDocument &&
+    type !== DocumentType.ElectronicReturnNote
+  );
+}
+
+function arrayOfRecords(value: unknown): Record<string, unknown>[] {
+  return Array.isArray(value) ? value.filter(isRecord) : [];
 }
