@@ -18,7 +18,7 @@ bun add @akira-io/efatura
 ## Quick Start
 
 ```ts
-import { DocumentType, createEfatura } from '@akira-io/efatura';
+import { DocumentType, TaxTypeCode, createEfatura } from '@akira-io/efatura';
 
 const efatura = createEfatura({
   transmitterNif: process.env.EFATURA_TRANSMITTER_NIF,
@@ -43,7 +43,7 @@ const invoice = efatura
     price: 1000,
     priceExtension: 1000,
     netTotal: 1000,
-    taxes: [{ taxTypeCode: 'IVA', taxPercentage: 15, taxTotal: 150 }],
+    taxes: [{ taxTypeCode: TaxTypeCode.IVA, taxPercentage: 15, taxTotal: 150 }],
     item: {
       description: 'Item',
       emitterIdentification: 'ITEM1',
