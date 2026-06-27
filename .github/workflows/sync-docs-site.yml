@@ -1,0 +1,40 @@
+name: Deploy docs site
+
+on:
+  push:
+    branches: [main]
+    paths: ["docs/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout node-efatura
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+
+      - name: Checkout efatura-docs
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        with:
+          repository: kidiatoliny/efatura-docs
+          token: ${{ secrets.PAYABLE_DOCS_TOKEN }}
+          path: efatura-docs
+
+      - name: Mirror docs into _docs_src
+        run: rsync -a --delete docs/ efatura-docs/_docs_src/
+
+      - name: Commit and push
+        working-directory: efatura-docs
+        run: |
+          git config user.name "kidiatoliny"
+          git config user.email "48266788+kidiatoliny@users.noreply.github.com"
+          git add _docs_src
+          if git diff --cached --quiet; then
+            echo "no docs changes to publish"
+            exit 0
+          fi
+          git commit -m "docs: sync from node-efatura ${GITHUB_SHA::7}"
+          git push
