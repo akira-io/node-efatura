@@ -90,6 +90,7 @@ console.log(invoice.id); // UUID
 - Packages DFE XML files into Deflate ZIP payloads.
 - Submits ZIP payloads through middleware and platform transports with normalized responses.
 - Validates fiscal readiness through PE/DNRE client contracts for taxpayers, registered software, and emitter authorization.
+- Keeps `ExtraFields` as a custom extension surface and blocks known official XML names there.
 - Builds DFA QR Code URLs from a configurable base URL.
 - Renders DFA PDFs with fiscal header, parties, line summary, totals, QR Code, and contingency notice.
 - Provides in-memory, file, and Knex-backed sequence stores.
@@ -119,8 +120,13 @@ console.log(invoice.id); // UUID
 ## Testing
 
 ```sh
-bun test
+bun run typecheck
+bun run lint
+bun run test
+bun run build
 ```
+
+Live PE/DNRE readiness tests are skipped by default. Enable them with `EFATURA_LIVE_TESTS=1` and the required `EFATURA_LIVE_*` credentials documented in [Configuration](docs/02-configuration.md).
 
 ## License
 

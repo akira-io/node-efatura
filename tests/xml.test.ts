@@ -109,7 +109,7 @@ describe('DFE XML', () => {
     ).toThrow('Emitter email is required.');
   });
 
-  it('serializes official ExtraFields as typed XML blocks', () => {
+  it('serializes custom ExtraFields as typed XML blocks', () => {
     const efatura = createEfatura(config, { clock: fixedClock });
     const xml = efatura.buildDfeXml(
       baseInvoicePayload({

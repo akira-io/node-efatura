@@ -69,6 +69,8 @@ Defaults are concrete infrastructure implementations: OpenSSL-backed certificate
 
 Fiscal authority clients are used by `validateFiscalReadiness(invoice, options)`. External PE/DNRE checks require `options.accessToken`; without it, those checks return `skipped` so offline validation remains deterministic.
 
+Live fiscal readiness tests are opt-in. Set `EFATURA_LIVE_TESTS=1` with `EFATURA_LIVE_ACCESS_TOKEN`, `EFATURA_LIVE_BASE_URL`, `EFATURA_LIVE_TRANSMITTER_NIF`, `EFATURA_LIVE_EMITTER_NIF`, `EFATURA_LIVE_RECEIVER_NIF`, `EFATURA_LIVE_SOFTWARE_CODE`, `EFATURA_LIVE_SOFTWARE_NAME`, and `EFATURA_LIVE_SOFTWARE_VERSION`.
+
 Use `FileSystemGoldenVectorRepository` when DNRE-provided vectors are stored on disk:
 
 ```ts

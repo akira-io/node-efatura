@@ -12,6 +12,40 @@ export interface ExtraFieldData {
 }
 
 const xmlNameSchema = z.string().regex(/^[A-Za-z_][A-Za-z0-9_.-]*$/);
+const OFFICIAL_EXTRA_FIELD_NAMES = new Set([
+  'Address',
+  'Contacts',
+  'Delivery',
+  'Discount',
+  'Duration',
+  'EmitterParty',
+  'ExtraProperties',
+  'FiscalDocument',
+  'Item',
+  'Line',
+  'Lines',
+  'OrderReference',
+  'Party',
+  'PayeeFinancialAccount',
+  'Payment',
+  'PaymentParty',
+  'Payments',
+  'Quantity',
+  'ReceiverParty',
+  'Reference',
+  'References',
+  'RentReceipt',
+  'SelfBilling',
+  'Software',
+  'StandardIdentification',
+  'Tax',
+  'TaxId',
+  'Totals',
+  'Transmission',
+  'TransportLocation',
+  'TransportRoute',
+  'TransportServiceProviderParty',
+]);
 
 export const extraFieldDataSchema: z.ZodType<ExtraFieldData> = z.lazy(() =>
   z
@@ -57,6 +91,16 @@ function extraFieldDataFrom(value: unknown, prefix: string): ExtraFieldData {
     );
   }
 
+  const name = requiredText(value.name, field(prefix, 'name'));
+
+  if (OFFICIAL_EXTRA_FIELD_NAMES.has(name)) {
+    throw new EfaturaValidationError(
+      field(prefix, 'name'),
+      `${name} is an official XML field and must use its first-class schema.`,
+      'extra_field.official_field_reserved',
+    );
+  }
+
   const children = Array.isArray(value.children)
     ? value.children.map((child, index) =>
         extraFieldDataFrom(child, field(prefix, `children.${index}`)),
@@ -64,7 +108,7 @@ function extraFieldDataFrom(value: unknown, prefix: string): ExtraFieldData {
     : childrenFromRecordValue(value.value, prefix);
   const normalizedValue = children.length > 0 ? null : scalarFrom(value.value);
   const result = extraFieldDataSchema.safeParse({
-    name: requiredText(value.name, field(prefix, 'name')),
+    name,
     value: normalizedValue,
     attributes: attributesFrom(value.attributes),
     children,

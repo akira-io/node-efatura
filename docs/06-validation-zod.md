@@ -31,6 +31,8 @@ const valid = isCapeVerdeNif('100200300');
 
 For `countryCode = CV`, `TaxId.value` must match the official XSD `stTaxIdCV` pattern `[1-9][0-9]{8}`. The package also applies this validation to `transmitterNif` during `createEfatura(config)` resolution. Other country codes keep the generic no-space, 5-to-20-character `TaxId` rule from the official XSD.
 
+`ExtraFields` is a controlled extension surface only. It rejects known official XML element names with `extra_field.official_field_reserved`, so official fields stay on their first-class schemas.
+
 ## Presentation Schemas
 
 HTTP adapters use shared Zod schemas before calling the facade:
@@ -62,3 +64,5 @@ The domain validates the rules that are cheap to catch before XSD validation:
 ## Fiscal Readiness
 
 `validateFiscalReadiness(invoice, options)` composes local invoice validation with optional PE/DNRE checks through core contracts. It validates taxpayer registry status, registered software, and emitter authorization when `options.accessToken` is provided. Without an access token, external checks are reported as `skipped`.
+
+Live PE/DNRE readiness tests are skipped by default. Run them only with `EFATURA_LIVE_TESTS=1` plus `EFATURA_LIVE_ACCESS_TOKEN`, `EFATURA_LIVE_BASE_URL`, taxpayer NIFs, and software identity environment variables.
