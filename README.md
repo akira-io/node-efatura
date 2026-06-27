@@ -74,6 +74,7 @@ console.log(invoice.id); // UUID
 - Validates XML with the bundled official XSD set through `XmllintXsdValidator`.
 - Test coverage validates generated XML for all 9 DFE types against the bundled official XSD.
 - Signs XML with a certificate-backed XAdES-BES signer.
+- Validates certificate material, matching private keys, and optional CA bundles before signing.
 - Packages DFE XML files into Deflate ZIP payloads.
 - Submits ZIP payloads through middleware and platform transports with normalized responses.
 - Builds DFA QR Code URLs from a configurable base URL.
@@ -86,7 +87,7 @@ console.log(invoice.id); // UUID
 - Official e-Fatura XSD files are bundled under `resources/xsd/efatura/2024-05-27`.
 - XAdES-BES signing requires caller-provided certificate and private key material.
 - Official XML examples from the XSD package are tested against the bundled schema.
-- Official golden vectors for IUD, ZIP, and signature were not present in the supplied artifacts. The `GoldenVectorRepository` contract remains available for those fixtures when DNRE publishes them.
+- Official golden vectors for IUD, ZIP, and signature were not present in the supplied artifacts. The `GoldenVectorRepository` contract and `FileSystemGoldenVectorRepository` implementation are available for those fixtures when DNRE publishes them.
 
 ## Documentation
 

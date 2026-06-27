@@ -24,11 +24,11 @@ presentation -> application -> domain -> core contracts
 infrastructure -> core contracts and application contracts
 ```
 
-The `core` folder is intentionally small. It defines contracts such as `XsdValidator`, `XmlSigner`, `SequenceStore`, `DfaRenderer`, `MiddlewareTransport`, and `PlatformTransport`.
+The `core` folder is intentionally small. It defines contracts such as `XsdValidator`, `XmlSigner`, `CertificateValidator`, `SequenceStore`, `DfaRenderer`, `MiddlewareTransport`, `PlatformTransport`, and `GoldenVectorRepository`.
 
 ## Official Artifacts
 
-The official e-Fatura XSD files supplied to the project are embedded under `resources/xsd/efatura/2024-05-27`. The package also includes concrete `XmllintXsdValidator` and `XadesBesSigner` implementations. Official golden vectors for IUD, ZIP, and signatures were not included in the supplied artifacts, so the `GoldenVectorRepository` contract remains injectable.
+The official e-Fatura XSD files supplied to the project are embedded under `resources/xsd/efatura/2024-05-27`. The package also includes concrete `XmllintXsdValidator`, `XadesBesSigner`, `OpensslCertificateValidator`, and `FileSystemGoldenVectorRepository` implementations. Official golden vectors for IUD, ZIP, and signatures were not included in the supplied artifacts, so the filesystem repository only loads externally supplied fixtures instead of generating synthetic official values.
 
 ## XML v11
 

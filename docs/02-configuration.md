@@ -23,6 +23,7 @@ The second argument composes official or storage-backed dependencies without cou
 
 ```ts
 const efatura = createEfatura(config, {
+  certificateValidator,
   sequenceStore,
   xsdValidator,
   xmlSigner,
@@ -32,7 +33,19 @@ const efatura = createEfatura(config, {
 });
 ```
 
-Defaults are concrete infrastructure implementations: in-memory sequence storage, bundled XSD validation through `xmllint`, XAdES-BES signing, DFA PDF rendering, and fetch-based transports.
+Defaults are concrete infrastructure implementations: OpenSSL-backed certificate validation, in-memory sequence storage, bundled XSD validation through `xmllint`, XAdES-BES signing, DFA PDF rendering, fetch-based transports, and in-memory golden vectors.
+
+Use `FileSystemGoldenVectorRepository` when DNRE-provided vectors are stored on disk:
+
+```ts
+import { FileSystemGoldenVectorRepository } from '@akira-io/efatura';
+
+const efatura = createEfatura(config, {
+  goldenVectors: new FileSystemGoldenVectorRepository('resources/golden-vectors'),
+});
+```
+
+The expected layout is `resources/golden-vectors/{kind}/{name}.{extension}`, where `kind` is `iud`, `xml`, `zip`, or `signature`. Optional metadata can live next to a vector as `{name}.meta.json`.
 
 ## UUID Generators
 

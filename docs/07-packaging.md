@@ -36,7 +36,8 @@ This split keeps packaging deterministic and easy to test with golden vectors.
 
 Fetch-based middleware and platform transports normalize JSON and XML service responses into:
 
-- `documents`: DFE-level results such as IUD, status, code, message, and repository code.
-- `errors`: service or validation errors with code, message, field, and raw payload.
+- `requestId`, `correlationId`, and `receivedAt`, when the response carries envelope metadata.
+- `documents`: DFE-level results such as IUD, status, code, message, repository code, authorization code, validation code, processing timestamp, and raw payload.
+- `errors`: service or validation errors with code, message, field, severity, details, and raw payload.
 
 If the HTTP response fails without a structured error body, the transport records the HTTP status as a submission error.
