@@ -1,4 +1,3 @@
-import { InvoiceBuilder } from './application/builders/invoice-builder';
 import { assertContingencyMatchesEmissionMode } from './application/contingency-validation';
 import { dfaQrCodeUrl } from './application/dfa/dfa';
 import { dfaRenderInputFrom } from './application/dfa/dfa-render-input';
@@ -29,6 +28,9 @@ import { buildDfeZip } from './application/packaging/dfe-zip';
 import { type BuildDfeXmlInput, buildDfeXml, DFE_XML_VERSION } from './application/xml/dfe-xml';
 import { configAsArray, type EfaturaConfigArray, type ResolvedEfaturaConfig } from './config';
 import type {
+  CertificateValidationInput,
+  CertificateValidationResult,
+  CertificateValidator,
   Clock,
   DfaDocument,
   DfaRenderer,
@@ -45,27 +47,15 @@ import type {
   XsdValidationResult,
   XsdValidator,
 } from './core/contracts';
-import type { DocumentTypePolicy } from './core/contracts/document-type-policy';
 import type { DocumentType } from './domain/enums/document-type';
 import { EfaturaValidationError } from './domain/errors';
 import { buildIud } from './domain/iud/iud';
-import {
-  creditNoteDataFrom,
-  debitNoteDataFrom,
-  electronicInvoiceDataFrom,
-  electronicReceiptDataFrom,
-  entryNoteDataFrom,
-  receiptInvoiceDataFrom,
-  returnNoteDataFrom,
-  salesReceiptDataFrom,
-  transportDocumentDataFrom,
-  type WrappedInvoiceData,
-} from './domain/value-objects/documents';
 import { type EventData, eventDataFrom } from './domain/value-objects/event-data';
-import { type InvoiceData, invoiceDataFrom } from './domain/value-objects/invoice-data';
+import type { InvoiceData } from './domain/value-objects/invoice-data';
+import { EfaturaDocuments } from './efatura-documents';
 
-export class Efatura {
-  readonly documentTypePolicy: DocumentTypePolicy;
+export class Efatura extends EfaturaDocuments {
+  readonly certificateValidator: CertificateValidator;
   readonly clock: Clock;
   readonly sequenceStore: SequenceStore;
   readonly xsdValidator: XsdValidator;
@@ -75,13 +65,11 @@ export class Efatura {
   readonly platformTransport: PlatformTransport;
   readonly goldenVectors: GoldenVectorRepository;
 
-  constructor(
-    readonly config: ResolvedEfaturaConfig,
-    dependencies: EfaturaDependencies = {},
-  ) {
+  constructor(config: ResolvedEfaturaConfig, dependencies: EfaturaDependencies = {}) {
     const resolvedDependencies = resolveEfaturaDependencies(dependencies);
 
-    this.documentTypePolicy = resolvedDependencies.documentTypePolicy;
+    super(config, resolvedDependencies.documentTypePolicy);
+    this.certificateValidator = resolvedDependencies.certificateValidator;
     this.clock = resolvedDependencies.clock;
     this.sequenceStore = resolvedDependencies.sequenceStore;
     this.xsdValidator = resolvedDependencies.xsdValidator;
@@ -90,57 +78,6 @@ export class Efatura {
     this.middlewareTransport = resolvedDependencies.middlewareTransport;
     this.platformTransport = resolvedDependencies.platformTransport;
     this.goldenVectors = resolvedDependencies.goldenVectors;
-  }
-
-  invoice(): InvoiceBuilder {
-    return new InvoiceBuilder(
-      (data) => this.validateInvoice(data),
-      () => this.generateDocumentId(),
-    );
-  }
-
-  validateInvoice(data: Record<string, unknown>): InvoiceData {
-    return invoiceDataFrom(data, { documentTypePolicy: this.documentTypePolicy });
-  }
-
-  electronicInvoice(data: Record<string, unknown>): WrappedInvoiceData {
-    return electronicInvoiceDataFrom(data, { documentTypePolicy: this.documentTypePolicy });
-  }
-
-  receiptInvoice(data: Record<string, unknown>): WrappedInvoiceData {
-    return receiptInvoiceDataFrom(data, { documentTypePolicy: this.documentTypePolicy });
-  }
-
-  salesReceipt(data: Record<string, unknown>): WrappedInvoiceData {
-    return salesReceiptDataFrom(data, { documentTypePolicy: this.documentTypePolicy });
-  }
-
-  electronicReceipt(data: Record<string, unknown>): WrappedInvoiceData {
-    return electronicReceiptDataFrom(data, { documentTypePolicy: this.documentTypePolicy });
-  }
-
-  creditNote(data: Record<string, unknown>): WrappedInvoiceData {
-    return creditNoteDataFrom(data, { documentTypePolicy: this.documentTypePolicy });
-  }
-
-  debitNote(data: Record<string, unknown>): WrappedInvoiceData {
-    return debitNoteDataFrom(data, { documentTypePolicy: this.documentTypePolicy });
-  }
-
-  transportDocument(data: Record<string, unknown>): WrappedInvoiceData {
-    return transportDocumentDataFrom(data, { documentTypePolicy: this.documentTypePolicy });
-  }
-
-  returnNote(data: Record<string, unknown>): WrappedInvoiceData {
-    return returnNoteDataFrom(data, { documentTypePolicy: this.documentTypePolicy });
-  }
-
-  entryNote(data: Record<string, unknown>): WrappedInvoiceData {
-    return entryNoteDataFrom(data, { documentTypePolicy: this.documentTypePolicy });
-  }
-
-  generateDocumentId(): string {
-    return this.config.generators.documentId();
   }
 
   generateSubmissionId(): string {
@@ -246,6 +183,10 @@ export class Efatura {
 
   signEventXml(xml: string, options: XmlSigningOptions = {}): Promise<SignedXmlResult> {
     return this.xmlSigner.sign(xml, options);
+  }
+
+  validateCertificate(input: CertificateValidationInput): Promise<CertificateValidationResult> {
+    return this.certificateValidator.validate(input);
   }
 
   buildDfeZip(files: Array<{ iud: string; xml: string | Buffer }>): Buffer {

@@ -1,4 +1,5 @@
 import type {
+  CertificateValidator,
   Clock,
   DfaRenderer,
   GoldenVectorRepository,
@@ -16,11 +17,13 @@ import { InMemoryGoldenVectorRepository } from '../infrastructure/golden-vectors
 import { FetchMiddlewareTransport } from '../infrastructure/middleware/fetch-middleware-transport';
 import { FetchPlatformTransport } from '../infrastructure/middleware/fetch-platform-transport';
 import { InMemorySequenceStore } from '../infrastructure/sequence/in-memory-sequence-store';
+import { OpensslCertificateValidator } from '../infrastructure/signing/openssl-certificate-validator';
 import { XadesBesSigner } from '../infrastructure/signing/xades-bes-signer';
 import { XmllintXsdValidator } from '../infrastructure/validation/xmllint-xsd-validator';
 import type { EfaturaDependencies } from './efatura-options';
 
 export interface ResolvedEfaturaDependencies {
+  certificateValidator: CertificateValidator;
   documentTypePolicy: DocumentTypePolicy;
   clock: Clock;
   sequenceStore: SequenceStore;
@@ -36,6 +39,7 @@ export function resolveEfaturaDependencies(
   dependencies: EfaturaDependencies,
 ): ResolvedEfaturaDependencies {
   return {
+    certificateValidator: dependencies.certificateValidator ?? new OpensslCertificateValidator(),
     documentTypePolicy: dependencies.documentTypePolicy ?? new DefaultDocumentTypePolicy(),
     clock: dependencies.clock ?? new SystemClock(),
     sequenceStore: dependencies.sequenceStore ?? new InMemorySequenceStore(),

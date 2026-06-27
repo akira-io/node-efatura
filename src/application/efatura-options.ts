@@ -1,4 +1,5 @@
 import type {
+  CertificateValidator,
   Clock,
   DfaRenderer,
   GoldenVectorRepository,
@@ -14,6 +15,7 @@ import type { InvoiceData } from '../domain/value-objects/invoice-data';
 import type { EmissionMode } from './xml/dfe-xml';
 
 export interface EfaturaDependencies {
+  certificateValidator?: CertificateValidator;
   documentTypePolicy?: DocumentTypePolicy;
   clock?: Clock;
   sequenceStore?: SequenceStore;

@@ -1,18 +1,13 @@
-import { execFile } from 'node:child_process';
 import { createVerify } from 'node:crypto';
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { promisify } from 'node:util';
+import { rm } from 'node:fs/promises';
 import { DOMParser } from '@xmldom/xmldom';
 import { describe, expect, it } from 'vitest';
 import { C14nCanonicalization } from 'xml-crypto';
 import { createEfatura } from '../src/create-efatura';
 import { DocumentType } from '../src/domain/enums/document-type';
 import { EfaturaValidationError } from '../src/domain/errors';
+import { temporaryCertificate } from './certificate-fixtures';
 import { baseInvoicePayload } from './helpers';
-
-const execFileAsync = promisify(execFile);
 
 describe('XAdES-BES signing', () => {
   it('requires certificate and private key material', async () => {
@@ -66,41 +61,6 @@ function config() {
     softwareName: 'Efatura Suite',
     softwareVersion: '1.0.0',
     middlewareBaseUrl: 'https://localhost:3443',
-  };
-}
-
-async function temporaryCertificate(): Promise<{
-  directory: string;
-  certificate: string;
-  privateKey: string;
-}> {
-  const directory = await mkdtemp(join(tmpdir(), 'efatura-signing-'));
-  const keyPath = join(directory, 'key.pem');
-  const certificatePath = join(directory, 'cert.pem');
-
-  await execFileAsync('openssl', [
-    'req',
-    '-x509',
-    '-newkey',
-    'rsa:2048',
-    '-sha256',
-    '-nodes',
-    '-keyout',
-    keyPath,
-    '-out',
-    certificatePath,
-    '-subj',
-    '/CN=Efatura Test',
-    '-set_serial',
-    '1234567890',
-    '-days',
-    '1',
-  ]);
-
-  return {
-    directory,
-    certificate: await readFile(certificatePath, 'utf8'),
-    privateKey: await readFile(keyPath, 'utf8'),
   };
 }
 

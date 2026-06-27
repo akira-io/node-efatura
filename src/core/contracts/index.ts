@@ -1,3 +1,9 @@
+export type {
+  CertificateValidationInput,
+  CertificateValidationIssue,
+  CertificateValidationResult,
+  CertificateValidator,
+} from './certificate-validator';
 export type { Clock } from './clock';
 export type {
   DfaDocument,
