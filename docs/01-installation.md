@@ -8,7 +8,14 @@
 ## Install the Package
 
 ```bash
+# Bun. Recommended for this repository.
 bun add @akira-io/efatura
+
+# npm. Use when your project is npm-based.
+npm install @akira-io/efatura
+
+# pnpm. Use when your project is pnpm-based.
+pnpm add @akira-io/efatura
 ```
 
 The package ships runtime dependencies for validation and DFA PDF generation:

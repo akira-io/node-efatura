@@ -12,7 +12,14 @@ Framework-agnostic Node.js engine for Cabo Verde e-Fatura fiscal documents. The 
 ## Install
 
 ```sh
+# Bun. Recommended for this repository.
 bun add @akira-io/efatura
+
+# npm. Use when your project is npm-based.
+npm install @akira-io/efatura
+
+# pnpm. Use when your project is pnpm-based.
+pnpm add @akira-io/efatura
 ```
 
 ## Quick Start
