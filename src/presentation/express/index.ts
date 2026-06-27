@@ -5,6 +5,7 @@ import {
   handleBuildEventXml,
   handleBuildXml,
   handleBuildZip,
+  handleFiscalReadiness,
   handleRenderDfa,
   handleSubmitMiddleware,
 } from '../shared/http';
@@ -32,6 +33,10 @@ export function efaturaRoutes(efatura: Efatura, _options: EfaturaRoutesOptions =
   router.post(
     '/dfe/submit/middleware',
     handle((req) => handleSubmitMiddleware(efatura, req.body)),
+  );
+  router.post(
+    '/dfe/validate/fiscal-readiness',
+    handle((req) => handleFiscalReadiness(efatura, req.body)),
   );
   router.get(
     '/dfa/:iud',

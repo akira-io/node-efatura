@@ -23,6 +23,9 @@ describe('HTTP adapters', () => {
     expect(router.stack.map((layer: { route?: { path: string } }) => layer.route?.path)).toContain(
       '/event/xml',
     );
+    expect(router.stack.map((layer: { route?: { path: string } }) => layer.route?.path)).toContain(
+      '/dfe/validate/fiscal-readiness',
+    );
   });
 
   it('registers Fastify routes for DFE and Event XML', async () => {
@@ -36,6 +39,7 @@ describe('HTTP adapters', () => {
 
     expect(routes).toContain('POST /dfe/xml');
     expect(routes).toContain('POST /event/xml');
+    expect(routes).toContain('POST /dfe/validate/fiscal-readiness');
   });
 
   it('creates a Nest dynamic module with the configured service', () => {
@@ -45,5 +49,6 @@ describe('HTTP adapters', () => {
     expect(module.exports).toEqual([EFATURA]);
     expect(module.providers).toEqual([{ provide: EFATURA, useValue: efatura }]);
     expect(typeof EfaturaController.prototype.buildEventXml).toBe('function');
+    expect(typeof EfaturaController.prototype.validateFiscalReadiness).toBe('function');
   });
 });

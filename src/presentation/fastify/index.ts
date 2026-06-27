@@ -5,6 +5,7 @@ import {
   handleBuildEventXml,
   handleBuildXml,
   handleBuildZip,
+  handleFiscalReadiness,
   handleRenderDfa,
   handleSubmitMiddleware,
 } from '../shared/http';
@@ -30,6 +31,9 @@ export async function efaturaFastifyPlugin(
   });
   fastify.post('/dfe/submit/middleware', async (request, reply) => {
     send(reply, await handleSubmitMiddleware(efatura, request.body));
+  });
+  fastify.post('/dfe/validate/fiscal-readiness', async (request, reply) => {
+    send(reply, await handleFiscalReadiness(efatura, request.body));
   });
   fastify.get('/dfa/:iud', async (request, reply) => {
     const params = request.params as { iud?: string };
