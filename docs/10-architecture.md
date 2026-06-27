@@ -7,7 +7,7 @@ src/
   core/                 Contracts only. No Zod, no HTTP, no filesystem, no framework imports.
   domain/               Fiscal enums, value objects, policies, IUD logic, and domain errors.
   application/          Builders, XML v11 generation, DFA helpers, packaging, and use-case validation.
-  infrastructure/       Default clocks, sequence stores, transports, PDF renderer, XSD and signer placeholders.
+  infrastructure/       Default clocks, sequence stores, transports, PDF renderer, XSD validator, and signer.
   presentation/         Express, Fastify, Nest, and shared HTTP request schemas.
   support/              Internal messages, normalizers, and UUID helpers.
   config.ts             Config resolution and defaults.
@@ -28,7 +28,7 @@ The `core` folder is intentionally small. It defines contracts such as `XsdValid
 
 ## Official Artifacts
 
-The official XSD files, certificate-backed XAdES-BES signing implementation, and official golden vectors are not embedded in the package. The package exposes contracts for them and fails explicitly when a required official artifact has not been injected.
+The official e-Fatura XSD files supplied to the project are embedded under `resources/xsd/efatura/2024-05-27`. The package also includes concrete `XmllintXsdValidator` and `XadesBesSigner` implementations. Official golden vectors for IUD, ZIP, and signatures were not included in the supplied artifacts, so the `GoldenVectorRepository` contract remains injectable.
 
 ## XML v11
 

@@ -31,3 +31,12 @@ Packaging is separate from transport:
 - `PlatformTransport` submits ZIP payloads to the official PE API using OAuth bearer tokens and repository headers.
 
 This split keeps packaging deterministic and easy to test with golden vectors.
+
+## Responses
+
+Fetch-based middleware and platform transports normalize JSON and XML service responses into:
+
+- `documents`: DFE-level results such as IUD, status, code, message, and repository code.
+- `errors`: service or validation errors with code, message, field, and raw payload.
+
+If the HTTP response fails without a structured error body, the transport records the HTTP status as a submission error.

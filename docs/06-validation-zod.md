@@ -17,7 +17,7 @@ The parsing functions keep the public error contract stable by converting schema
 import { partyDataSchema, partyDataFrom } from '@akira-io/efatura';
 
 const parsed = partyDataSchema.parse({
-  nif: '100200300',
+  taxId: { countryCode: 'CV', value: '100200300' },
   name: 'Emitter',
 });
 

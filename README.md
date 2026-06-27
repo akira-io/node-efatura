@@ -7,7 +7,7 @@
 
 > Beta software. Pin an exact version in production and review the changelog before upgrading.
 
-Framework-agnostic Node.js engine for Cabo Verde e-Fatura fiscal document data. This package ports the implemented behavior from `akira/efatura`: document type policies, DNRE repository configuration, fiscal value objects, validation rules, and UUID-based local document identifiers.
+Framework-agnostic Node.js engine for Cabo Verde e-Fatura fiscal documents. The package follows the same clean boundary used by `node-sisp`: contracts-only core, domain value objects, application use cases, infrastructure implementations, and framework adapters.
 
 ## Install
 
@@ -36,16 +36,25 @@ const invoice = efatura
   .invoice()
   .type(DocumentType.ElectronicInvoice)
   .issueDate('2026-02-08')
-  .emitter({ nif: '100200300', name: 'Emitter' })
-  .receiver({ nif: '900800700', name: 'Receiver' })
+  .emitter({ taxId: { countryCode: 'CV', value: '100200300' }, name: 'Emitter' })
+  .receiver({ taxId: { countryCode: 'CV', value: '900800700' }, name: 'Receiver' })
   .line({
-    description: 'Item',
-    quantity: 1,
-    unitPrice: 1000,
-    total: 1000,
-    taxes: [{ type: 'IVA', rate: 15, amount: 150 }],
+    quantity: { value: 1, unitCode: 'EA' },
+    price: 1000,
+    priceExtension: 1000,
+    netTotal: 1000,
+    taxes: [{ taxTypeCode: 'IVA', taxPercentage: 15, taxTotal: 150 }],
+    item: {
+      description: 'Item',
+      emitterIdentification: 'ITEM1',
+    },
   })
-  .totals({ subtotal: 1000, taxTotal: 150, grandTotal: 1150 })
+  .totals({
+    priceExtensionTotalAmount: 1000,
+    netTotalAmount: 1000,
+    taxTotalAmount: 150,
+    payableAmount: 1150,
+  })
   .validate();
 
 console.log(invoice.id); // UUID
@@ -60,19 +69,22 @@ console.log(invoice.id); // UUID
 - Validates parties, taxes, totals, invoice lines, note references, and sales receipt receiver thresholds.
 - Generates local document, submission, and batch identifiers with UUIDs.
 - Generates and validates IUD values with Luhn check digits.
-- Generates compact DFE XML using the v11 document-element mapping.
+- Generates compact DFE XML using the official v11 document-element mapping.
+- Validates XML with the bundled official XSD set through `XmllintXsdValidator`.
+- Signs XML with a certificate-backed XAdES-BES signer.
 - Packages DFE XML files into Deflate ZIP payloads.
-- Submits ZIP payloads through middleware and platform transport contracts.
+- Submits ZIP payloads through middleware and platform transports with normalized responses.
 - Builds DFA QR Code URLs from a configurable base URL.
 - Renders DFA PDFs through the injectable PDF renderer.
+- Provides in-memory, file, and Knex-backed sequence stores.
 - Exposes Express, Fastify, and Nest adapters.
 
-## Official Artifacts Required
+## Official Artifacts
 
-- Official XSD files must be provided through an `XsdValidator`.
-- XAdES-BES signing must be provided through a certificate-backed `XmlSigner`.
-- Official golden vectors must be provided through a `GoldenVectorRepository`.
-- Database-backed sequence storage can be provided through a `SequenceStore`.
+- Official e-Fatura XSD files are bundled under `resources/xsd/efatura/2024-05-27`.
+- XAdES-BES signing requires caller-provided certificate and private key material.
+- Official XML examples from the XSD package are tested against the bundled schema.
+- Official golden vectors for IUD, ZIP, and signature were not present in the supplied artifacts. The `GoldenVectorRepository` contract remains available for those fixtures when DNRE publishes them.
 
 ## Documentation
 
