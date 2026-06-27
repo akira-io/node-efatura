@@ -38,11 +38,14 @@
     }
   },
   "files": [
+    "assets",
     "dist",
     "docs",
     "resources",
     "README.md",
-    "LICENSE.md"
+    "LICENSE.md",
+    "LICENSE-MIT",
+    "LICENSE-APACHE"
   ],
   "scripts": {
     "build": "tsup",

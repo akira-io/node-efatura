@@ -1,53 +1,70 @@
-# @akira-io/efatura
+<p align="center">
+  <img src="assets/banner.svg" alt="@akira-io/efatura" />
+</p>
 
-[![npm version](https://img.shields.io/npm/v/@akira-io/efatura/beta.svg)](https://www.npmjs.com/package/@akira-io/efatura)
-[![node](https://img.shields.io/node/v/@akira-io/efatura)](https://www.npmjs.com/package/@akira-io/efatura)
-[![license](https://img.shields.io/npm/l/@akira-io/efatura.svg)](LICENSE.md)
-[![status](https://img.shields.io/badge/status-beta-orange.svg)](https://www.npmjs.com/package/@akira-io/efatura)
+<p align="center">
+  <a href="https://www.npmjs.com/package/@akira-io/efatura"><img src="https://img.shields.io/npm/v/@akira-io/efatura.svg" alt="npm"></a>
+  <a href="https://www.npmjs.com/package/@akira-io/efatura"><img src="https://img.shields.io/npm/dm/@akira-io/efatura.svg" alt="downloads"></a>
+  <a href="https://www.npmjs.com/package/@akira-io/efatura"><img src="https://img.shields.io/bundlephobia/minzip/@akira-io/efatura" alt="size"></a>
+  <a href="https://github.com/akira-io/node-efatura/actions/workflows/test.yml"><img src="https://github.com/akira-io/node-efatura/actions/workflows/test.yml/badge.svg" alt="tests"></a>
+  <img src="https://img.shields.io/npm/l/@akira-io/efatura.svg" alt="license">
+  <img src="https://img.shields.io/node/v/@akira-io/efatura" alt="node">
+</p>
 
-> Beta software. Pin an exact version in production and review the changelog before upgrading.
-
-Framework-agnostic Node.js engine for Cabo Verde e-Fatura fiscal documents. The package follows the same clean boundary used by `node-sisp`: contracts-only core, domain value objects, application use cases, infrastructure implementations, and framework adapters.
+Cabo Verde e-Fatura fiscal document validation engine for Node.js. It provides a framework-agnostic core for validating fiscal documents, generating DFE XML, packaging ZIP payloads, signing with XAdES-BES, and integrating through Express, Fastify, and Nest adapters.
 
 ## Install
 
 ```sh
-# Bun. Recommended for this repository.
-bun add @akira-io/efatura
+# npm
+npm install @akira-io/efatura@0.1.0-beta.0
 
-# npm. Use when your project is npm-based.
-npm install @akira-io/efatura
+# pnpm
+pnpm add @akira-io/efatura@0.1.0-beta.0
 
-# pnpm. Use when your project is pnpm-based.
-pnpm add @akira-io/efatura
+# yarn
+yarn add @akira-io/efatura@0.1.0-beta.0
+
+# bun
+bun add @akira-io/efatura@0.1.0-beta.0
 ```
 
-## Quick Start
+```json
+{
+  "dependencies": {
+    "@akira-io/efatura": "0.1.0-beta.0"
+  }
+}
+```
+
+This is beta software. Pin exact versions in production and review [CHANGELOG.md](CHANGELOG.md) before upgrading.
+
+## Quick start
 
 ```ts
 import { DocumentType, TaxTypeCode, createEfatura } from '@akira-io/efatura';
 
 const efatura = createEfatura({
-  transmitterNif: process.env.EFATURA_TRANSMITTER_NIF,
-  transmitterLed: process.env.EFATURA_TRANSMITTER_LED,
+  transmitterNif: '123456789',
+  transmitterLed: '001',
   transmitterKey: process.env.EFATURA_TRANSMITTER_KEY,
   emitter: {
-    name: process.env.EFATURA_EMITTER_NAME,
+    name: 'Demo Emitter',
     address: {
       countryCode: 'CV',
-      addressDetail: process.env.EFATURA_EMITTER_ADDRESS,
+      addressDetail: 'Praia',
     },
     contacts: {
-      email: process.env.EFATURA_EMITTER_EMAIL,
-      telephone: process.env.EFATURA_EMITTER_PHONE,
+      email: 'billing@example.com',
+      telephone: '2600000',
     },
   },
-  softwareCode: process.env.EFATURA_SOFTWARE_CODE,
-  softwareName: process.env.EFATURA_SOFTWARE_NAME,
-  softwareVersion: process.env.EFATURA_SOFTWARE_VERSION,
-  middlewareBaseUrl: process.env.EFATURA_MIDDLEWARE_BASE_URL,
-  dfaBaseUrl: process.env.EFATURA_DFA_BASE_URL,
-  environment: process.env.EFATURA_ENVIRONMENT,
+  softwareCode: 'EFATURA-DEMO',
+  softwareName: 'Demo Billing',
+  softwareVersion: '1.0.0',
+  middlewareBaseUrl: 'https://middleware.example.test',
+  dfaBaseUrl: 'https://dfa.example.test',
+  environment: 'TEST',
 });
 
 const invoice = efatura
@@ -74,41 +91,8 @@ const invoice = efatura
   })
   .validate();
 
-console.log(invoice.id); // UUID
+console.log(invoice.id);
 ```
-
-`config.emitter` is the default issuer for every document. Omit `.emitter(...)` when the configured issuer is the document emitter. Pass `.emitter(...)` only to override the default, for example when the same Efatura instance emits for another taxpayer.
-
-## Current Scope
-
-- Resolves DNRE repository environments: `PRODUCTION`, `HOMOLOGATION`, and `TEST`.
-- Validates transmitter, software, middleware, platform, and DFA configuration.
-- Supports all official e-Fatura v11.0 DFE document type codes.
-- Uses Zod schemas for domain value objects and HTTP adapter payloads.
-- Validates parties, taxes, totals, invoice lines, note references, receipt, transport, and corrective-note rules.
-- Generates local document, submission, and batch identifiers with UUIDs.
-- Generates and validates IUD values with Luhn check digits.
-- Generates compact DFE XML using the official v11 document-element mapping.
-- Generates official `Event` XML for fiscal document cancellation/annulment (`FDC`) and unused document number invalidation (`UDN`).
-- Validates XML with the bundled official XSD set through `XmllintXsdValidator`.
-- Test coverage validates generated XML for all 9 DFE types against the bundled official XSD.
-- Signs XML with a certificate-backed XAdES-BES signer.
-- Validates certificate material, matching private keys, and optional CA bundles before signing.
-- Packages DFE XML files into Deflate ZIP payloads.
-- Submits ZIP payloads through middleware and platform transports with normalized responses.
-- Validates fiscal readiness through PE/DNRE client contracts for taxpayers, registered software, and emitter authorization.
-- Keeps `ExtraFields` as a custom extension surface and blocks known official XML names there.
-- Builds DFA QR Code URLs from a configurable base URL.
-- Renders DFA PDFs with fiscal header, parties, line summary, totals, QR Code, and contingency notice.
-- Provides in-memory, file, and Knex-backed sequence stores.
-- Exposes Express, Fastify, and Nest adapters.
-
-## Official Artifacts
-
-- Official e-Fatura XSD files are bundled under `resources/xsd/efatura/2024-05-27`.
-- XAdES-BES signing requires caller-provided certificate and private key material.
-- Official XML examples from the XSD package are tested against the bundled schema.
-- Official golden vectors for IUD, ZIP, and signature were not published with the supplied artifacts. Internal fixtures under `resources/golden-vectors/internal` are package baselines, not DNRE vectors.
 
 ## Documentation
 
@@ -123,18 +107,38 @@ console.log(invoice.id); // UUID
 - [Adapters](docs/08-adapters.md)
 - [Architecture](docs/10-architecture.md)
 - [Compliance Matrix](docs/11-compliance-matrix.md)
+- API reference: https://www.npmjs.com/package/@akira-io/efatura
 
 ## Testing
 
 ```sh
-bun run typecheck
-bun run lint
 bun run test
-bun run build
 ```
 
 Live PE/DNRE readiness tests are skipped by default. Enable them with `EFATURA_LIVE_TESTS=1` and the required `EFATURA_LIVE_*` credentials documented in [Configuration](docs/02-configuration.md).
 
+## Changelog
+
+Please see [CHANGELOG.md](CHANGELOG.md) for what has changed recently. The changelog is generated from conventional commits via [git-cliff](https://git-cliff.org) on every release tag.
+
+## Contributing
+
+Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+
+## Security
+
+Please review [our security policy](SECURITY.md) on how to report security vulnerabilities.
+
+## Credits
+
+- [Kidiatoliny](https://github.com/kidiatoliny)
+- [All Contributors](https://github.com/akira-io/node-efatura/graphs/contributors)
+
 ## License
 
-MIT
+Dual-licensed under either of the following, at your option:
+
+- MIT License ([LICENSE-MIT](LICENSE-MIT) or https://opensource.org/licenses/MIT)
+- Apache License 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or https://www.apache.org/licenses/LICENSE-2.0)
+
+Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in this project by you, as defined in the Apache-2.0 license, shall be dual-licensed as above, without any additional terms or conditions.
