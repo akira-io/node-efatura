@@ -59,10 +59,15 @@ const efatura = createEfatura(config, {
   middlewareTransport,
   platformTransport,
   goldenVectors,
+  taxpayerRegistryClient,
+  softwareRegistryClient,
+  emitterAuthorizationClient,
 });
 ```
 
-Defaults are concrete infrastructure implementations: OpenSSL-backed certificate validation, in-memory sequence storage, bundled XSD validation through `xmllint`, XAdES-BES signing, DFA PDF rendering, fetch-based transports, and in-memory golden vectors.
+Defaults are concrete infrastructure implementations: OpenSSL-backed certificate validation, in-memory sequence storage, bundled XSD validation through `xmllint`, XAdES-BES signing, DFA PDF rendering, fetch-based transports, fiscal authority fetch clients, and in-memory golden vectors.
+
+Fiscal authority clients are used by `validateFiscalReadiness(invoice, options)`. External PE/DNRE checks require `options.accessToken`; without it, those checks return `skipped` so offline validation remains deterministic.
 
 Use `FileSystemGoldenVectorRepository` when DNRE-provided vectors are stored on disk:
 

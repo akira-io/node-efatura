@@ -24,11 +24,11 @@ presentation -> application -> domain -> core contracts
 infrastructure -> core contracts and application contracts
 ```
 
-The `core` folder is intentionally small. It defines contracts such as `XsdValidator`, `XmlSigner`, `CertificateValidator`, `SequenceStore`, `DfaRenderer`, `MiddlewareTransport`, `PlatformTransport`, and `GoldenVectorRepository`.
+The `core` folder is intentionally small. It defines contracts such as `XsdValidator`, `XmlSigner`, `CertificateValidator`, `SequenceStore`, `DfaRenderer`, `MiddlewareTransport`, `PlatformTransport`, fiscal authority registry clients, and `GoldenVectorRepository`.
 
 ## Official Artifacts
 
-The official e-Fatura XSD files supplied to the project are embedded under `resources/xsd/efatura/2024-05-27`. The package also includes concrete `XmllintXsdValidator`, `XadesBesSigner`, `OpensslCertificateValidator`, and `FileSystemGoldenVectorRepository` implementations. Official golden vectors for IUD, ZIP, and signatures were not included in the supplied artifacts, so the filesystem repository only loads externally supplied fixtures instead of generating synthetic official values.
+The official e-Fatura XSD files supplied to the project are embedded under `resources/xsd/efatura/2024-05-27`. The package also includes concrete `XmllintXsdValidator`, `XadesBesSigner`, `OpensslCertificateValidator`, fiscal authority fetch clients, and `FileSystemGoldenVectorRepository` implementations. Official golden vectors for IUD, ZIP, and signatures were not published with the supplied artifacts. Internal fixtures under `resources/golden-vectors/internal` are package baselines, not DNRE vectors.
 
 ## XML v11
 
@@ -41,3 +41,7 @@ ZIP packaging is documented in [Packaging](07-packaging.md). The implementation 
 ## Validation
 
 Zod validation is documented in [Validation And Zod](06-validation-zod.md). Zod is used in `domain` and `presentation`, while `core` remains contracts-only.
+
+## Compliance
+
+Coverage against the official manual and XML-XSD artifacts is tracked in [Compliance Matrix](11-compliance-matrix.md).

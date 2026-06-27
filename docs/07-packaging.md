@@ -30,7 +30,7 @@ Packaging is separate from transport:
 - `MiddlewareTransport` submits ZIP payloads to a local middleware instance.
 - `PlatformTransport` submits ZIP payloads to the official PE API using OAuth bearer tokens and repository headers.
 
-This split keeps packaging deterministic and easy to test with golden vectors.
+This split keeps packaging deterministic and easy to test with internal package fixtures. Official DNRE golden vectors for ZIP payloads were not found in the published artifacts.
 
 ## Responses
 

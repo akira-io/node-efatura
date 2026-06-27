@@ -89,6 +89,7 @@ console.log(invoice.id); // UUID
 - Validates certificate material, matching private keys, and optional CA bundles before signing.
 - Packages DFE XML files into Deflate ZIP payloads.
 - Submits ZIP payloads through middleware and platform transports with normalized responses.
+- Validates fiscal readiness through PE/DNRE client contracts for taxpayers, registered software, and emitter authorization.
 - Builds DFA QR Code URLs from a configurable base URL.
 - Renders DFA PDFs with fiscal header, parties, line summary, totals, QR Code, and contingency notice.
 - Provides in-memory, file, and Knex-backed sequence stores.
@@ -99,7 +100,7 @@ console.log(invoice.id); // UUID
 - Official e-Fatura XSD files are bundled under `resources/xsd/efatura/2024-05-27`.
 - XAdES-BES signing requires caller-provided certificate and private key material.
 - Official XML examples from the XSD package are tested against the bundled schema.
-- Official golden vectors for IUD, ZIP, and signature were not present in the supplied artifacts. The `GoldenVectorRepository` contract and `FileSystemGoldenVectorRepository` implementation are available for those fixtures when DNRE publishes them.
+- Official golden vectors for IUD, ZIP, and signature were not published with the supplied artifacts. Internal fixtures under `resources/golden-vectors/internal` are package baselines, not DNRE vectors.
 
 ## Documentation
 
@@ -113,6 +114,7 @@ console.log(invoice.id); // UUID
 - [Packaging](docs/07-packaging.md)
 - [Adapters](docs/08-adapters.md)
 - [Architecture](docs/10-architecture.md)
+- [Compliance Matrix](docs/11-compliance-matrix.md)
 
 ## Testing
 

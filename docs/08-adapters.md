@@ -51,6 +51,9 @@ Adapters expose the same route set:
 | `POST` | `/event/xml` | Build official Event XML for `FDC` or `UDN` events |
 | `POST` | `/dfe/zip` | Build a ZIP payload from `{ iud, xml }` files |
 | `POST` | `/dfe/submit/middleware` | Submit a ZIP payload through the configured middleware transport |
+| `POST` | `/dfe/validate/fiscal-readiness` | Validate local invoice rules plus optional PE/DNRE readiness checks |
 | `GET` | `/dfa/:iud` | Render a DFA PDF for an IUD |
 
 Request payloads are validated with the shared Zod schemas documented in [Validation And Zod](06-validation-zod.md).
+
+Fiscal readiness accepts `{ invoice, options }`. Without `options.accessToken`, external PE/DNRE checks return `skipped`; with a token, the configured fiscal authority clients validate taxpayers, registered software, and emitter authorization.

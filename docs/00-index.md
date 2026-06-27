@@ -15,3 +15,4 @@
 | 07 | [Packaging](07-packaging.md) | ZIP Deflate packaging and transport split |
 | 08 | [Adapters](08-adapters.md) | Express, Fastify, and Nest adapters |
 | 10 | [Architecture](10-architecture.md) | Clean architecture layout and dependency direction |
+| 11 | [Compliance Matrix](11-compliance-matrix.md) | Manual v11 and XML-XSD coverage status |

@@ -58,3 +58,7 @@ The domain validates the rules that are cheap to catch before XSD validation:
 ## Boundary Rule
 
 `src/core` must stay framework-free and schema-library-free. Contracts can mention TypeScript types, but concrete validation belongs in `domain`, `application`, or `presentation`.
+
+## Fiscal Readiness
+
+`validateFiscalReadiness(invoice, options)` composes local invoice validation with optional PE/DNRE checks through core contracts. It validates taxpayer registry status, registered software, and emitter authorization when `options.accessToken` is provided. Without an access token, external checks are reported as `skipped`.
