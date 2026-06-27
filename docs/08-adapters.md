@@ -48,6 +48,7 @@ Adapters expose the same route set:
 | Method | Path | Purpose |
 |--------|------|---------|
 | `POST` | `/dfe/xml` | Build DFE XML from invoice data and options |
+| `POST` | `/event/xml` | Build official Event XML for `FDC` or `UDN` events |
 | `POST` | `/dfe/zip` | Build a ZIP payload from `{ iud, xml }` files |
 | `POST` | `/dfe/submit/middleware` | Submit a ZIP payload through the configured middleware transport |
 | `GET` | `/dfa/:iud` | Render a DFA PDF for an IUD |

@@ -10,6 +10,8 @@ The package exports Zod schemas for reusable fiscal value-object validation:
 - `taxDataSchema`
 - `lineItemDataSchema`
 - `totalsDataSchema`
+- `eventDataSchema`
+- `eventDocumentRangeDataSchema`
 
 The parsing functions keep the public error contract stable by converting schema failures into `EfaturaValidationError`.
 
@@ -29,10 +31,23 @@ const party = partyDataFrom(parsed);
 HTTP adapters use shared Zod schemas before calling the facade:
 
 - `dfeXmlRequestSchema`
+- `eventXmlRequestSchema`
 - `dfeZipFileSchema`
 - `dfeZipRequestSchema`
 
 Adapters reject malformed payloads with `EfaturaValidationError` and do not place HTTP-specific validation in the domain or core layers.
+
+## Fiscal Rules
+
+The domain validates the rules that are cheap to catch before XSD validation:
+
+- `ReceiptTypeCode` must be `1`, `2`, `3`, or `4`.
+- `ReceiptTypeCode = 4` requires `RentReceipt`.
+- `TransportDocumentTypeCode` must be `1` through `5`.
+- `TransportDocumentTypeCode = 5` requires `References`.
+- Credit, debit, and return notes validate allowed `IssueReasonCode` values per document type.
+- `IssueReasonCode = DRP` requires `RappelPeriod`.
+- `TaxTypeCode = NA` requires `TaxExemptionReasonCode`.
 
 ## Boundary Rule
 

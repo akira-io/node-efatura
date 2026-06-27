@@ -198,6 +198,21 @@ Known API categories:
 - Searching by date or NIF.
 - Events such as cancellation, annulment, and document number invalidation.
 
+## Events
+
+The official XSD defines `Event` as a root element alongside `Dfe`.
+
+Supported event codes:
+
+- `FDC`: fiscal document cancellation or annulment. The event targets one or more `IUD` values.
+- `UDN`: unused document number invalidation. The event targets a document-number interval by year, LED, series, document type, and start/end document numbers.
+
+Event IDs follow the 24-character XSD pattern:
+
+```text
+CV{repository}{YY}{MM}{DD}{HH}{mm}{ss}{transmitterNif}
+```
+
 ## Self-Billing
 
 Version 10.0 supports self-billing.
@@ -217,6 +232,7 @@ Requirements:
 - It must include a QR Code.
 - The default QR Code URL format is `https://pe.efatura.cv/dfe/view/{IUD}`. Configure `dfaBaseUrl` if the PE endpoint changes.
 - In contingency modes, it must display `EMITIDO EM CONTINGENCIA`.
+- The package PDF renderer includes fiscal header data, parties, line summary, totals, QR Code, and the contingency notice.
 
 ## Implementation Checklist
 

@@ -66,16 +66,17 @@ console.log(invoice.id); // UUID
 - Validates transmitter, software, middleware, platform, and DFA configuration.
 - Supports all official e-Fatura v11.0 DFE document type codes.
 - Uses Zod schemas for domain value objects and HTTP adapter payloads.
-- Validates parties, taxes, totals, invoice lines, note references, and sales receipt receiver thresholds.
+- Validates parties, taxes, totals, invoice lines, note references, receipt, transport, and corrective-note rules.
 - Generates local document, submission, and batch identifiers with UUIDs.
 - Generates and validates IUD values with Luhn check digits.
 - Generates compact DFE XML using the official v11 document-element mapping.
+- Generates official `Event` XML for fiscal document cancellation/annulment (`FDC`) and unused document number invalidation (`UDN`).
 - Validates XML with the bundled official XSD set through `XmllintXsdValidator`.
 - Signs XML with a certificate-backed XAdES-BES signer.
 - Packages DFE XML files into Deflate ZIP payloads.
 - Submits ZIP payloads through middleware and platform transports with normalized responses.
 - Builds DFA QR Code URLs from a configurable base URL.
-- Renders DFA PDFs through the injectable PDF renderer.
+- Renders DFA PDFs with fiscal header, parties, line summary, totals, QR Code, and contingency notice.
 - Provides in-memory, file, and Knex-backed sequence stores.
 - Exposes Express, Fastify, and Nest adapters.
 
