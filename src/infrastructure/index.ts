@@ -1,5 +1,10 @@
 export { SystemClock } from './clock/system-clock';
 export { PdfDfaRenderer } from './dfa/pdf-dfa-renderer';
+export {
+  FetchEmitterAuthorizationClient,
+  FetchSoftwareRegistryClient,
+  FetchTaxpayerRegistryClient,
+} from './fiscal-authority/fetch-fiscal-authority-clients';
 export { FileSystemGoldenVectorRepository } from './golden-vectors/file-system-golden-vector-repository';
 export { InMemoryGoldenVectorRepository } from './golden-vectors/in-memory-golden-vector-repository';
 export { FetchMiddlewareTransport } from './middleware/fetch-middleware-transport';

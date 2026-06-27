@@ -13,6 +13,19 @@ export type {
   DfaTotalsInput,
 } from './dfa-renderer';
 export type {
+  EmitterAuthorizationClient,
+  EmitterAuthorizationInput,
+  EmitterAuthorizationResult,
+  FiscalAuthorityIssue,
+  FiscalAuthorityRequestContext,
+  SoftwareLookupInput,
+  SoftwareLookupResult,
+  SoftwareRegistryClient,
+  TaxpayerLookupInput,
+  TaxpayerLookupResult,
+  TaxpayerRegistryClient,
+} from './fiscal-authority';
+export type {
   GoldenVector,
   GoldenVectorKind,
   GoldenVectorRepository,

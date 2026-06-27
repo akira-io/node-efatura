@@ -2,10 +2,13 @@ import type {
   CertificateValidator,
   Clock,
   DfaRenderer,
+  EmitterAuthorizationClient,
   GoldenVectorRepository,
   MiddlewareTransport,
   PlatformTransport,
   SequenceStore,
+  SoftwareRegistryClient,
+  TaxpayerRegistryClient,
   XmlSigner,
   XsdValidator,
 } from '../core/contracts';
@@ -13,6 +16,11 @@ import type { DocumentTypePolicy } from '../core/contracts/document-type-policy'
 import { DefaultDocumentTypePolicy } from '../domain/policies/default-document-type-policy';
 import { SystemClock } from '../infrastructure/clock/system-clock';
 import { PdfDfaRenderer } from '../infrastructure/dfa/pdf-dfa-renderer';
+import {
+  FetchEmitterAuthorizationClient,
+  FetchSoftwareRegistryClient,
+  FetchTaxpayerRegistryClient,
+} from '../infrastructure/fiscal-authority/fetch-fiscal-authority-clients';
 import { InMemoryGoldenVectorRepository } from '../infrastructure/golden-vectors/in-memory-golden-vector-repository';
 import { FetchMiddlewareTransport } from '../infrastructure/middleware/fetch-middleware-transport';
 import { FetchPlatformTransport } from '../infrastructure/middleware/fetch-platform-transport';
@@ -33,6 +41,9 @@ export interface ResolvedEfaturaDependencies {
   middlewareTransport: MiddlewareTransport;
   platformTransport: PlatformTransport;
   goldenVectors: GoldenVectorRepository;
+  taxpayerRegistryClient: TaxpayerRegistryClient;
+  softwareRegistryClient: SoftwareRegistryClient;
+  emitterAuthorizationClient: EmitterAuthorizationClient;
 }
 
 export function resolveEfaturaDependencies(
@@ -49,5 +60,11 @@ export function resolveEfaturaDependencies(
     middlewareTransport: dependencies.middlewareTransport ?? new FetchMiddlewareTransport(),
     platformTransport: dependencies.platformTransport ?? new FetchPlatformTransport(),
     goldenVectors: dependencies.goldenVectors ?? new InMemoryGoldenVectorRepository(),
+    taxpayerRegistryClient:
+      dependencies.taxpayerRegistryClient ?? new FetchTaxpayerRegistryClient(),
+    softwareRegistryClient:
+      dependencies.softwareRegistryClient ?? new FetchSoftwareRegistryClient(),
+    emitterAuthorizationClient:
+      dependencies.emitterAuthorizationClient ?? new FetchEmitterAuthorizationClient(),
   };
 }

@@ -19,6 +19,19 @@ export const dfeZipRequestSchema = z.object({
   files: z.array(dfeZipFileSchema).min(1),
 });
 
+export const fiscalReadinessRequestSchema = z.object({
+  invoice: z.record(z.string(), z.unknown()),
+  options: z
+    .object({
+      accessToken: z.string().min(1).optional(),
+      baseUrl: z.string().url().optional(),
+      validateReceiver: z.boolean().optional(),
+    })
+    .optional()
+    .default({}),
+});
+
 export type DfeXmlRequest = z.infer<typeof dfeXmlRequestSchema>;
 export type EventXmlRequest = z.infer<typeof eventXmlRequestSchema>;
 export type DfeZipRequest = z.infer<typeof dfeZipRequestSchema>;
+export type FiscalReadinessRequest = z.infer<typeof fiscalReadinessRequestSchema>;

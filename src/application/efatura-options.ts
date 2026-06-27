@@ -2,10 +2,13 @@ import type {
   CertificateValidator,
   Clock,
   DfaRenderer,
+  EmitterAuthorizationClient,
   GoldenVectorRepository,
   MiddlewareTransport,
   PlatformTransport,
   SequenceStore,
+  SoftwareRegistryClient,
+  TaxpayerRegistryClient,
   XmlSigner,
   XsdValidator,
 } from '../core/contracts';
@@ -25,6 +28,9 @@ export interface EfaturaDependencies {
   middlewareTransport?: MiddlewareTransport;
   platformTransport?: PlatformTransport;
   goldenVectors?: GoldenVectorRepository;
+  taxpayerRegistryClient?: TaxpayerRegistryClient;
+  softwareRegistryClient?: SoftwareRegistryClient;
+  emitterAuthorizationClient?: EmitterAuthorizationClient;
 }
 
 export interface EfaturaBuildIudInput
@@ -68,4 +74,10 @@ export interface RenderDfaOptions {
 export interface SubmitPlatformOptions {
   accessToken: string;
   baseUrl?: string;
+}
+
+export interface FiscalReadinessOptions {
+  accessToken?: string;
+  baseUrl?: string;
+  validateReceiver?: boolean;
 }

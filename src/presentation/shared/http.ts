@@ -1,7 +1,12 @@
 import { EfaturaValidationError } from '../../domain/errors';
 import type { Efatura } from '../../efatura';
 import { isRecord } from '../../support/normalizers';
-import { dfeXmlRequestSchema, dfeZipRequestSchema, eventXmlRequestSchema } from './schemas';
+import {
+  dfeXmlRequestSchema,
+  dfeZipRequestSchema,
+  eventXmlRequestSchema,
+  fiscalReadinessRequestSchema,
+} from './schemas';
 
 export interface HttpResult {
   status: number;
@@ -42,6 +47,13 @@ export async function handleSubmitMiddleware(efatura: Efatura, body: unknown): P
   const result = await efatura.submitDfeZip(zip);
 
   return { status: result.status, body: result };
+}
+
+export async function handleFiscalReadiness(efatura: Efatura, body: unknown): Promise<HttpResult> {
+  const payload = parseRequest(body, fiscalReadinessRequestSchema, 'body');
+  const result = await efatura.validateFiscalReadiness(payload.invoice, payload.options);
+
+  return { status: result.ok ? 200 : 422, body: result };
 }
 
 export async function handleRenderDfa(efatura: Efatura, iud: string): Promise<HttpResult> {

@@ -22,6 +22,12 @@ export type {
   RenderDfaOptions,
   SubmitPlatformOptions,
 } from './application/efatura-options';
+export type {
+  FiscalReadinessCheck,
+  FiscalReadinessResult,
+  FiscalReadinessStatus,
+} from './application/fiscal-readiness';
+export { validateFiscalReadiness } from './application/fiscal-readiness';
 export { assertGoldenVector } from './application/golden-vector-assertion';
 export {
   parseIssueDateTime,
@@ -159,8 +165,11 @@ export type { TotalsData } from './domain/value-objects/totals-data';
 export { totalsDataFrom, totalsDataSchema } from './domain/value-objects/totals-data';
 export { Efatura } from './efatura';
 export {
+  FetchEmitterAuthorizationClient,
   FetchMiddlewareTransport,
   FetchPlatformTransport,
+  FetchSoftwareRegistryClient,
+  FetchTaxpayerRegistryClient,
   FileSequenceStore,
   InMemoryGoldenVectorRepository,
   InMemorySequenceStore,
@@ -176,12 +185,18 @@ export {
   XadesBesSigner,
   XmllintXsdValidator,
 } from './infrastructure';
-export type { DfeXmlRequest, DfeZipRequest, EventXmlRequest } from './presentation/shared/schemas';
+export type {
+  DfeXmlRequest,
+  DfeZipRequest,
+  EventXmlRequest,
+  FiscalReadinessRequest,
+} from './presentation/shared/schemas';
 export {
   dfeXmlRequestSchema,
   dfeZipFileSchema,
   dfeZipRequestSchema,
   eventXmlRequestSchema,
+  fiscalReadinessRequestSchema,
 } from './presentation/shared/schemas';
 export { generateUuid, isUuid } from './support/generators';
 export { messages } from './support/messages';

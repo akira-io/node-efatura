@@ -15,6 +15,7 @@ import type {
   EfaturaBuildIudInput,
   EfaturaBuildSequentialIudInput,
   EfaturaDependencies,
+  FiscalReadinessOptions,
   RenderDfaOptions,
   SubmitPlatformOptions,
 } from './application/efatura-options';
@@ -22,6 +23,10 @@ import {
   buildEventIdForConfig,
   buildEventXmlForConfig,
 } from './application/events/event-xml-request';
+import {
+  type FiscalReadinessResult,
+  validateFiscalReadiness as validateFiscalReadinessForInvoice,
+} from './application/fiscal-readiness';
 import { assertGoldenVector as assertGoldenVectorValue } from './application/golden-vector-assertion';
 import { validateIssueDateTolerance } from './application/issue-date-validation';
 import { buildDfeZip } from './application/packaging/dfe-zip';
@@ -34,6 +39,7 @@ import type {
   Clock,
   DfaDocument,
   DfaRenderer,
+  EmitterAuthorizationClient,
   GoldenVectorKind,
   GoldenVectorRepository,
   MiddlewareSubmissionResult,
@@ -42,6 +48,8 @@ import type {
   PlatformTransport,
   SequenceStore,
   SignedXmlResult,
+  SoftwareRegistryClient,
+  TaxpayerRegistryClient,
   XmlSigner,
   XmlSigningOptions,
   XsdValidationResult,
@@ -65,6 +73,9 @@ export class Efatura extends EfaturaDocuments {
   readonly middlewareTransport: MiddlewareTransport;
   readonly platformTransport: PlatformTransport;
   readonly goldenVectors: GoldenVectorRepository;
+  readonly taxpayerRegistryClient: TaxpayerRegistryClient;
+  readonly softwareRegistryClient: SoftwareRegistryClient;
+  readonly emitterAuthorizationClient: EmitterAuthorizationClient;
 
   constructor(config: ResolvedEfaturaConfig, dependencies: EfaturaDependencies = {}) {
     const resolvedDependencies = resolveEfaturaDependencies(dependencies);
@@ -79,6 +90,9 @@ export class Efatura extends EfaturaDocuments {
     this.middlewareTransport = resolvedDependencies.middlewareTransport;
     this.platformTransport = resolvedDependencies.platformTransport;
     this.goldenVectors = resolvedDependencies.goldenVectors;
+    this.taxpayerRegistryClient = resolvedDependencies.taxpayerRegistryClient;
+    this.softwareRegistryClient = resolvedDependencies.softwareRegistryClient;
+    this.emitterAuthorizationClient = resolvedDependencies.emitterAuthorizationClient;
   }
 
   generateSubmissionId(): string {
@@ -230,6 +244,24 @@ export class Efatura extends EfaturaDocuments {
 
   async renderDfa(options: RenderDfaOptions): Promise<DfaDocument> {
     return this.dfaRenderer.render(dfaRenderInputFrom(options, this.dfaQrCodeUrl(options.iud)));
+  }
+
+  validateFiscalReadiness(
+    data: Record<string, unknown> | InvoiceData,
+    options: FiscalReadinessOptions = {},
+  ): Promise<FiscalReadinessResult> {
+    const invoice = isInvoiceData(data) ? data : this.validateInvoice(data);
+
+    return validateFiscalReadinessForInvoice(
+      invoice,
+      this.config,
+      {
+        taxpayerRegistryClient: this.taxpayerRegistryClient,
+        softwareRegistryClient: this.softwareRegistryClient,
+        emitterAuthorizationClient: this.emitterAuthorizationClient,
+      },
+      options,
+    );
   }
 
   assertGoldenVector(kind: GoldenVectorKind, name: string, actual: string): Promise<void> {
