@@ -6,6 +6,8 @@ import {
 } from '../src/infrastructure';
 
 describe('fetch fiscal authority clients', () => {
+  const unrecognizedBodies = [{}, null, { response: { exists: true } }];
+
   it('maps taxpayer registry responses', async () => {
     const requests: string[] = [];
     const client = new FetchTaxpayerRegistryClient({
@@ -48,6 +50,65 @@ describe('fetch fiscal authority clients', () => {
     ).resolves.toMatchObject({
       authorized: false,
       issues: [{ message: 'Nao autorizado', raw: { Mensagem: 'Nao autorizado' } }],
+    });
+  });
+
+  it.each(unrecognizedBodies)('fails taxpayer registry responses closed for %o', async (body) => {
+    const client = new FetchTaxpayerRegistryClient({ fetcher: fetcher([], body) });
+    const result = await client.lookupTaxpayer(
+      { taxId: '100200300', role: 'emitter' },
+      { baseUrl: 'https://pe.example', accessToken: 'token' },
+    );
+
+    expect(result).toMatchObject({
+      exists: false,
+      issues: [
+        {
+          code: 'fiscal_authority.unrecognized_response',
+          field: 'taxpayer.exists',
+          severity: 'error',
+        },
+      ],
+    });
+  });
+
+  it.each(unrecognizedBodies)('fails software registry responses closed for %o', async (body) => {
+    const client = new FetchSoftwareRegistryClient({ fetcher: fetcher([], body) });
+    const result = await client.lookupSoftware(
+      { code: 'SW001' },
+      { baseUrl: 'https://pe.example', accessToken: 'token' },
+    );
+
+    expect(result).toMatchObject({
+      registered: false,
+      issues: [
+        {
+          code: 'fiscal_authority.unrecognized_response',
+          field: 'software.registered',
+          severity: 'error',
+        },
+      ],
+    });
+  });
+
+  it.each(
+    unrecognizedBodies,
+  )('fails emitter authorization responses closed for %o', async (body) => {
+    const client = new FetchEmitterAuthorizationClient({ fetcher: fetcher([], body) });
+    const result = await client.checkEmitterAuthorization(
+      { transmitterNif: '100200300', emitterNif: '200300400', softwareCode: 'SW001' },
+      { baseUrl: 'https://pe.example', accessToken: 'token' },
+    );
+
+    expect(result).toMatchObject({
+      authorized: false,
+      issues: [
+        {
+          code: 'fiscal_authority.unrecognized_response',
+          field: 'emitter.authorization',
+          severity: 'error',
+        },
+      ],
     });
   });
 });
