@@ -9,6 +9,7 @@ import { EventType, eventTypeFromValue } from '../enums/event-type';
 import { EfaturaValidationError } from '../errors';
 import { validateEventId } from '../iud/event-id';
 import { validateIud } from '../iud/iud';
+import { isValidEventDateTime } from './event-date-time';
 
 export interface EventDocumentRangeData {
   year: string | null;
@@ -30,7 +31,7 @@ export interface EventData {
 
 const issueDateTimeSchema = z
   .string()
-  .regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?$/);
+  .refine(isValidEventDateTime, 'IssueDateTime must be a valid ISO date-time.');
 
 const documentNumberSchema = z.coerce.number().int().min(1).max(999999999);
 

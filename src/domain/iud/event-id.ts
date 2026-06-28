@@ -1,4 +1,5 @@
 import { EfaturaValidationError } from '../errors';
+import { isValidEventDateTimeParts, parseEventDateTime } from '../value-objects/event-date-time';
 
 export interface BuildEventIdInput {
   repositoryCode: number | string;
@@ -28,20 +29,16 @@ export function buildEventId(input: BuildEventIdInput): string {
     );
   }
 
-  const match =
-    /^(?<year>\d{4})-(?<month>\d{2})-(?<day>\d{2})T(?<hour>\d{2}):(?<minute>\d{2}):(?<second>\d{2})/.exec(
-      input.issueDateTime,
-    );
+  const dateTime = parseEventDateTime(input.issueDateTime);
 
-  if (!match?.groups) {
+  if (dateTime === null) {
     throw new EfaturaValidationError(
       'issueDateTime',
-      'IssueDateTime must be an ISO date-time.',
+      'IssueDateTime must be a valid ISO date-time.',
       'event.issue_date_time_invalid',
     );
   }
 
-  const { year, month, day, hour, minute, second } = requiredEventDateTimeGroups(match.groups);
   const transmitterNif = String(input.transmitterNif);
 
   if (!/^[1-9]\d{8}$/.test(transmitterNif)) {
@@ -52,11 +49,15 @@ export function buildEventId(input: BuildEventIdInput): string {
     );
   }
 
-  return `CV${repositoryCode}${year.slice(2)}${month}${day}${hour}${minute}${second}${transmitterNif}`;
+  const dateTimeSegment = `${dateTime.year.slice(2)}${dateTime.month}${dateTime.day}${dateTime.hour}${dateTime.minute}${dateTime.second}`;
+
+  return `CV${repositoryCode}${dateTimeSegment}${transmitterNif}`;
 }
 
 export function validateEventId(value: string): boolean {
-  return EVENT_ID_PATTERN.test(value);
+  const match = EVENT_ID_PATTERN.exec(value);
+
+  return Boolean(match?.groups && isValidEventIdDateTime(match.groups));
 }
 
 export function parseEventId(value: string): ParsedEventId {
@@ -68,6 +69,10 @@ export function parseEventId(value: string): ParsedEventId {
 
   const groups = requiredEventIdGroups(match.groups);
 
+  if (!isValidEventIdDateTime(groups)) {
+    throw new EfaturaValidationError('eventId', 'Event Id is invalid.', 'event.id_invalid');
+  }
+
   return {
     countryCode: 'CV',
     repositoryCode: groups.repositoryCode,
@@ -75,27 +80,6 @@ export function parseEventId(value: string): ParsedEventId {
     issueTime: `${groups.time.slice(0, 2)}:${groups.time.slice(2, 4)}:${groups.time.slice(4, 6)}`,
     transmitterNif: groups.transmitterNif,
   };
-}
-
-function requiredEventDateTimeGroups(groups: Record<string, string | undefined>): {
-  year: string;
-  month: string;
-  day: string;
-  hour: string;
-  minute: string;
-  second: string;
-} {
-  const { year, month, day, hour, minute, second } = groups;
-
-  if (!year || !month || !day || !hour || !minute || !second) {
-    throw new EfaturaValidationError(
-      'issueDateTime',
-      'IssueDateTime must be an ISO date-time.',
-      'event.issue_date_time_invalid',
-    );
-  }
-
-  return { year, month, day, hour, minute, second };
 }
 
 function requiredEventIdGroups(groups: Record<string, string | undefined>): {
@@ -113,4 +97,26 @@ function requiredEventIdGroups(groups: Record<string, string | undefined>): {
   }
 
   return { repositoryCode, year, month, day, time, transmitterNif };
+}
+
+function isValidEventIdDateTime(groups: {
+  year?: string;
+  month?: string;
+  day?: string;
+  time?: string;
+}): boolean {
+  const { year, month, day, time } = groups;
+
+  if (!year || !month || !day || !time) {
+    return false;
+  }
+
+  return isValidEventDateTimeParts(
+    `20${year}`,
+    month,
+    day,
+    time.slice(0, 2),
+    time.slice(2, 4),
+    time.slice(4, 6),
+  );
 }
