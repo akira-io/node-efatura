@@ -14,6 +14,14 @@ const config = {
   middlewareBaseUrl: 'https://localhost:3443',
 };
 
+const invalidEventDateTimes = [
+  '2026-02-30T11:30:00',
+  '2026-13-08T11:30:00',
+  '2026-02-08T24:00:00',
+  '2026-02-08T11:60:00',
+  '2026-02-08T11:30:60',
+];
+
 describe('official Event XML', () => {
   it('builds and parses the official 24-character Event Id', () => {
     const efatura = createEfatura(config);
@@ -28,6 +36,40 @@ describe('official Event XML', () => {
       issueTime: '11:30:00',
       transmitterNif: '100200300',
     });
+  });
+
+  it.each(invalidEventDateTimes)('rejects invalid event issue date-time %s', (issueDateTime) => {
+    const efatura = createEfatura(config);
+
+    expect(() =>
+      efatura.buildEventXml({
+        type: EventType.UnusedDocumentNumber,
+        issueDateTime,
+        issueReasonDescription: 'Data invalida.',
+        range: {
+          year: '2026',
+          ledCode: '123',
+          serie: '123',
+          documentTypeCode: 1,
+          documentNumberStart: 10,
+          documentNumberEnd: 12,
+        },
+      }),
+    ).toThrow('Event is invalid.');
+  });
+
+  it.each(invalidEventDateTimes)('rejects invalid Event Id date-time %s', (issueDateTime) => {
+    const efatura = createEfatura(config);
+
+    expect(() => efatura.buildEventId({ issueDateTime })).toThrow(
+      'IssueDateTime must be a valid ISO date-time.',
+    );
+  });
+
+  it('rejects Event Ids with invalid calendar and clock parts', () => {
+    expect(validateEventId('CV3260230113000100200300')).toBe(false);
+    expect(validateEventId('CV3260208240000100200300')).toBe(false);
+    expect(() => parseEventId('CV3260230113000100200300')).toThrow('Event Id is invalid.');
   });
 
   it('builds an FDC cancellation event for one or more IUDs', async () => {
