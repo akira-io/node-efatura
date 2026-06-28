@@ -2,6 +2,7 @@ import type {
   EmitterAuthorizationClient,
   EmitterAuthorizationInput,
   EmitterAuthorizationResult,
+  FiscalAuthorityIssue,
   FiscalAuthorityRequestContext,
   SoftwareLookupInput,
   SoftwareLookupResult,
@@ -45,14 +46,19 @@ export class FetchTaxpayerRegistryClient implements TaxpayerRegistryClient {
     context: FiscalAuthorityRequestContext,
   ): Promise<TaxpayerLookupResult> {
     const body = await fetchJson(this.#fetch, context, this.#path(input));
+    const exists = requiredBooleanValue(
+      body,
+      ['exists', 'Exists', 'existe', 'Existe'],
+      'taxpayer.exists',
+    );
 
     return {
-      exists: booleanValue(body, ['exists', 'Exists', 'existe', 'Existe'], true),
+      exists: exists.value,
       activityStarted: optionalBooleanValue(body, ['activityStarted', 'AtividadeIniciada']),
       activityActive: optionalBooleanValue(body, ['activityActive', 'AtividadeAtiva']),
       hasFiscalFramework: optionalBooleanValue(body, ['hasFiscalFramework', 'EnquadramentoFiscal']),
       name: textValue(body, ['name', 'Name', 'nome', 'Nome']),
-      issues: issuesFromBody(body),
+      issues: issuesFromBody(body, exists.issue),
       raw: body,
     };
   }
@@ -73,10 +79,15 @@ export class FetchSoftwareRegistryClient implements SoftwareRegistryClient {
     context: FiscalAuthorityRequestContext,
   ): Promise<SoftwareLookupResult> {
     const body = await fetchJson(this.#fetch, context, this.#path(input));
+    const registered = requiredBooleanValue(
+      body,
+      ['registered', 'Registered', 'registado', 'Registado'],
+      'software.registered',
+    );
 
     return {
-      registered: booleanValue(body, ['registered', 'Registered', 'registado', 'Registado'], true),
-      issues: issuesFromBody(body),
+      registered: registered.value,
+      issues: issuesFromBody(body, registered.issue),
       raw: body,
     };
   }
@@ -101,14 +112,15 @@ export class FetchEmitterAuthorizationClient implements EmitterAuthorizationClie
     context: FiscalAuthorityRequestContext,
   ): Promise<EmitterAuthorizationResult> {
     const body = await fetchJson(this.#fetch, context, this.#path(input));
+    const authorized = requiredBooleanValue(
+      body,
+      ['authorized', 'Authorized', 'autorizado', 'Autorizado'],
+      'emitter.authorization',
+    );
 
     return {
-      authorized: booleanValue(
-        body,
-        ['authorized', 'Authorized', 'autorizado', 'Autorizado'],
-        true,
-      ),
-      issues: issuesFromBody(body),
+      authorized: authorized.value,
+      issues: issuesFromBody(body, authorized.issue),
       raw: body,
     };
   }
@@ -136,10 +148,9 @@ async function fetchJson(
   return body;
 }
 
-function issuesFromBody(body: unknown) {
+function issuesFromBody(body: unknown, additionalIssue?: FiscalAuthorityIssue) {
   const issues = arrayValue(body, ['errors', 'Errors', 'erros', 'Erros']);
-
-  return issues.filter(isRecord).map((issue) => ({
+  const parsedIssues = issues.filter(isRecord).map((issue) => ({
     code: textValue(issue, ['code', 'Code', 'codigo', 'Codigo']),
     field: textValue(issue, ['field', 'Field', 'campo', 'Campo']),
     severity: textValue(issue, ['severity', 'Severity', 'severidade', 'Severidade']),
@@ -148,10 +159,32 @@ function issuesFromBody(body: unknown) {
     details: textValue(issue, ['details', 'Details', 'detalhes', 'Detalhes']),
     raw: issue,
   }));
+
+  return additionalIssue ? [...parsedIssues, additionalIssue] : parsedIssues;
 }
 
-function booleanValue(body: unknown, keys: string[], fallback: boolean): boolean {
-  return optionalBooleanValue(body, keys) ?? fallback;
+function requiredBooleanValue(
+  body: unknown,
+  keys: string[],
+  field: string,
+): { value: boolean; issue?: FiscalAuthorityIssue } {
+  const value = optionalBooleanValue(body, keys);
+
+  if (value !== undefined) {
+    return { value };
+  }
+
+  return {
+    value: false,
+    issue: {
+      code: 'fiscal_authority.unrecognized_response',
+      field,
+      severity: 'error',
+      message: 'Fiscal authority response did not include a recognized status field.',
+      details: `Expected one of: ${keys.join(', ')}.`,
+      raw: body,
+    },
+  };
 }
 
 function optionalBooleanValue(body: unknown, keys: string[]): boolean | undefined {
