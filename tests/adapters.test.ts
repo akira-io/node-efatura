@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest';
+import type { NextFunction, Request, RequestHandler, Response } from 'express';
+import { describe, expect, it, vi } from 'vitest';
 import { createEfatura } from '../src/create-efatura';
 import { efaturaRoutes } from '../src/presentation/express';
 import { efaturaFastifyPlugin } from '../src/presentation/fastify';
@@ -14,6 +15,11 @@ const efatura = createEfatura({
   middlewareBaseUrl: 'https://localhost:3443',
 });
 
+interface ExpressLayer {
+  route?: { path: string };
+  handle: RequestHandler;
+}
+
 describe('HTTP adapters', () => {
   it('creates an Express router for e-Fatura endpoints', () => {
     const router = efaturaRoutes(efatura);
@@ -28,18 +34,50 @@ describe('HTTP adapters', () => {
     );
   });
 
+  it('runs Express authorization before fiscal handlers', () => {
+    const authorization: RequestHandler = (_request, response) => {
+      response.status(401).json({ message: 'Unauthorized' });
+    };
+    const router = efaturaRoutes(efatura, { authorization });
+    const stack = (router as unknown as { stack: ExpressLayer[] }).stack;
+    const authorizationIndex = stack.findIndex((layer) => layer.handle === authorization);
+    const firstRouteIndex = stack.findIndex((layer) => layer.route?.path === '/dfe/xml');
+    const response = {
+      status: vi.fn().mockReturnThis(),
+      json: vi.fn().mockReturnThis(),
+    } as unknown as Response;
+    const next: NextFunction = vi.fn();
+
+    stack[authorizationIndex]?.handle({} as Request, response, next);
+
+    expect(authorizationIndex).toBeGreaterThan(-1);
+    expect(authorizationIndex).toBeLessThan(firstRouteIndex);
+    expect(response.status).toHaveBeenCalledWith(401);
+    expect(response.json).toHaveBeenCalledWith({ message: 'Unauthorized' });
+    expect(next).not.toHaveBeenCalled();
+  });
+
   it('registers Fastify routes for DFE and Event XML', async () => {
     const routes: string[] = [];
+    const routeOptions: unknown[] = [];
+    const authorization = () => undefined;
     const fastify = {
-      post: (path: string) => routes.push(`POST ${path}`),
-      get: (path: string) => routes.push(`GET ${path}`),
+      post: (path: string, options: unknown) => {
+        routes.push(`POST ${path}`);
+        routeOptions.push(options);
+      },
+      get: (path: string, options: unknown) => {
+        routes.push(`GET ${path}`);
+        routeOptions.push(options);
+      },
     };
 
-    await efaturaFastifyPlugin(fastify as never, { efatura });
+    await efaturaFastifyPlugin(fastify as never, { efatura, authorization });
 
     expect(routes).toContain('POST /dfe/xml');
     expect(routes).toContain('POST /event/xml');
     expect(routes).toContain('POST /dfe/validate/fiscal-readiness');
+    expect(routeOptions).toContainEqual({ preHandler: [authorization] });
   });
 
   it('creates a Nest dynamic module with the configured service', () => {

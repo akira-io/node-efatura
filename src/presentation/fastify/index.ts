@@ -1,4 +1,4 @@
-import type { FastifyInstance, FastifyReply } from 'fastify';
+import type { FastifyInstance, FastifyReply, preHandlerHookHandler } from 'fastify';
 import type { Efatura } from '../../efatura';
 import {
   type HttpResult,
@@ -12,6 +12,7 @@ import {
 
 export interface EfaturaFastifyOptions {
   efatura: Efatura;
+  authorization?: preHandlerHookHandler | preHandlerHookHandler[];
 }
 
 export async function efaturaFastifyPlugin(
@@ -19,27 +20,38 @@ export async function efaturaFastifyPlugin(
   options: EfaturaFastifyOptions,
 ): Promise<void> {
   const { efatura } = options;
+  const routeOptions = fastifyRouteOptions(options.authorization);
 
-  fastify.post('/dfe/xml', async (request, reply) => {
+  fastify.post('/dfe/xml', routeOptions, async (request, reply) => {
     send(reply, await handleBuildXml(efatura, request.body));
   });
-  fastify.post('/event/xml', async (request, reply) => {
+  fastify.post('/event/xml', routeOptions, async (request, reply) => {
     send(reply, await handleBuildEventXml(efatura, request.body));
   });
-  fastify.post('/dfe/zip', async (request, reply) => {
+  fastify.post('/dfe/zip', routeOptions, async (request, reply) => {
     send(reply, await handleBuildZip(efatura, request.body));
   });
-  fastify.post('/dfe/submit/middleware', async (request, reply) => {
+  fastify.post('/dfe/submit/middleware', routeOptions, async (request, reply) => {
     send(reply, await handleSubmitMiddleware(efatura, request.body));
   });
-  fastify.post('/dfe/validate/fiscal-readiness', async (request, reply) => {
+  fastify.post('/dfe/validate/fiscal-readiness', routeOptions, async (request, reply) => {
     send(reply, await handleFiscalReadiness(efatura, request.body));
   });
-  fastify.get('/dfa/:iud', async (request, reply) => {
+  fastify.get('/dfa/:iud', routeOptions, async (request, reply) => {
     const params = request.params as { iud?: string };
 
     send(reply, await handleRenderDfa(efatura, params.iud ?? ''));
   });
+}
+
+function fastifyRouteOptions(authorization: EfaturaFastifyOptions['authorization']): {
+  preHandler?: preHandlerHookHandler[];
+} {
+  if (!authorization) {
+    return {};
+  }
+
+  return { preHandler: Array.isArray(authorization) ? authorization : [authorization] };
 }
 
 function send(reply: FastifyReply, result: HttpResult): void {

@@ -12,12 +12,17 @@ import {
 
 export interface EfaturaRoutesOptions {
   basePath?: string;
+  authorization?: RequestHandler | RequestHandler[];
 }
 
-export function efaturaRoutes(efatura: Efatura, _options: EfaturaRoutesOptions = {}): Router {
+export function efaturaRoutes(efatura: Efatura, options: EfaturaRoutesOptions = {}): Router {
   const router = Router();
+  const authorization = authorizationHandlers(options.authorization);
 
   router.use(json({ limit: '10mb' }));
+  if (authorization.length > 0) {
+    router.use(...authorization);
+  }
   router.post(
     '/dfe/xml',
     handle((req) => handleBuildXml(efatura, req.body)),
@@ -44,6 +49,16 @@ export function efaturaRoutes(efatura: Efatura, _options: EfaturaRoutesOptions =
   );
 
   return router;
+}
+
+function authorizationHandlers(
+  authorization: EfaturaRoutesOptions['authorization'],
+): RequestHandler[] {
+  if (!authorization) {
+    return [];
+  }
+
+  return Array.isArray(authorization) ? authorization : [authorization];
 }
 
 function handle(
