@@ -5,6 +5,7 @@ import { buildDfeZip } from '../src/application/packaging/dfe-zip';
 import type { MiddlewareSubmitInput } from '../src/core/contracts';
 import { createEfatura } from '../src/create-efatura';
 import { EmissionMode } from '../src/domain/enums/emission-mode';
+import { dfaPdfContingencyLines } from '../src/infrastructure/dfa/pdf-dfa-renderer';
 
 const iud = 'CV3260208100200300001230100000000112345678909';
 
@@ -87,5 +88,16 @@ describe('DFA helpers', () => {
     });
 
     expect(efatura.dfaQrCodeUrl(iud)).toBe(`https://portal.example/dfe/${iud}`);
+  });
+
+  it('builds PDF contingency lines for every emission mode', () => {
+    expect(dfaPdfContingencyLines({ emissionMode: EmissionMode.Online })).toEqual([]);
+    expect(dfaPdfContingencyLines({ emissionMode: EmissionMode.Offline })).toEqual([
+      'EMITIDO EM CONTINGENCIA OFFLINE',
+      'Pendente de Autorizacao',
+    ]);
+    expect(
+      dfaPdfContingencyLines({ emissionMode: EmissionMode.Off, contingencyIuc: 'IUC-123' }),
+    ).toEqual(['EMITIDO EM CONTINGENCIA OFF', 'IUC: IUC-123', 'Pendente de Autorizacao']);
   });
 });

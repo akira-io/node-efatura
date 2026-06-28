@@ -23,6 +23,7 @@ export function dfaRenderInputFrom(options: RenderDfaOptions, qrCodeUrl: string)
     total: options.invoice?.totals?.payableAmount,
     currency: options.currency,
     emissionMode: normalizeEmissionMode(options.emissionMode),
+    contingencyIuc: options.contingencyIuc ?? options.invoice?.contingency?.iuc ?? undefined,
   };
 }
 

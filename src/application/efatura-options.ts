@@ -67,6 +67,7 @@ export interface RenderDfaOptions {
   iud: string;
   invoice?: InvoiceData;
   emissionMode?: EmissionModeInput;
+  contingencyIuc?: string;
   title?: string;
   currency?: string;
 }
