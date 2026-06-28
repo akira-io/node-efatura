@@ -30,12 +30,13 @@ export class PdfDfaRenderer implements DfaRenderer {
     document.text(`Emissao: ${formatDateTime(input.issueDate, input.issueTime)}`, { width: 360 });
     document.text(`Consulta DFE: ${input.qrCodeUrl}`, { width: 360 });
 
-    const notice = dfaContingencyNotice(input.emissionMode !== EmissionMode.Online);
+    const contingencyLines = dfaPdfContingencyLines(input);
 
-    if (notice) {
+    if (contingencyLines.length > 0) {
       document.moveDown();
-      document.fontSize(12).text(notice, { align: 'center' });
-      document.fontSize(10).text('Pendente de Autorizacao', { align: 'center' });
+      contingencyLines.forEach((line, index) => {
+        document.fontSize(index === 0 ? 12 : 10).text(line, { align: 'center' });
+      });
     }
 
     document.moveDown();
@@ -65,6 +66,24 @@ export class PdfDfaRenderer implements DfaRenderer {
       buffer: await completed,
     };
   }
+}
+
+export function dfaPdfContingencyLines(
+  input: Pick<DfaRenderInput, 'contingencyIuc' | 'emissionMode'>,
+): string[] {
+  const emissionMode = input.emissionMode ?? EmissionMode.Online;
+  const notice = dfaContingencyNotice(emissionMode);
+
+  if (!notice) {
+    return [];
+  }
+
+  const iucLine =
+    emissionMode === EmissionMode.Off && input.contingencyIuc
+      ? [`IUC: ${input.contingencyIuc}`]
+      : [];
+
+  return [notice, ...iucLine, 'Pendente de Autorizacao'];
 }
 
 function partyBlock(

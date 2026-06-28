@@ -16,6 +16,7 @@ export interface DfaRenderInput {
   total?: number;
   currency?: string;
   emissionMode?: EmissionMode;
+  contingencyIuc?: string;
 }
 
 export interface DfaLineInput {
