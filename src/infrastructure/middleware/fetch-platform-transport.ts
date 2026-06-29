@@ -4,6 +4,7 @@ import type {
   PlatformTransport,
 } from '../../core/contracts/platform-transport';
 import { EfaturaValidationError } from '../../domain/errors';
+import { stripTrailingSlashes } from '../../support/url';
 import { normalizePlatformSubmissionResult, parseServiceBody } from './response-parser';
 
 export type PlatformFetch = typeof fetch;
@@ -19,7 +20,7 @@ export class FetchPlatformTransport implements PlatformTransport {
     const form = new FormData();
     form.append('file', new Blob([input.zip], { type: 'application/octet-stream' }), 'dfe.zip');
 
-    const response = await this.#fetch(`${input.baseUrl.replace(/\/+$/, '')}/v1/dfe`, {
+    const response = await this.#fetch(`${stripTrailingSlashes(input.baseUrl)}/v1/dfe`, {
       method: 'POST',
       headers: {
         authorization: `Bearer ${input.accessToken}`,

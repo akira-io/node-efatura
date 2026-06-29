@@ -12,6 +12,7 @@ import type {
   TaxpayerRegistryClient,
 } from '../../core/contracts';
 import { EfaturaValidationError } from '../../domain/errors';
+import { stripTrailingSlashes } from '../../support/url';
 import { parseServiceBody } from '../middleware/response-parser';
 
 type FiscalAuthorityFetch = typeof fetch;
@@ -131,7 +132,7 @@ async function fetchJson(
   context: FiscalAuthorityRequestContext,
   path: string,
 ): Promise<unknown> {
-  const response = await fetcher(`${context.baseUrl.replace(/\/+$/, '')}${path}`, {
+  const response = await fetcher(`${stripTrailingSlashes(context.baseUrl)}${path}`, {
     headers: { authorization: `Bearer ${context.accessToken}` },
   });
   const rawBody = await response.text();

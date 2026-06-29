@@ -4,6 +4,7 @@ import type {
   MiddlewareTransport,
 } from '../../core/contracts';
 import { EfaturaValidationError } from '../../domain/errors';
+import { stripTrailingSlashes } from '../../support/url';
 import { normalizeSubmissionResult, parseServiceBody } from './response-parser';
 
 export type MiddlewareFetch = typeof fetch;
@@ -16,7 +17,7 @@ export class FetchMiddlewareTransport implements MiddlewareTransport {
   }
 
   async submitDfeZip(input: MiddlewareSubmitInput): Promise<MiddlewareSubmissionResult> {
-    const response = await this.#fetch(`${input.baseUrl.replace(/\/+$/, '')}/v1/dfe`, {
+    const response = await this.#fetch(`${stripTrailingSlashes(input.baseUrl)}/v1/dfe`, {
       method: 'POST',
       headers: {
         'content-type': 'application/zip',
