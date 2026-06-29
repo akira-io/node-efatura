@@ -50,3 +50,13 @@ export async function temporaryCertificate(
     privateKey: await readFile(keyPath, 'utf8'),
   };
 }
+
+export async function isOpensslAvailable(): Promise<boolean> {
+  try {
+    await execFileAsync('openssl', ['version']);
+
+    return true;
+  } catch {
+    return false;
+  }
+}

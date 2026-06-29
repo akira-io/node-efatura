@@ -1,46 +1,61 @@
 import { rm } from 'node:fs/promises';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import { createEfatura } from '../src/create-efatura';
 import { OpensslCertificateValidator } from '../src/infrastructure';
-import { temporaryCertificate } from './certificate-fixtures';
+import {
+  isOpensslAvailable,
+  type TemporaryCertificate,
+  type TemporaryCertificateOptions,
+  temporaryCertificate,
+} from './certificate-fixtures';
 
-describe('certificate validation', () => {
+const opensslAvailable = await isOpensslAvailable();
+
+describe.skipIf(!opensslAvailable)('certificate validation', () => {
+  const directories: string[] = [];
+
+  async function certificate(options?: TemporaryCertificateOptions): Promise<TemporaryCertificate> {
+    const fixture = await temporaryCertificate(options);
+
+    directories.push(fixture.directory);
+
+    return fixture;
+  }
+
+  afterEach(async () => {
+    await Promise.all(
+      directories.map((directory) => rm(directory, { force: true, recursive: true })),
+    );
+    directories.length = 0;
+  });
+
   it('validates matching certificate private key and CA bundle', async () => {
-    const fixture = await temporaryCertificate({ commonName: 'Efatura Certificate Test' });
+    const fixture = await certificate({ commonName: 'Efatura Certificate Test' });
 
-    try {
-      const result = await createEfatura(config()).validateCertificate({
-        certificate: fixture.certificate,
-        privateKey: fixture.privateKey,
-        caCertificates: [fixture.certificate],
-      });
+    const result = await createEfatura(config()).validateCertificate({
+      certificate: fixture.certificate,
+      privateKey: fixture.privateKey,
+      caCertificates: [fixture.certificate],
+    });
 
-      expect(result.valid).toBe(true);
-      expect(result.subject).toContain('Efatura Certificate Test');
-      expect(result.issues).toEqual([]);
-    } finally {
-      await rm(fixture.directory, { force: true, recursive: true });
-    }
+    expect(result.valid).toBe(true);
+    expect(result.subject).toContain('Efatura Certificate Test');
+    expect(result.issues).toEqual([]);
   });
 
   it('rejects private keys that do not match the certificate', async () => {
-    const certificate = await temporaryCertificate({ serialNumber: '1001' });
-    const otherCertificate = await temporaryCertificate({ serialNumber: '1002' });
+    const fixture = await certificate({ serialNumber: '1001' });
+    const otherFixture = await certificate({ serialNumber: '1002' });
 
-    try {
-      const result = await createEfatura(config()).validateCertificate({
-        certificate: certificate.certificate,
-        privateKey: otherCertificate.privateKey,
-      });
+    const result = await createEfatura(config()).validateCertificate({
+      certificate: fixture.certificate,
+      privateKey: otherFixture.privateKey,
+    });
 
-      expect(result.valid).toBe(false);
-      expect(result.issues).toContainEqual(
-        expect.objectContaining({ code: 'certificate.private_key_mismatch' }),
-      );
-    } finally {
-      await rm(certificate.directory, { force: true, recursive: true });
-      await rm(otherCertificate.directory, { force: true, recursive: true });
-    }
+    expect(result.valid).toBe(false);
+    expect(result.issues).toContainEqual(
+      expect.objectContaining({ code: 'certificate.private_key_mismatch' }),
+    );
   });
 
   it('returns structured issues for invalid certificate material', async () => {
