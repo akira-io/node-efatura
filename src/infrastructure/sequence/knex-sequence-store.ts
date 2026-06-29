@@ -46,29 +46,21 @@ export class KnexSequenceStore implements SequenceStore {
   }
 
   async next(scope: SequenceScope): Promise<number> {
-    return this.#knex.transaction(async (transaction) => {
-      const key = sequenceKey(scope);
-      const row = await transaction<SequenceRow>(this.#tableName).where(key).forUpdate().first();
-      const next = (row?.current_number ?? 0) + 1;
-      const now = new Date().toISOString();
+    const key = sequenceKey(scope);
+    const now = new Date().toISOString();
 
-      if (!row) {
-        await transaction<SequenceRow>(this.#tableName).insert({
-          ...key,
-          current_number: next,
-          created_at: now,
+    return this.#knex.transaction(async (transaction) => {
+      await transaction<SequenceRow>(this.#tableName)
+        .insert({ ...key, current_number: 1, created_at: now, updated_at: now })
+        .onConflict(['emitter_nif', 'fiscal_year', 'led_code', 'document_type'])
+        .merge({
+          current_number: this.#knex.raw('?? + 1', [`${this.#tableName}.current_number`]),
           updated_at: now,
         });
 
-        return next;
-      }
+      const row = await transaction<SequenceRow>(this.#tableName).where(key).first();
 
-      await transaction<SequenceRow>(this.#tableName).where(key).update({
-        current_number: next,
-        updated_at: now,
-      });
-
-      return next;
+      return row?.current_number ?? 1;
     });
   }
 
