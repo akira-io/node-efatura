@@ -24,7 +24,6 @@ export const fiscalReadinessRequestSchema = z.object({
   options: z
     .object({
       accessToken: z.string().min(1).optional(),
-      baseUrl: z.string().url().optional(),
       validateReceiver: z.boolean().optional(),
     })
     .optional()

@@ -1,4 +1,5 @@
 import { json, type RequestHandler, Router } from 'express';
+import { EfaturaError } from '../../domain/errors';
 import type { Efatura } from '../../efatura';
 import {
   type HttpResult,
@@ -13,11 +14,14 @@ import {
 export interface EfaturaRoutesOptions {
   basePath?: string;
   authorization?: RequestHandler | RequestHandler[];
+  allowUnauthenticated?: boolean;
 }
 
 export function efaturaRoutes(efatura: Efatura, options: EfaturaRoutesOptions = {}): Router {
   const router = Router();
   const authorization = authorizationHandlers(options.authorization);
+
+  assertAuthorization(authorization.length > 0, options.allowUnauthenticated);
 
   router.use(json({ limit: '10mb' }));
   if (authorization.length > 0) {
@@ -49,6 +53,14 @@ export function efaturaRoutes(efatura: Efatura, options: EfaturaRoutesOptions = 
   );
 
   return router;
+}
+
+function assertAuthorization(hasAuthorization: boolean, allowUnauthenticated?: boolean): void {
+  if (!hasAuthorization && allowUnauthenticated !== true) {
+    throw new EfaturaError(
+      'Efatura routes require an authorization handler. Pass `authorization`, or set `allowUnauthenticated: true` to opt out explicitly.',
+    );
+  }
 }
 
 function authorizationHandlers(

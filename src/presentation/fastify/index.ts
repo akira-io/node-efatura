@@ -1,4 +1,5 @@
 import type { FastifyInstance, FastifyReply, preHandlerHookHandler } from 'fastify';
+import { EfaturaError } from '../../domain/errors';
 import type { Efatura } from '../../efatura';
 import {
   type HttpResult,
@@ -13,6 +14,7 @@ import {
 export interface EfaturaFastifyOptions {
   efatura: Efatura;
   authorization?: preHandlerHookHandler | preHandlerHookHandler[];
+  allowUnauthenticated?: boolean;
 }
 
 export async function efaturaFastifyPlugin(
@@ -20,7 +22,10 @@ export async function efaturaFastifyPlugin(
   options: EfaturaFastifyOptions,
 ): Promise<void> {
   const { efatura } = options;
+
   const routeOptions = fastifyRouteOptions(options.authorization);
+
+  assertAuthorization((routeOptions.preHandler?.length ?? 0) > 0, options.allowUnauthenticated);
 
   fastify.post('/dfe/xml', routeOptions, async (request, reply) => {
     send(reply, await handleBuildXml(efatura, request.body));
@@ -42,6 +47,14 @@ export async function efaturaFastifyPlugin(
 
     send(reply, await handleRenderDfa(efatura, params.iud ?? ''));
   });
+}
+
+function assertAuthorization(hasAuthorization: boolean, allowUnauthenticated?: boolean): void {
+  if (!hasAuthorization && allowUnauthenticated !== true) {
+    throw new EfaturaError(
+      'Efatura routes require an authorization handler. Pass `authorization`, or set `allowUnauthenticated: true` to opt out explicitly.',
+    );
+  }
 }
 
 function fastifyRouteOptions(authorization: EfaturaFastifyOptions['authorization']): {

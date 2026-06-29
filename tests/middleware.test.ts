@@ -76,6 +76,12 @@ describe('DFA helpers', () => {
     expect(dfaContingencyNotice(false)).toBeNull();
   });
 
+  it('rejects a non-https or malformed DFA base URL', () => {
+    expect(() => dfaQrCodeUrl(iud, 'http://pe.efatura.cv/dfe/view')).toThrow(/https/);
+    expect(() => dfaQrCodeUrl(iud, 'javascript:alert(1)')).toThrow();
+    expect(() => dfaQrCodeUrl(iud, 'not a url')).toThrow();
+  });
+
   it('uses the configured DFA base URL from the facade', () => {
     const efatura = createEfatura({
       transmitterNif: '100200300',
