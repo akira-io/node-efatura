@@ -76,6 +76,12 @@ describe('DFA helpers', () => {
     expect(dfaContingencyNotice(false)).toBeNull();
   });
 
+  it('strips trailing slashes from the DFA base URL', () => {
+    expect(dfaQrCodeUrl(iud, 'https://pe.efatura.cv/dfe/view///')).toBe(
+      `https://pe.efatura.cv/dfe/view/${iud}`,
+    );
+  });
+
   it('rejects a non-https or malformed DFA base URL', () => {
     expect(() => dfaQrCodeUrl(iud, 'http://pe.efatura.cv/dfe/view')).toThrow(/https/);
     expect(() => dfaQrCodeUrl(iud, 'javascript:alert(1)')).toThrow();
