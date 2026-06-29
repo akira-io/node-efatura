@@ -1,8 +1,10 @@
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
+import { pid } from 'node:process';
 import type { SequenceScope, SequenceStore } from '../../core/contracts';
 import { sequenceScopeKey } from '../../core/contracts';
 
+// Single-process only; multi-process deployments must use KnexSequenceStore.
 export class FileSequenceStore implements SequenceStore {
   readonly #filePath: string;
   #queue: Promise<unknown> = Promise.resolve();
@@ -62,7 +64,7 @@ export class FileSequenceStore implements SequenceStore {
   async #write(data: Record<string, number>): Promise<void> {
     await mkdir(dirname(this.#filePath), { recursive: true });
 
-    const temporaryPath = `${this.#filePath}.tmp`;
+    const temporaryPath = `${this.#filePath}.${pid}.tmp`;
 
     await writeFile(temporaryPath, JSON.stringify(data, null, 2));
     await rename(temporaryPath, this.#filePath);
