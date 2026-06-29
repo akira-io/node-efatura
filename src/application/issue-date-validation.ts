@@ -46,8 +46,11 @@ export function validateIssueDateTolerance(input: IssueDateValidationInput): Dat
   return issuedAt;
 }
 
+const CAPE_VERDE_UTC_OFFSET = '-01:00';
+
 export function parseIssueDateTime(issueDate: string, issueTime?: string | null): Date {
-  const value = issueDate.includes('T') ? issueDate : `${issueDate}T${issueTime ?? '00:00:00'}`;
+  const base = issueDate.includes('T') ? issueDate : `${issueDate}T${issueTime ?? '00:00:00'}`;
+  const value = hasTimezoneDesignator(base) ? base : `${base}${CAPE_VERDE_UTC_OFFSET}`;
   const parsed = new Date(value);
 
   if (Number.isNaN(parsed.getTime())) {
@@ -59,4 +62,8 @@ export function parseIssueDateTime(issueDate: string, issueTime?: string | null)
   }
 
   return parsed;
+}
+
+function hasTimezoneDesignator(value: string): boolean {
+  return /(?:Z|[+-]\d{2}:?\d{2})$/.test(value);
 }
