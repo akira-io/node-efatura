@@ -199,6 +199,37 @@ describe('data validation', () => {
     );
   });
 
+  it('rejects a non-NA tax carrying only an exemption reason', () => {
+    expectValidation(
+      () =>
+        taxDataFrom({
+          taxTypeCode: TaxTypeCode.IVA,
+          taxExemptionReasonCode: '1',
+        }),
+      'taxExemptionReasonCode',
+      'Tax exemption reason is only allowed for not-applicable tax.',
+    );
+  });
+
+  it('rejects a NA tax carrying a percentage', () => {
+    expectValidation(
+      () =>
+        taxDataFrom({
+          taxTypeCode: TaxTypeCode.NotApplicable,
+          taxExemptionReasonCode: '1',
+          taxPercentage: 15,
+        }),
+      'taxPercentage',
+      'Not-applicable tax must not contain a percentage or amount.',
+    );
+  });
+
+  it('accepts an IVA tax with a percentage', () => {
+    expect(() =>
+      taxDataFrom({ taxTypeCode: TaxTypeCode.IVA, taxPercentage: 15, taxTotal: 150 }),
+    ).not.toThrow();
+  });
+
   it('rejects fields not allowed by the selected official document type', () => {
     expectValidation(
       () =>
