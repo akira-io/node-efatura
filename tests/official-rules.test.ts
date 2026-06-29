@@ -131,6 +131,104 @@ describe('official v11 fiscal rules', () => {
     );
   });
 
+  it('does not subtract withholding from the payable amount (TT-PA)', () => {
+    const lines = [
+      linePayload({
+        taxes: [
+          { taxTypeCode: TaxTypeCode.IVA, taxPercentage: 15, taxTotal: 150 },
+          { taxTypeCode: TaxTypeCode.IncomeTax, taxPercentage: 10, taxTotal: 100 },
+        ],
+      }),
+    ];
+
+    expect(() =>
+      invoiceDataFrom(
+        baseInvoicePayload({
+          lines,
+          totals: totalsPayload({ withholdingTaxTotalAmount: 100, payableAmount: 1150 }),
+        }),
+      ),
+    ).not.toThrow();
+
+    expectValidation(
+      () =>
+        invoiceDataFrom(
+          baseInvoicePayload({
+            lines,
+            totals: totalsPayload({ withholdingTaxTotalAmount: 100, payableAmount: 1050 }),
+          }),
+        ),
+      'totals.payableAmount',
+      'Document totals must match line amounts.',
+    );
+  });
+
+  it('subtracts deduction (D) lines from totals', () => {
+    const lines = [
+      linePayload({ id: 'L1' }),
+      linePayload({
+        id: 'L2',
+        lineTypeCode: 'D',
+        price: 200,
+        priceExtension: 200,
+        netTotal: 200,
+        taxes: [{ taxTypeCode: TaxTypeCode.IVA, taxPercentage: 15, taxTotal: 30 }],
+      }),
+    ];
+
+    expect(() =>
+      invoiceDataFrom(
+        baseInvoicePayload({
+          lines,
+          totals: totalsPayload({
+            priceExtensionTotalAmount: 800,
+            netTotalAmount: 800,
+            taxTotalAmount: 120,
+            payableAmount: 920,
+          }),
+        }),
+      ),
+    ).not.toThrow();
+
+    expectValidation(
+      () =>
+        invoiceDataFrom(
+          baseInvoicePayload({
+            lines,
+            totals: totalsPayload({
+              priceExtensionTotalAmount: 1200,
+              netTotalAmount: 1200,
+              taxTotalAmount: 180,
+              payableAmount: 1380,
+            }),
+          }),
+        ),
+      'totals.priceExtensionTotalAmount',
+      'Document totals must match line amounts.',
+    );
+  });
+
+  it('ignores informational (I) lines in totals', () => {
+    expect(() =>
+      invoiceDataFrom(
+        baseInvoicePayload({
+          lines: [
+            linePayload({ id: 'L1' }),
+            linePayload({
+              id: 'L2',
+              lineTypeCode: 'I',
+              price: 500,
+              priceExtension: 500,
+              netTotal: 500,
+              taxes: [{ taxTypeCode: TaxTypeCode.IVA, taxPercentage: 15, taxTotal: 75 }],
+            }),
+          ],
+          totals: totalsPayload(),
+        }),
+      ),
+    ).not.toThrow();
+  });
+
   it('requires contingency fields tied to emission mode', () => {
     const offlineInvoice = invoiceDataFrom(
       baseInvoicePayload({

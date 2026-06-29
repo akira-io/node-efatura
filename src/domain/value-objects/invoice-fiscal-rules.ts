@@ -89,12 +89,12 @@ function assertTotals(invoice: InvoiceData): void {
   assertMoneyEquals(
     'totals.priceExtensionTotalAmount',
     invoice.totals.priceExtensionTotalAmount,
-    sumKnown(invoice.lines.map((line) => line.priceExtension)),
+    sumSigned(invoice.lines, (line) => line.priceExtension),
   );
   assertMoneyEquals(
     'totals.netTotalAmount',
     invoice.totals.netTotalAmount,
-    sumKnown(invoice.lines.map((line) => line.netTotal)),
+    sumSigned(invoice.lines, (line) => line.netTotal),
   );
 
   const taxTotals = taxTotalsFrom(invoice.lines);
@@ -110,12 +110,8 @@ function assertTotals(invoice: InvoiceData): void {
   }
 
   const payableRoundingAmount = invoice.totals.payableRoundingAmount ?? 0;
-  const withholdingTaxTotalAmount = invoice.totals.withholdingTaxTotalAmount ?? 0;
   const expectedPayableAmount =
-    invoice.totals.netTotalAmount +
-    invoice.totals.taxTotalAmount -
-    withholdingTaxTotalAmount +
-    payableRoundingAmount;
+    invoice.totals.netTotalAmount + invoice.totals.taxTotalAmount + payableRoundingAmount;
 
   assertMoneyEquals('totals.payableAmount', invoice.totals.payableAmount, expectedPayableAmount);
 }
@@ -130,15 +126,32 @@ function requiresLineTaxes(type: DocumentType): boolean {
   return !optionalTaxTypes.includes(type);
 }
 
-function sumKnown(values: Array<number | null>): number | null {
-  if (values.some((value) => value === null)) {
-    return null;
-  }
+function lineSign(line: LineItemData): number {
+  return line.lineTypeCode === 'D' ? -1 : 1;
+}
 
+function isIgnoredLine(line: LineItemData): boolean {
+  return line.lineTypeCode === 'I';
+}
+
+function sumSigned(
+  lines: LineItemData[],
+  selector: (line: LineItemData) => number | null,
+): number | null {
   let total = 0;
 
-  for (const value of values) {
-    total += value ?? 0;
+  for (const line of lines) {
+    if (isIgnoredLine(line)) {
+      continue;
+    }
+
+    const value = selector(line);
+
+    if (value === null) {
+      return null;
+    }
+
+    total += lineSign(line) * value;
   }
 
   return roundMoney(total);
@@ -153,6 +166,12 @@ function taxTotalsFrom(lines: LineItemData[]): {
   let withholdingTotal = 0;
 
   for (const line of lines) {
+    if (isIgnoredLine(line)) {
+      continue;
+    }
+
+    const sign = lineSign(line);
+
     for (const tax of line.taxes) {
       if (tax.taxTotal === null) {
         missingTaxTotal = true;
@@ -160,11 +179,11 @@ function taxTotalsFrom(lines: LineItemData[]): {
       }
 
       if (tax.taxTypeCode === TaxTypeCode.IncomeTax) {
-        withholdingTotal += tax.taxTotal;
+        withholdingTotal += sign * tax.taxTotal;
         continue;
       }
 
-      taxTotal += tax.taxTotal;
+      taxTotal += sign * tax.taxTotal;
     }
   }
 
