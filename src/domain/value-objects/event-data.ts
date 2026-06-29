@@ -141,11 +141,19 @@ function eventRangeFrom(value: unknown): EventDocumentRangeData | null {
   const documentType =
     documentTypeFromValue(value.documentType) ?? documentTypeFromCode(value.documentTypeCode);
 
+  if (!documentType) {
+    throw new EfaturaValidationError(
+      'event.range.documentType',
+      'Event range document type is invalid.',
+      'event.range.document_type_invalid',
+    );
+  }
+
   return {
     year: optionalText(value.year),
     ledCode: String(value.ledCode ?? ''),
     serie: String(value.serie ?? ''),
-    documentType: documentType as DocumentType,
+    documentType,
     documentNumberStart: Number(value.documentNumberStart),
     documentNumberEnd: Number(value.documentNumberEnd),
   };

@@ -233,6 +233,7 @@ describe('official v11 fiscal rules', () => {
     const offlineInvoice = invoiceDataFrom(
       baseInvoicePayload({
         contingency: {
+          ledCode: '123',
           issueDate: '2026-02-08',
           reasonTypeCode: '4',
         },
@@ -248,6 +249,7 @@ describe('official v11 fiscal rules', () => {
     const offInvoice = invoiceDataFrom(
       baseInvoicePayload({
         contingency: {
+          ledCode: '123',
           issueDate: '2026-02-08',
           issueTime: '10:30:00',
           reasonTypeCode: '0',
@@ -259,6 +261,24 @@ describe('official v11 fiscal rules', () => {
       () => assertContingencyMatchesEmissionMode(offInvoice, EmissionMode.Off),
       'contingency.iuc',
       'Contingency IUC is required in Off mode.',
+    );
+  });
+
+  it('requires a contingency LedCode in contingency modes', () => {
+    const invoice = invoiceDataFrom(
+      baseInvoicePayload({
+        contingency: {
+          issueDate: '2026-02-08',
+          issueTime: '10:30:00',
+          reasonTypeCode: '4',
+        },
+      }),
+    );
+
+    expectValidation(
+      () => assertContingencyMatchesEmissionMode(invoice, EmissionMode.Offline),
+      'contingency.ledCode',
+      'Contingency LedCode is required.',
     );
   });
 });
