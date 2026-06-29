@@ -1,4 +1,4 @@
-import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
+import { mkdir, open, readFile, rename } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import { pid } from 'node:process';
 import type { SequenceScope, SequenceStore } from '../../core/contracts';
@@ -27,9 +27,11 @@ export class FileSequenceStore implements SequenceStore {
   }
 
   async current(scope: SequenceScope): Promise<number | null> {
-    const data = await this.#read();
+    return this.#withLock(async () => {
+      const data = await this.#read();
 
-    return data[sequenceScopeKey(scope)] ?? null;
+      return data[sequenceScopeKey(scope)] ?? null;
+    });
   }
 
   async reset(scope: SequenceScope): Promise<void> {
@@ -62,12 +64,35 @@ export class FileSequenceStore implements SequenceStore {
   }
 
   async #write(data: Record<string, number>): Promise<void> {
-    await mkdir(dirname(this.#filePath), { recursive: true });
+    const directory = dirname(this.#filePath);
+
+    await mkdir(directory, { recursive: true });
 
     const temporaryPath = `${this.#filePath}.${pid}.tmp`;
+    const handle = await open(temporaryPath, 'w');
 
-    await writeFile(temporaryPath, JSON.stringify(data, null, 2));
+    try {
+      await handle.writeFile(JSON.stringify(data, null, 2));
+      await handle.sync();
+    } finally {
+      await handle.close();
+    }
+
     await rename(temporaryPath, this.#filePath);
+    await syncDirectory(directory);
+  }
+}
+
+async function syncDirectory(directory: string): Promise<void> {
+  let handle: Awaited<ReturnType<typeof open>> | undefined;
+
+  try {
+    handle = await open(directory, 'r');
+    await handle.sync();
+  } catch {
+    // Directory fsync is unsupported on some platforms; durability is best-effort there.
+  } finally {
+    await handle?.close();
   }
 }
 

@@ -38,7 +38,7 @@ export class KnexSequenceStore implements SequenceStore {
       table.integer('fiscal_year').notNullable();
       table.string('led_code', 5).notNullable();
       table.string('document_type', 3).notNullable();
-      table.integer('current_number').notNullable();
+      table.bigInteger('current_number').notNullable();
       table.string('created_at').notNullable();
       table.string('updated_at').notNullable();
       table.primary(['emitter_nif', 'fiscal_year', 'led_code', 'document_type']);
@@ -60,14 +60,14 @@ export class KnexSequenceStore implements SequenceStore {
 
       const row = await transaction<SequenceRow>(this.#tableName).where(key).first();
 
-      return row?.current_number ?? 1;
+      return row ? Number(row.current_number) : 1;
     });
   }
 
   async current(scope: SequenceScope): Promise<number | null> {
     const row = await this.#knex<SequenceRow>(this.#tableName).where(sequenceKey(scope)).first();
 
-    return row?.current_number ?? null;
+    return row ? Number(row.current_number) : null;
   }
 
   async reset(scope: SequenceScope): Promise<void> {

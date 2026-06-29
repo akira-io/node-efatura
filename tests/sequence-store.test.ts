@@ -68,6 +68,30 @@ describe('KnexSequenceStore', () => {
     expect(Math.max(...results)).toBe(50);
     await expect(store.current(scope)).resolves.toBe(50);
   });
+
+  it('handles sequence numbers beyond 32-bit integers', async () => {
+    const store = new KnexSequenceStore(knex);
+    const scope = {
+      nif: '100200300',
+      year: 2026,
+      led: '123',
+      documentType: DocumentType.ElectronicInvoice,
+    };
+
+    await store.ensureSchema();
+    await knex('efatura_sequences').insert({
+      emitter_nif: scope.nif,
+      fiscal_year: scope.year,
+      led_code: scope.led,
+      document_type: scope.documentType,
+      current_number: 3_000_000_000,
+      created_at: 'seed',
+      updated_at: 'seed',
+    });
+
+    await expect(store.next(scope)).resolves.toBe(3_000_000_001);
+    await expect(store.current(scope)).resolves.toBe(3_000_000_001);
+  });
 });
 
 describe('FileSequenceStore', () => {
@@ -98,6 +122,16 @@ describe('FileSequenceStore', () => {
 
     await store.reset(scope);
     await expect(store.current(scope)).resolves.toBeNull();
+  });
+
+  it('persists durably across store instances on the same file', async () => {
+    await store.next(scope);
+    await store.next(scope);
+
+    const reopened = new FileSequenceStore(join(directory, 'sequences.json'));
+
+    await expect(reopened.current(scope)).resolves.toBe(2);
+    await expect(reopened.next(scope)).resolves.toBe(3);
   });
 
   it('serializes concurrent next() calls into a gap-free unique sequence in-process', async () => {
