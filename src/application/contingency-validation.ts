@@ -32,6 +32,14 @@ export function assertContingencyMatchesEmissionMode(
     );
   }
 
+  if (!invoice.contingency.ledCode) {
+    throw new EfaturaValidationError(
+      'contingency.ledCode',
+      'Contingency LedCode is required.',
+      'contingency.led_code_required',
+    );
+  }
+
   const allowedReasonCodes =
     normalizedEmissionMode === EmissionMode.Offline ? ['0', '1', '4', '5'] : ['0', '2', '3'];
 

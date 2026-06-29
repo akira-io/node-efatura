@@ -32,8 +32,10 @@ export function salesReceiptDataFrom(
   options: WrapperValidationOptions = {},
 ): WrappedInvoiceData {
   const wrapped = wrapInvoice(data, DocumentType.ElectronicSalesTicket, options);
+  const totalIncludingTax =
+    (wrapped.invoice.totals?.netTotalAmount ?? 0) + (wrapped.invoice.totals?.taxTotalAmount ?? 0);
 
-  if ((wrapped.invoice.totals?.payableAmount ?? 0) >= 20000 && wrapped.invoice.receiver === null) {
+  if (totalIncludingTax >= 20000 && wrapped.invoice.receiver === null) {
     throw new EfaturaValidationError(
       'invoice.receiver',
       messages.invoice.receiverRequiredForType,

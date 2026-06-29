@@ -58,6 +58,25 @@ describe('official Event XML', () => {
     ).toThrow('Event is invalid.');
   });
 
+  it('rejects an event range with an unresolvable document type', () => {
+    const efatura = createEfatura(config);
+
+    expect(() =>
+      efatura.buildEventXml({
+        type: EventType.UnusedDocumentNumber,
+        issueDateTime: '2026-02-08T11:30:00',
+        issueReasonDescription: 'Sem tipo.',
+        range: {
+          year: '2026',
+          ledCode: '123',
+          serie: '123',
+          documentNumberStart: 10,
+          documentNumberEnd: 12,
+        },
+      }),
+    ).toThrow('Event range document type is invalid.');
+  });
+
   it.each(invalidEventDateTimes)('rejects invalid Event Id date-time %s', (issueDateTime) => {
     const efatura = createEfatura(config);
 

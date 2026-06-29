@@ -124,6 +124,35 @@ describe('data validation', () => {
     );
   });
 
+  it('uses total including tax, not payable, for the sales receipt receiver threshold', () => {
+    const payload = baseInvoicePayload({
+      type: DocumentType.ElectronicSalesTicket,
+      receiver: null,
+      lines: [
+        {
+          quantity: { value: 1, unitCode: 'EA' },
+          price: 17000,
+          priceExtension: 17000,
+          netTotal: 17000,
+          taxes: [{ taxTypeCode: TaxTypeCode.IVA, taxPercentage: 15, taxTotal: 2999 }],
+          item: {
+            description: 'Item',
+            emitterIdentification: 'ITEM1',
+          },
+        },
+      ],
+      totals: {
+        priceExtensionTotalAmount: 17000,
+        netTotalAmount: 17000,
+        taxTotalAmount: 2999,
+        payableRoundingAmount: 1,
+        payableAmount: 20000,
+      },
+    });
+
+    expect(() => salesReceiptDataFrom({ invoice: payload })).not.toThrow();
+  });
+
   it('requires credit note references', () => {
     const payload = baseInvoicePayload({
       type: DocumentType.ElectronicCreditNote,
