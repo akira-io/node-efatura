@@ -4,6 +4,7 @@ import {
   type EmissionModeInput,
   normalizeEmissionMode,
 } from '../../domain/enums/emission-mode';
+import { EfaturaValidationError } from '../../domain/errors';
 import type {
   DatePeriodData,
   DeliveryData,
@@ -19,6 +20,20 @@ import type { ContingencyData, InvoiceData } from '../../domain/value-objects/in
 import { taxXml } from './dfe-lines-xml';
 import { addressXml } from './dfe-party-xml';
 import { element, escapeXml, requiredValue } from './xml-core';
+
+const XML_NAME_PATTERN = /^[A-Za-z_][A-Za-z0-9_.-]*$/;
+
+function assertXmlName(name: string): string {
+  if (!XML_NAME_PATTERN.test(name)) {
+    throw new EfaturaValidationError(
+      'extraFields.name',
+      'Extra field name is not a valid XML name.',
+      'extra_fields.xml_name_invalid',
+    );
+  }
+
+  return name;
+}
 
 export interface TransmissionXmlInput {
   config: ResolvedEfaturaConfig;
@@ -209,13 +224,14 @@ function extraFieldsXml(fields: ExtraFieldData[]): string {
 }
 
 function extraFieldXml(field: ExtraFieldData): string {
+  const name = assertXmlName(field.name);
   const attributes = Object.entries(field.attributes)
-    .map(([name, value]) => ` ${name}="${escapeXml(value)}"`)
+    .map(([attributeName, value]) => ` ${assertXmlName(attributeName)}="${escapeXml(value)}"`)
     .join('');
   const content =
     field.children.length > 0 ? field.children.map(extraFieldXml).join('') : scalarXml(field.value);
 
-  return `<${field.name}${attributes}>${content}</${field.name}>`;
+  return `<${name}${attributes}>${content}</${name}>`;
 }
 
 function scalarXml(value: ExtraFieldScalar | null): string {

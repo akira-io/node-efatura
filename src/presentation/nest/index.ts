@@ -10,6 +10,7 @@ import {
   Res,
 } from '@nestjs/common';
 import type { Response } from 'express';
+import { EfaturaError } from '../../domain/errors';
 import type { Efatura } from '../../efatura';
 import {
   type HttpResult,
@@ -25,6 +26,7 @@ export const EFATURA = 'EFATURA';
 
 export interface EfaturaModuleOptions {
   efatura: Efatura;
+  allowUnauthenticated?: boolean;
 }
 
 @Controller('efatura')
@@ -65,6 +67,12 @@ export class EfaturaController {
 @Module({})
 export class EfaturaModule {
   static forRoot(options: EfaturaModuleOptions): DynamicModule {
+    if (options.allowUnauthenticated !== true) {
+      throw new EfaturaError(
+        'EfaturaModule exposes unauthenticated routes. Apply a global guard (e.g. APP_GUARD) and set `allowUnauthenticated: true` to acknowledge.',
+      );
+    }
+
     return {
       module: EfaturaModule,
       controllers: [EfaturaController],

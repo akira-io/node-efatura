@@ -22,7 +22,7 @@ interface ExpressLayer {
 
 describe('HTTP adapters', () => {
   it('creates an Express router for e-Fatura endpoints', () => {
-    const router = efaturaRoutes(efatura);
+    const router = efaturaRoutes(efatura, { allowUnauthenticated: true });
 
     expect(typeof router).toBe('function');
     expect(typeof router.use).toBe('function');
@@ -81,12 +81,22 @@ describe('HTTP adapters', () => {
   });
 
   it('creates a Nest dynamic module with the configured service', () => {
-    const module = EfaturaModule.forRoot({ efatura });
+    const module = EfaturaModule.forRoot({ efatura, allowUnauthenticated: true });
 
     expect(module.controllers).toEqual([EfaturaController]);
     expect(module.exports).toEqual([EFATURA]);
     expect(module.providers).toEqual([{ provide: EFATURA, useValue: efatura }]);
     expect(typeof EfaturaController.prototype.buildEventXml).toBe('function');
     expect(typeof EfaturaController.prototype.validateFiscalReadiness).toBe('function');
+  });
+
+  it('fails closed when no authorization is supplied', async () => {
+    expect(() => efaturaRoutes(efatura)).toThrow(/authorization handler/);
+
+    await expect(
+      efaturaFastifyPlugin({ post() {}, get() {} } as never, { efatura }),
+    ).rejects.toThrow(/authorization handler/);
+
+    expect(() => EfaturaModule.forRoot({ efatura })).toThrow(/unauthenticated routes/);
   });
 });

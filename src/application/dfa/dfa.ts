@@ -15,7 +15,37 @@ export function dfaQrCodeUrl(iud: string, baseUrl: string): string {
     throw new EfaturaValidationError('iud', 'IUD is invalid.', 'dfa.iud_invalid');
   }
 
-  return `${baseUrl.replace(/\/+$/, '')}/${encodeURIComponent(iud)}`;
+  return `${stripTrailingSlashes(assertHttpsBaseUrl(baseUrl))}/${encodeURIComponent(iud)}`;
+}
+
+function stripTrailingSlashes(value: string): string {
+  let end = value.length;
+
+  while (end > 0 && value.charCodeAt(end - 1) === 47) {
+    end--;
+  }
+
+  return value.slice(0, end);
+}
+
+function assertHttpsBaseUrl(baseUrl: string): string {
+  let parsed: URL;
+
+  try {
+    parsed = new URL(baseUrl);
+  } catch {
+    throw new EfaturaValidationError('baseUrl', 'DFA base URL is invalid.', 'dfa.base_url_invalid');
+  }
+
+  if (parsed.protocol !== 'https:') {
+    throw new EfaturaValidationError(
+      'baseUrl',
+      'DFA base URL must use https.',
+      'dfa.base_url_insecure',
+    );
+  }
+
+  return baseUrl;
 }
 
 export function dfaContingencyNotice(value: boolean | EmissionModeInput): string | null {
