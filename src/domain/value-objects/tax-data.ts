@@ -39,21 +39,35 @@ export const taxDataSchema = z
     taxTotal: z.coerce.number().finite().gt(0).nullable(),
   })
   .superRefine((tax, context) => {
-    if (tax.taxTypeCode === TaxTypeCode.NotApplicable && tax.taxExemptionReasonCode === null) {
-      context.addIssue({
-        code: 'custom',
-        path: ['taxExemptionReasonCode'],
-        message: messages.validation.naTaxExemptionRequired,
-      });
+    if (tax.taxTypeCode === TaxTypeCode.NotApplicable) {
+      if (tax.taxExemptionReasonCode === null) {
+        context.addIssue({
+          code: 'custom',
+          path: ['taxExemptionReasonCode'],
+          message: messages.validation.naTaxExemptionRequired,
+        });
+      }
+
+      if (tax.taxPercentage !== null || tax.taxAmount !== null) {
+        context.addIssue({
+          code: 'custom',
+          path: ['taxPercentage'],
+          message: 'Not-applicable tax must not contain a percentage or amount.',
+        });
+      }
 
       return;
     }
 
-    const valueCount = [
-      tax.taxPercentage !== null,
-      tax.taxAmount !== null,
-      tax.taxExemptionReasonCode !== null,
-    ].filter(Boolean).length;
+    if (tax.taxExemptionReasonCode !== null) {
+      context.addIssue({
+        code: 'custom',
+        path: ['taxExemptionReasonCode'],
+        message: 'Tax exemption reason is only allowed for not-applicable tax.',
+      });
+    }
+
+    const valueCount = [tax.taxPercentage !== null, tax.taxAmount !== null].filter(Boolean).length;
 
     if (valueCount !== 1) {
       context.addIssue({
