@@ -88,7 +88,29 @@ await sequenceStore.ensureSchema();
 
 Pass the resulting store as the `sequenceStore` dependency to `createEfatura`. Install only the driver you use; the root entry never pulls in `knex`.
 
-The Prisma store lives at `@akira-io/efatura/prisma`. Prisma generates its client from your own `schema.prisma`, so copy the shipped model into your schema, then migrate. The model fragment ships at `node_modules/@akira-io/efatura/resources/prisma/efatura-sequence.prisma`:
+The Prisma store lives at `@akira-io/efatura/prisma`. Prisma generates its client from your own schema, so copy the shipped sequence model, then migrate:
+
+```sh
+npx @akira-io/efatura prisma
+```
+
+The command writes to `prisma/schema/efatura-sequence.prisma` by default for Prisma multi-file schemas. Use the options below for other layouts:
+
+```sh
+# Write to a custom path
+npx @akira-io/efatura prisma --out prisma/efatura-sequence.prisma
+
+# Append only model blocks to a single schema.prisma file
+npx @akira-io/efatura prisma --models-only --print >> prisma/schema.prisma
+
+# Print the shipped model without writing files
+npx @akira-io/efatura prisma --print
+
+# Replace an existing output file
+npx @akira-io/efatura prisma --force
+```
+
+The model fragment also ships at `node_modules/@akira-io/efatura/resources/prisma/efatura-sequence.prisma` if you need to copy it manually:
 
 ```prisma
 model EfaturaSequence {
@@ -99,7 +121,7 @@ model EfaturaSequence {
 }
 ```
 
-On Prisma 5.15+ with a `prisma/schema/` folder, copy the whole file into it. Otherwise paste the model block into your `schema.prisma`. Then run your migration (`prisma migrate dev` or `prisma db push`).
+Then run your migration (`prisma migrate dev` or `prisma db push`).
 
 ```ts
 import { PrismaClient } from '@prisma/client';
