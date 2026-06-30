@@ -1,6 +1,7 @@
 import { DocumentType } from '../enums/document-type';
 import { TaxTypeCode } from '../enums/tax-type-code';
 import { EfaturaValidationError } from '../errors';
+import { isIgnoredLine, lineSign, roundMoney, taxTotalsFrom } from './invoice-amounts';
 import type { InvoiceData } from './invoice-data';
 import type { LineItemData } from './line-item-data';
 
@@ -101,10 +102,10 @@ function assertTotals(invoice: InvoiceData): void {
 
   const taxTotals = taxTotalsFrom(invoice.lines);
 
-  assertMoneyEquals('totals.taxTotalAmount', invoice.totals.taxTotalAmount, taxTotals.taxTotal);
+  assertMoneyMatchesAny('totals.taxTotalAmount', invoice.totals.taxTotalAmount, taxTotals.taxTotal);
 
   if (invoice.totals.withholdingTaxTotalAmount !== null) {
-    assertMoneyEquals(
+    assertMoneyMatchesAny(
       'totals.withholdingTaxTotalAmount',
       invoice.totals.withholdingTaxTotalAmount,
       taxTotals.withholdingTotal,
@@ -149,14 +150,6 @@ function assertRempeInvoiceTaxCodes(invoice: InvoiceData): void {
       );
     });
   });
-}
-
-function lineSign(line: LineItemData): number {
-  return line.lineTypeCode === 'D' ? -1 : 1;
-}
-
-function isIgnoredLine(line: LineItemData): boolean {
-  return line.lineTypeCode === 'I';
 }
 
 function assertTotalsLineAmounts(lines: LineItemData[]): void {
@@ -221,48 +214,22 @@ function sumSigned(
   return roundMoney(total);
 }
 
-function taxTotalsFrom(lines: LineItemData[]): {
-  taxTotal: number | null;
-  withholdingTotal: number;
-} {
-  let missingTaxTotal = false;
-  let taxTotal = 0;
-  let withholdingTotal = 0;
-
-  for (const line of lines) {
-    if (isIgnoredLine(line)) {
-      continue;
-    }
-
-    const sign = lineSign(line);
-
-    for (const tax of line.taxes) {
-      if (tax.taxTotal === null) {
-        if (tax.taxTypeCode === TaxTypeCode.NotApplicable) {
-          continue;
-        }
-
-        missingTaxTotal = true;
-        continue;
-      }
-
-      if (tax.taxTypeCode === TaxTypeCode.IncomeTax) {
-        withholdingTotal += sign * tax.taxTotal;
-        continue;
-      }
-
-      taxTotal += sign * tax.taxTotal;
-    }
-  }
-
-  return {
-    taxTotal: missingTaxTotal ? null : roundMoney(taxTotal),
-    withholdingTotal: roundMoney(withholdingTotal),
-  };
+function assertMoneyEquals(field: string, actual: number, expected: number | null): void {
+  assertMoneyMatchesAny(field, actual, expected === null ? null : [expected]);
 }
 
-function assertMoneyEquals(field: string, actual: number, expected: number | null): void {
-  if (expected === null || Math.abs(roundMoney(actual) - expected) <= MONEY_TOLERANCE) {
+function assertMoneyMatchesAny(
+  field: string,
+  actual: number,
+  candidates: readonly number[] | null,
+): void {
+  if (candidates === null) {
+    return;
+  }
+
+  const roundedActual = roundMoney(actual);
+
+  if (candidates.some((expected) => Math.abs(roundedActual - expected) <= MONEY_TOLERANCE)) {
     return;
   }
 
@@ -271,8 +238,4 @@ function assertMoneyEquals(field: string, actual: number, expected: number | nul
     'Document totals must match line amounts.',
     'invoice.totals_mismatch',
   );
-}
-
-function roundMoney(value: number): number {
-  return Math.round(value * 100) / 100;
 }
