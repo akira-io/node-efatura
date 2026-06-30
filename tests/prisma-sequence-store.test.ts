@@ -39,7 +39,9 @@ beforeAll(async () => {
     },
   );
 
-  const { PrismaClient } = await import('@prisma/client');
+  const { PrismaClient } = (await import('@prisma/client')) as unknown as {
+    PrismaClient: new (options: { adapter: unknown }) => typeof prisma;
+  };
   const { PrismaBetterSqlite3 } = await import('@prisma/adapter-better-sqlite3');
   const adapter = new PrismaBetterSqlite3({ url: `file:${dbPath}` });
   prisma = new PrismaClient({ adapter });
