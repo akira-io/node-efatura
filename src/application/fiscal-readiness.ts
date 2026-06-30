@@ -51,7 +51,8 @@ export async function validateFiscalReadiness(
     accessToken: options.accessToken,
   };
   const taxpayerChecks = await taxpayerChecksFor(invoice, config, dependencies, context, options);
-  const software = await dependencies.softwareRegistryClient.lookupSoftware(
+  const softwareCheck = await softwareCheckFor(
+    dependencies.softwareRegistryClient,
     {
       code: config.softwareCode,
       name: config.softwareName,
@@ -61,14 +62,7 @@ export async function validateFiscalReadiness(
   );
   const checks = [
     ...taxpayerChecks,
-    statusCheck(
-      software.registered,
-      'software.registered',
-      'Software is registered in the fiscal authority.',
-      'Software is not registered in the fiscal authority.',
-      software.issues,
-      software.raw,
-    ),
+    softwareCheck,
     ...(await authorizationChecksFor(invoice, config, dependencies, context)),
   ];
 
@@ -83,26 +77,83 @@ async function taxpayerChecksFor(
   options: FiscalReadinessOptions,
 ): Promise<FiscalReadinessCheck[]> {
   const taxpayers = taxpayersFor(invoice, config, options.validateReceiver !== false);
-  const results = await Promise.all(
-    taxpayers.map(async (taxpayer) => ({
-      taxpayer,
-      result: await dependencies.taxpayerRegistryClient.lookupTaxpayer(taxpayer, context),
-    })),
-  );
+  return Promise.all(
+    taxpayers.map(async (taxpayer) => {
+      try {
+        const taxpayerResult = await dependencies.taxpayerRegistryClient.lookupTaxpayer(
+          taxpayer,
+          context,
+        );
 
-  return results.map(({ taxpayer, result: taxpayerResult }) =>
-    statusCheck(
-      taxpayerResult.exists &&
-        taxpayerResult.activityStarted !== false &&
-        taxpayerResult.activityActive !== false &&
-        taxpayerResult.hasFiscalFramework !== false,
-      `${taxpayer.role}.taxpayer_valid`,
-      `${taxpayer.role} taxpayer is valid in the fiscal authority.`,
-      `${taxpayer.role} taxpayer is not valid in the fiscal authority.`,
-      taxpayerResult.issues,
-      taxpayerResult.raw,
-    ),
+        return taxpayerStatusCheck(taxpayer, taxpayerResult);
+      } catch (error) {
+        return failedCheck(
+          `${taxpayer.role}.taxpayer_valid`,
+          `${taxpayer.role} taxpayer could not be validated in the fiscal authority.`,
+          error,
+        );
+      }
+    }),
   );
+}
+
+async function softwareCheckFor(
+  client: SoftwareRegistryClient,
+  software: { code: string; name: string; version: string },
+  context: { baseUrl: string; accessToken: string },
+): Promise<FiscalReadinessCheck> {
+  try {
+    const softwareResult = await client.lookupSoftware(software, context);
+
+    return statusCheck(
+      softwareResult.registered,
+      'software.registered',
+      'Software is registered in the fiscal authority.',
+      'Software is not registered in the fiscal authority.',
+      softwareResult.issues,
+      softwareResult.raw,
+    );
+  } catch (error) {
+    return failedCheck(
+      'software.registered',
+      'Software could not be validated in the fiscal authority.',
+      error,
+    );
+  }
+}
+
+function taxpayerStatusCheck(
+  taxpayer: TaxpayerLookupInput,
+  taxpayerResult: Awaited<ReturnType<TaxpayerRegistryClient['lookupTaxpayer']>>,
+): FiscalReadinessCheck {
+  return statusCheck(
+    taxpayerResult.exists &&
+      taxpayerResult.activityStarted !== false &&
+      taxpayerResult.activityActive !== false &&
+      taxpayerResult.hasFiscalFramework !== false,
+    `${taxpayer.role}.taxpayer_valid`,
+    `${taxpayer.role} taxpayer is valid in the fiscal authority.`,
+    `${taxpayer.role} taxpayer is not valid in the fiscal authority.`,
+    taxpayerResult.issues,
+    taxpayerResult.raw,
+  );
+}
+
+function failedCheck(code: string, message: string, error: unknown): FiscalReadinessCheck {
+  return {
+    code,
+    details: errorMessage(error),
+    message,
+    status: 'failed',
+  };
+}
+
+function errorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return String(error);
 }
 
 async function authorizationChecksFor(
@@ -118,25 +169,35 @@ async function authorizationChecksFor(
     return [];
   }
 
-  const authorization = await dependencies.emitterAuthorizationClient.checkEmitterAuthorization(
-    {
-      transmitterNif: config.transmitterNif,
-      emitterNif,
-      softwareCode: config.softwareCode,
-    },
-    context,
-  );
+  try {
+    const authorization = await dependencies.emitterAuthorizationClient.checkEmitterAuthorization(
+      {
+        transmitterNif: config.transmitterNif,
+        emitterNif,
+        softwareCode: config.softwareCode,
+      },
+      context,
+    );
 
-  return [
-    statusCheck(
-      authorization.authorized,
-      'emitter.authorization',
-      'Emitter is authorized for this transmitter.',
-      'Emitter is not authorized for this transmitter.',
-      authorization.issues,
-      authorization.raw,
-    ),
-  ];
+    return [
+      statusCheck(
+        authorization.authorized,
+        'emitter.authorization',
+        'Emitter is authorized for this transmitter.',
+        'Emitter is not authorized for this transmitter.',
+        authorization.issues,
+        authorization.raw,
+      ),
+    ];
+  } catch (error) {
+    return [
+      failedCheck(
+        'emitter.authorization',
+        'Emitter authorization could not be validated in the fiscal authority.',
+        error,
+      ),
+    ];
+  }
 }
 
 function taxpayersFor(

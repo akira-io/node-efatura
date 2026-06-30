@@ -5,6 +5,7 @@ import { buildDfeZip } from '../src/application/packaging/dfe-zip';
 import type { MiddlewareSubmitInput } from '../src/core/contracts';
 import { createEfatura } from '../src/create-efatura';
 import { EmissionMode } from '../src/domain/enums/emission-mode';
+import { FetchMiddlewareTransport, FetchPlatformTransport } from '../src/infrastructure';
 import { dfaPdfContingencyLines } from '../src/infrastructure/dfa/pdf-dfa-renderer';
 
 const iud = 'CV3260208100200300001230100000000112345678909';
@@ -62,6 +63,58 @@ describe('middleware packaging', () => {
     expect(calls[0]?.baseUrl).toBe('https://localhost:3443');
     expect(calls[0]?.transmitterKey).toBe('k'.repeat(64));
     expect(calls[0]?.zip).toBe(zip);
+  });
+});
+
+describe('fetch transports', () => {
+  it('sends middleware ZIP submissions with transmitter headers and normalized URL', async () => {
+    const zip = Buffer.from('zip');
+    const calls: Array<{ init?: RequestInit; url: string }> = [];
+    const fetcher: typeof fetch = async (url, init) => {
+      calls.push({ init, url: String(url) });
+
+      return new Response('<Accepted/>', { status: 202, statusText: 'Accepted' });
+    };
+    const transport = new FetchMiddlewareTransport(fetcher);
+    const response = await transport.submitDfeZip({
+      baseUrl: 'https://middleware.example.test///',
+      transmitterKey: 'transmitter-key',
+      zip,
+    });
+
+    expect(response.ok).toBe(true);
+    expect(calls[0]?.url).toBe('https://middleware.example.test/v1/dfe');
+    expect(calls[0]?.init?.method).toBe('POST');
+    expect(calls[0]?.init?.headers).toEqual({
+      'content-type': 'application/zip',
+      'cv-ef-mw-core-transmitter-key': 'transmitter-key',
+    });
+    expect(calls[0]?.init?.body).toBe(zip);
+  });
+
+  it('sends platform ZIP submissions with bearer token and repository headers', async () => {
+    const calls: Array<{ init?: RequestInit; url: string }> = [];
+    const fetcher: typeof fetch = async (url, init) => {
+      calls.push({ init, url: String(url) });
+
+      return new Response('<Accepted/>', { status: 202, statusText: 'Accepted' });
+    };
+    const transport = new FetchPlatformTransport(fetcher);
+    const response = await transport.submitDfeZip({
+      accessToken: 'access-token',
+      baseUrl: 'https://platform.example.test///',
+      repositoryCode: 12,
+      zip: Buffer.from('zip'),
+    });
+
+    expect(response.ok).toBe(true);
+    expect(calls[0]?.url).toBe('https://platform.example.test/v1/dfe');
+    expect(calls[0]?.init?.method).toBe('POST');
+    expect(calls[0]?.init?.headers).toEqual({
+      authorization: 'Bearer access-token',
+      'cv-ef-repository-code': '12',
+    });
+    expect(calls[0]?.init?.body).toBeInstanceOf(FormData);
   });
 });
 
