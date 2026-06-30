@@ -11,9 +11,13 @@
   <img src="https://img.shields.io/node/v/@akira-io/efatura" alt="node">
 </p>
 
-> **Beta status**
->
-> `@akira-io/efatura` is published as a beta package while the Cabo Verde e-Fatura integration surface is being finalized. APIs may change before stable 1.0. Review [CHANGELOG.md](CHANGELOG.md) before upgrading or using it in production.
+<p align="center">
+  <img src="https://img.shields.io/badge/BETA-APIs_may_change_before_1.0-f97316?style=for-the-badge" alt="Beta: APIs may change before 1.0">
+</p>
+
+<p align="center">
+  <strong>Production note:</strong> Review <a href="CHANGELOG.md">CHANGELOG.md</a> before upgrading. The public integration surface can change until the stable 1.0 release.
+</p>
 
 Cabo Verde e-Fatura fiscal document validation engine for Node.js. It provides a framework-agnostic core for validating fiscal documents, generating DFE XML, packaging ZIP payloads, signing with XAdES-BES, and integrating through Express, Fastify, and Nest adapters.
 
