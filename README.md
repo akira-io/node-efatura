@@ -9,15 +9,11 @@
   <a href="https://github.com/akira-io/node-efatura/actions/workflows/test.yml"><img src="https://github.com/akira-io/node-efatura/actions/workflows/test.yml/badge.svg" alt="tests"></a>
   <img src="https://img.shields.io/npm/l/@akira-io/efatura.svg" alt="license">
   <img src="https://img.shields.io/node/v/@akira-io/efatura" alt="node">
+  <img src="https://img.shields.io/badge/status-beta-orange.svg" alt="beta">
 </p>
 
-<p align="center">
-  <img src="https://img.shields.io/badge/BETA-APIs_may_change_before_1.0-f97316?style=for-the-badge" alt="Beta: APIs may change before 1.0">
-</p>
-
-<p align="center">
-  <strong>Production note:</strong> Review <a href="CHANGELOG.md">CHANGELOG.md</a> before upgrading. The public integration surface can change until the stable 1.0 release.
-</p>
+> [!WARNING]
+> Beta software. The API may change before `1.0.0`. Install with the `beta` tag: `npm install @akira-io/efatura@beta`. Pin an exact version in production and review the [changelog](CHANGELOG.md) before upgrading.
 
 Cabo Verde e-Fatura fiscal document validation engine for Node.js. It provides a framework-agnostic core for validating fiscal documents, generating DFE XML, packaging ZIP payloads, signing with XAdES-BES, and integrating through Express, Fastify, and Nest adapters.
 
@@ -46,6 +42,16 @@ bun add @akira-io/efatura
 ```
 
 Review [CHANGELOG.md](CHANGELOG.md) before upgrading production systems.
+
+## Prisma schema
+
+Copy the sequence model into a Prisma multi-file schema:
+
+```sh
+npx @akira-io/efatura prisma
+```
+
+The command writes to `prisma/schema/efatura-sequence.prisma` by default. Use `--out` for a custom path, `--print` to inspect or append the model, and `--force` to replace an existing file.
 
 ## Quick start
 
