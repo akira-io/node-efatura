@@ -82,10 +82,11 @@ function assertLineTaxes(invoice: InvoiceData): void {
 }
 
 function assertTotals(invoice: InvoiceData): void {
-  if (invoice.totals === null || invoice.lines.length === 0) {
+  if (invoice.totals === null) {
     return;
   }
 
+  assertTotalsLineAmounts(invoice.lines);
   assertMoneyEquals(
     'totals.priceExtensionTotalAmount',
     invoice.totals.priceExtensionTotalAmount,
@@ -134,6 +135,45 @@ function isIgnoredLine(line: LineItemData): boolean {
   return line.lineTypeCode === 'I';
 }
 
+function assertTotalsLineAmounts(lines: LineItemData[]): void {
+  if (lines.length === 0) {
+    throw lineAmountRequired('lines');
+  }
+
+  lines.forEach((line, lineIndex) => {
+    if (isIgnoredLine(line)) {
+      return;
+    }
+
+    assertLineAmount(`lines.${lineIndex}.priceExtension`, line.priceExtension);
+    assertLineAmount(`lines.${lineIndex}.netTotal`, line.netTotal);
+
+    line.taxes.forEach((tax, taxIndex) => {
+      if (tax.taxTypeCode === TaxTypeCode.NotApplicable) {
+        return;
+      }
+
+      assertLineAmount(`lines.${lineIndex}.taxes.${taxIndex}.taxTotal`, tax.taxTotal);
+    });
+  });
+}
+
+function assertLineAmount(field: string, value: number | null): void {
+  if (value !== null) {
+    return;
+  }
+
+  throw lineAmountRequired(field);
+}
+
+function lineAmountRequired(field: string): EfaturaValidationError {
+  return new EfaturaValidationError(
+    field,
+    'Line amount is required for totals reconciliation.',
+    'invoice.totals_line_amount_required',
+  );
+}
+
 function sumSigned(
   lines: LineItemData[],
   selector: (line: LineItemData) => number | null,
@@ -174,6 +214,10 @@ function taxTotalsFrom(lines: LineItemData[]): {
 
     for (const tax of line.taxes) {
       if (tax.taxTotal === null) {
+        if (tax.taxTypeCode === TaxTypeCode.NotApplicable) {
+          continue;
+        }
+
         missingTaxTotal = true;
         continue;
       }
