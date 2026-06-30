@@ -55,4 +55,47 @@ describe('totals reconciliation', () => {
       'lines.0.taxes.0.taxTotal',
     );
   });
+
+  it('accepts aggregate tax rounding across invoice lines', () => {
+    const lines = Array.from({ length: 10 }, () =>
+      linePayload({
+        price: 0.05,
+        priceExtension: 0.05,
+        netTotal: 0.05,
+        taxes: [{ taxTypeCode: TaxTypeCode.IVA, taxPercentage: 15, taxTotal: 0.01 }],
+      }),
+    );
+
+    expect(() =>
+      invoiceDataFrom(
+        baseInvoicePayload({
+          lines,
+          totals: {
+            priceExtensionTotalAmount: 0.5,
+            chargeTotalAmount: 0,
+            discountTotalAmount: 0,
+            netTotalAmount: 0.5,
+            taxTotalAmount: 0.08,
+            payableAmount: 0.58,
+          },
+        }),
+      ),
+    ).not.toThrow();
+
+    expect(() =>
+      invoiceDataFrom(
+        baseInvoicePayload({
+          lines,
+          totals: {
+            priceExtensionTotalAmount: 0.5,
+            chargeTotalAmount: 0,
+            discountTotalAmount: 0,
+            netTotalAmount: 0.5,
+            taxTotalAmount: 0.1,
+            payableAmount: 0.6,
+          },
+        }),
+      ),
+    ).not.toThrow();
+  });
 });
