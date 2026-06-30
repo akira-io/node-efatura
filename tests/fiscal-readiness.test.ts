@@ -78,6 +78,30 @@ describe('fiscal readiness', () => {
     expect(software?.status).toBe('passed');
     expect(result.ok).toBe(true);
   });
+
+  it('fails closed when a fiscal authority client throws', async () => {
+    const efatura = createEfatura(config(), {
+      taxpayerRegistryClient: {
+        async lookupTaxpayer() {
+          throw new Error('registry timeout');
+        },
+      },
+      softwareRegistryClient: softwareClient(true),
+      emitterAuthorizationClient: authorizationClient(true),
+    });
+    const result = await efatura.validateFiscalReadiness(baseInvoicePayload(), {
+      accessToken: 'token',
+    });
+
+    expect(result.ok).toBe(false);
+    expect(result.checks).toContainEqual(
+      expect.objectContaining({
+        code: 'transmitter.taxpayer_valid',
+        details: 'registry timeout',
+        status: 'failed',
+      }),
+    );
+  });
 });
 
 function taxpayerClient(calls: string[]): TaxpayerRegistryClient {
