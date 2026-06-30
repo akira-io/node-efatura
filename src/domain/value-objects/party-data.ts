@@ -7,6 +7,7 @@ import { type TaxIdData, taxIdDataFrom, taxIdDataSchema } from './tax-id';
 
 export interface PartyData {
   reference: 'EP' | 'RP' | null;
+  fiscalFramework: string | null;
   taxId: TaxIdData | null;
   name: string | null;
   address: AddressData | null;
@@ -16,6 +17,7 @@ export interface PartyData {
 export const partyDataSchema = z
   .object({
     reference: z.preprocess(normalizeReference, z.enum(['EP', 'RP']).nullable()),
+    fiscalFramework: z.preprocess(normalizeFiscalFramework, z.string().min(1).max(50).nullable()),
     taxId: taxIdDataSchema.nullable(),
     name: z.preprocess(normalizeOptionalText, z.string().min(3).max(150).nullable()),
     address: z.custom<AddressData>().nullable(),
@@ -40,6 +42,7 @@ export function partyDataFrom(data: Record<string, unknown>, prefix = ''): Party
   const taxId = taxIdDataFrom(data.taxId, field('taxId'));
   const result = partyDataSchema.safeParse({
     reference: data.reference,
+    fiscalFramework: data.fiscalFramework,
     taxId,
     name: data.name,
     address: addressDataFrom(data.address, field('address')),
@@ -68,4 +71,8 @@ function normalizeReference(value: unknown): 'EP' | 'RP' | null {
   }
 
   return null;
+}
+
+function normalizeFiscalFramework(value: unknown): string | null {
+  return optionalText(value)?.toUpperCase() ?? null;
 }

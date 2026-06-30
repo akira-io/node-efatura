@@ -10,6 +10,7 @@ export function assertInvoiceFiscalRules(invoice: InvoiceData): void {
   assertEmitterContacts(invoice);
   assertLineIds(invoice.lines);
   assertLineTaxes(invoice);
+  assertRempeInvoiceTaxCodes(invoice);
   assertTotals(invoice);
 }
 
@@ -124,6 +125,29 @@ function requiresLineTaxes(type: DocumentType): boolean {
   ];
 
   return !optionalTaxTypes.includes(type);
+}
+
+function assertRempeInvoiceTaxCodes(invoice: InvoiceData): void {
+  if (
+    invoice.type !== DocumentType.ElectronicInvoice ||
+    invoice.emitter.fiscalFramework !== 'REMPE'
+  ) {
+    return;
+  }
+
+  invoice.lines.forEach((line, lineIndex) => {
+    line.taxes.forEach((tax, taxIndex) => {
+      if (tax.taxTypeCode === TaxTypeCode.NotApplicable) {
+        return;
+      }
+
+      throw new EfaturaValidationError(
+        `lines.${lineIndex}.taxes.${taxIndex}.taxTypeCode`,
+        'REMPE emitter invoices must use NA tax code.',
+        'tax.rempe_invoice_requires_na',
+      );
+    });
+  });
 }
 
 function lineSign(line: LineItemData): number {

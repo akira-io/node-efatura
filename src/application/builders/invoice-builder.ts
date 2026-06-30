@@ -2,6 +2,7 @@ import type { DocumentType } from '../../domain/enums/document-type';
 import type { InvoiceData } from '../../domain/value-objects/invoice-data';
 
 export type PartyInput = {
+  fiscalFramework?: string | null;
   taxId: {
     countryCode: string;
     value: string;

@@ -21,6 +21,7 @@ export interface EfaturaEmitterTaxIdConfig {
 
 export interface EfaturaEmitterConfig {
   reference?: string | number | null;
+  fiscalFramework?: string | number | null;
   taxId?: EfaturaEmitterTaxIdConfig | null;
   name?: string | number | null;
   address?: Record<string, unknown> | null;
