@@ -7,6 +7,7 @@ export default defineConfig({
     'fastify/index': 'src/presentation/fastify/index.ts',
     'nest/index': 'src/presentation/nest/index.ts',
     'storage/knex/index': 'src/infrastructure/storage/knex/index.ts',
+    'storage/prisma/index': 'src/infrastructure/storage/prisma/index.ts',
   },
   format: ['esm', 'cjs'],
   dts: {
@@ -16,6 +17,7 @@ export default defineConfig({
       'fastify/index': 'src/presentation/fastify/index.ts',
       'nest/index': 'src/presentation/nest/index.ts',
       'storage/knex/index': 'src/infrastructure/storage/knex/index.ts',
+      'storage/prisma/index': 'src/infrastructure/storage/prisma/index.ts',
     },
   },
   sourcemap: true,

@@ -26,6 +26,11 @@
       "import": "./dist/storage/knex/index.js",
       "require": "./dist/storage/knex/index.cjs"
     },
+    "./prisma": {
+      "types": "./dist/storage/prisma/index.d.ts",
+      "import": "./dist/storage/prisma/index.js",
+      "require": "./dist/storage/prisma/index.cjs"
+    },
     "./express": {
       "types": "./dist/express/index.d.ts",
       "import": "./dist/express/index.js",
@@ -46,6 +51,7 @@
     "assets",
     "dist",
     "docs",
+    "prisma",
     "resources",
     "README.md",
     "LICENSE.md",
@@ -67,6 +73,8 @@
     "@commitlint/config-conventional": "^20.4.1",
     "@nestjs/common": "^11.1.27",
     "@nestjs/core": "^11.1.27",
+    "@prisma/adapter-better-sqlite3": "^7.8.0",
+    "@prisma/client": "^7.8.0",
     "@types/express": "^5.0.6",
     "@types/node": "^22.10.0",
     "@types/pdfkit": "^0.17.3",
@@ -77,6 +85,7 @@
     "express": "^5.2.1",
     "fastify": "^5.8.5",
     "knex": "^3.3.0",
+    "prisma": "^7.8.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
     "supertest": "^7.1.0",
@@ -95,6 +104,7 @@
   "peerDependencies": {
     "@nestjs/common": ">=10",
     "@nestjs/core": ">=10",
+    "@prisma/client": ">=5",
     "express": ">=4.18",
     "fastify": ">=4",
     "knex": ">=3",
@@ -105,6 +115,9 @@
       "optional": true
     },
     "@nestjs/core": {
+      "optional": true
+    },
+    "@prisma/client": {
       "optional": true
     },
     "express": {
@@ -119,5 +132,11 @@
     "reflect-metadata": {
       "optional": true
     }
-  }
+  },
+  "trustedDependencies": [
+    "@prisma/adapter-better-sqlite3",
+    "@prisma/client",
+    "better-sqlite3",
+    "prisma"
+  ]
 }

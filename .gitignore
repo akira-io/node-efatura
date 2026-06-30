@@ -6,3 +6,5 @@ npm-debug.log
 yarn-error.log
 bun-debug.log
 /docs/superpowers
+/tests/prisma/schema.prisma
+/tests/prisma/*.db

@@ -1,0 +1,7 @@
+// @akira-io/efatura sequence store model. Copy into your schema.prisma, then migrate.
+model EfaturaSequence {
+  id            String   @id
+  currentNumber BigInt
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
