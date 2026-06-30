@@ -24,17 +24,19 @@ The package ships runtime dependencies for validation and DFA PDF generation:
 - `pdfkit`, for the default DFA PDF renderer.
 - `qrcode`, for DFA QR Code images.
 - `xml-crypto` and `@xmldom/xmldom`, for XML canonicalization and parsing.
-- `knex`, for optional database-backed document sequence storage.
 
 The default XSD validator uses `xmllint`. On macOS it is available through the system `libxml2` tools.
 
-Framework adapters are optional peer dependencies. Install only the framework you use:
+Framework adapters and ORM-backed storage are optional peer dependencies. Install only what you use:
 
 ```bash
 bun add express
 bun add fastify
 bun add @nestjs/common @nestjs/core reflect-metadata
+bun add knex
 ```
+
+`knex` is only required for the database-backed sequence store at `@akira-io/efatura/knex`. The in-memory and file sequence stores ship in the root entry and need no extra dependency.
 
 ## Import
 
