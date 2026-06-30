@@ -4,7 +4,8 @@ import { join } from 'node:path';
 import knexFactory, { type Knex } from 'knex';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { DocumentType } from '../src/domain/enums/document-type';
-import { FileSequenceStore, KnexSequenceStore } from '../src/infrastructure';
+import { FileSequenceStore } from '../src/infrastructure';
+import { KnexSequenceStore } from '../src/infrastructure/storage/knex';
 
 describe('KnexSequenceStore', () => {
   let knex: Knex;
