@@ -173,7 +173,6 @@ export {
   FileSequenceStore,
   InMemoryGoldenVectorRepository,
   InMemorySequenceStore,
-  KnexSequenceStore,
   MissingOfficialXsdValidator,
   MissingXadesBesSigner,
   normalizePlatformSubmissionResult,

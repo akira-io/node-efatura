@@ -1,5 +1,5 @@
 import type { Knex } from 'knex';
-import type { SequenceScope, SequenceStore } from '../../core/contracts';
+import type { SequenceScope, SequenceStore } from '../../../core/contracts';
 
 export interface KnexSequenceStoreOptions {
   tableName?: string;

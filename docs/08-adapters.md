@@ -64,6 +64,30 @@ export class AppModule {}
 
 For Nest, use the standard guard system in the application that imports `EfaturaModule`. A route-specific guard or an `APP_GUARD` provider must reject unauthenticated requests before they reach the adapter controller.
 
+## Storage
+
+Document sequence stores implement the `SequenceStore` contract. The zero-dependency stores ship in the root entry:
+
+```ts
+import { InMemorySequenceStore, FileSequenceStore } from '@akira-io/efatura';
+
+const sequenceStore = new FileSequenceStore('storage/efatura-sequences.json');
+```
+
+ORM-backed stores live behind their own subpath so the driver stays an optional peer dependency. The knex store is at `@akira-io/efatura/knex`:
+
+```ts
+import knex from 'knex';
+import { KnexSequenceStore } from '@akira-io/efatura/knex';
+
+const database = knex({ client: 'pg', connection: process.env.DATABASE_URL });
+const sequenceStore = new KnexSequenceStore(database);
+
+await sequenceStore.ensureSchema();
+```
+
+Pass the resulting store as the `sequenceStore` dependency to `createEfatura`. Install only the driver you use; the root entry never pulls in `knex`.
+
 ## Routes
 
 Adapters expose the same route set:

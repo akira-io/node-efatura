@@ -24,9 +24,9 @@ import {
 import { InMemoryGoldenVectorRepository } from '../infrastructure/golden-vectors/in-memory-golden-vector-repository';
 import { FetchMiddlewareTransport } from '../infrastructure/middleware/fetch-middleware-transport';
 import { FetchPlatformTransport } from '../infrastructure/middleware/fetch-platform-transport';
-import { InMemorySequenceStore } from '../infrastructure/sequence/in-memory-sequence-store';
 import { OpensslCertificateValidator } from '../infrastructure/signing/openssl-certificate-validator';
 import { XadesBesSigner } from '../infrastructure/signing/xades-bes-signer';
+import { InMemorySequenceStore } from '../infrastructure/storage/in-memory-sequence-store';
 import { XmllintXsdValidator } from '../infrastructure/validation/xmllint-xsd-validator';
 import type { EfaturaDependencies } from './efatura-options';
 

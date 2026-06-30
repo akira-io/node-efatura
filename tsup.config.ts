@@ -6,6 +6,7 @@ export default defineConfig({
     'express/index': 'src/presentation/express/index.ts',
     'fastify/index': 'src/presentation/fastify/index.ts',
     'nest/index': 'src/presentation/nest/index.ts',
+    'storage/knex/index': 'src/infrastructure/storage/knex/index.ts',
   },
   format: ['esm', 'cjs'],
   dts: {
@@ -14,6 +15,7 @@ export default defineConfig({
       'express/index': 'src/presentation/express/index.ts',
       'fastify/index': 'src/presentation/fastify/index.ts',
       'nest/index': 'src/presentation/nest/index.ts',
+      'storage/knex/index': 'src/infrastructure/storage/knex/index.ts',
     },
   },
   sourcemap: true,

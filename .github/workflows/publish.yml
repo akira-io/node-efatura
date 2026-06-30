@@ -64,4 +64,9 @@ jobs:
 
       - name: Publish to npm
         if: steps.version_check.outputs.skip != 'true'
-        run: npx -y npm@11 publish --access public --provenance
+        run: |
+          if [[ "${GITHUB_REF_NAME}" == *-* ]]; then
+            npx -y npm@11 publish --access public --provenance --tag beta
+          else
+            npx -y npm@11 publish --access public --provenance
+          fi
