@@ -30,10 +30,14 @@ beforeAll(async () => {
   await writeFile(schemaPath, `${header}${fragment}`);
 
   execFileSync('bunx', ['prisma', 'generate', `--schema=${schemaPath}`], { stdio: 'pipe' });
-  execFileSync('bunx', ['prisma', 'db', 'push', `--schema=${schemaPath}`, '--force-reset', `--url=file:${dbPath}`], {
-    stdio: 'pipe',
-    env: { ...process.env, PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION: 'yes' },
-  });
+  execFileSync(
+    'bunx',
+    ['prisma', 'db', 'push', `--schema=${schemaPath}`, '--force-reset', `--url=file:${dbPath}`],
+    {
+      stdio: 'pipe',
+      env: { ...process.env, PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION: 'yes' },
+    },
+  );
 
   const { PrismaClient } = await import('@prisma/client');
   const { PrismaBetterSqlite3 } = await import('@prisma/adapter-better-sqlite3');
@@ -92,7 +96,10 @@ describe('PrismaSequenceStore', () => {
     const store = new PrismaSequenceStore(prisma.efaturaSequence);
 
     await prisma.efaturaSequence.create({
-      data: { id: `${scope.nif}:${scope.year}:${scope.led}:${scope.documentType}`, currentNumber: 3_000_000_000n },
+      data: {
+        id: `${scope.nif}:${scope.year}:${scope.led}:${scope.documentType}`,
+        currentNumber: 3_000_000_000n,
+      },
     });
 
     await expect(store.next(scope)).resolves.toBe(3_000_000_001);

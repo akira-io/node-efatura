@@ -26,6 +26,11 @@
       "import": "./dist/storage/knex/index.js",
       "require": "./dist/storage/knex/index.cjs"
     },
+    "./prisma": {
+      "types": "./dist/storage/prisma/index.d.ts",
+      "import": "./dist/storage/prisma/index.js",
+      "require": "./dist/storage/prisma/index.cjs"
+    },
     "./express": {
       "types": "./dist/express/index.d.ts",
       "import": "./dist/express/index.js",
@@ -46,6 +51,7 @@
     "assets",
     "dist",
     "docs",
+    "prisma",
     "resources",
     "README.md",
     "LICENSE.md",
@@ -127,5 +133,9 @@
       "optional": true
     }
   },
-  "trustedDependencies": ["@prisma/adapter-better-sqlite3", "@prisma/client", "prisma"]
+  "trustedDependencies": [
+    "@prisma/adapter-better-sqlite3",
+    "@prisma/client",
+    "prisma"
+  ]
 }
