@@ -6,7 +6,6 @@
       "name": "@akira-io/efatura",
       "dependencies": {
         "@xmldom/xmldom": "^0.9.10",
-        "knex": "^3.3.0",
         "pdfkit": "^0.17.2",
         "qrcode": "^1.5.4",
         "xml-crypto": "^6.1.2",
@@ -27,6 +26,7 @@
         "better-sqlite3": "^12.11.1",
         "express": "^5.2.1",
         "fastify": "^5.8.5",
+        "knex": "^3.3.0",
         "reflect-metadata": "^0.2.2",
         "rxjs": "^7.8.2",
         "supertest": "^7.1.0",
@@ -39,6 +39,7 @@
         "@nestjs/core": ">=10",
         "express": ">=4.18",
         "fastify": ">=4",
+        "knex": ">=3",
         "reflect-metadata": ">=0.2",
       },
       "optionalPeers": [
@@ -46,6 +47,7 @@
         "@nestjs/core",
         "express",
         "fastify",
+        "knex",
         "reflect-metadata",
       ],
     },

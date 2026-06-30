@@ -14,10 +14,10 @@ export {
   normalizeSubmissionResult,
   parseServiceBody,
 } from './middleware/response-parser';
-export { FileSequenceStore } from './storage/file-sequence-store';
-export { InMemorySequenceStore } from './storage/in-memory-sequence-store';
 export { MissingXadesBesSigner } from './signing/missing-xml-signer';
 export { OpensslCertificateValidator } from './signing/openssl-certificate-validator';
 export { XadesBesSigner } from './signing/xades-bes-signer';
+export { FileSequenceStore } from './storage/file-sequence-store';
+export { InMemorySequenceStore } from './storage/in-memory-sequence-store';
 export { MissingOfficialXsdValidator } from './validation/missing-xsd-validator';
 export { resolveDefaultSchemaPath, XmllintXsdValidator } from './validation/xmllint-xsd-validator';
