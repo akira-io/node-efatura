@@ -88,7 +88,7 @@ await sequenceStore.ensureSchema();
 
 Pass the resulting store as the `sequenceStore` dependency to `createEfatura`. Install only the driver you use; the root entry never pulls in `knex`.
 
-The Prisma store lives at `@akira-io/efatura/prisma`. Prisma generates its client from your own `schema.prisma`, so copy the shipped model into your schema, then migrate. The model fragment ships at `node_modules/@akira-io/efatura/prisma/efatura-sequence.prisma`:
+The Prisma store lives at `@akira-io/efatura/prisma`. Prisma generates its client from your own `schema.prisma`, so copy the shipped model into your schema, then migrate. The model fragment ships at `node_modules/@akira-io/efatura/resources/prisma/efatura-sequence.prisma`:
 
 ```prisma
 model EfaturaSequence {

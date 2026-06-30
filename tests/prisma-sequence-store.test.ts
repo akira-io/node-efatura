@@ -15,7 +15,10 @@ let prisma: any;
 beforeAll(async () => {
   await mkdir(schemaDirectory, { recursive: true });
 
-  const fragment = await readFile(join(process.cwd(), 'prisma', 'efatura-sequence.prisma'), 'utf8');
+  const fragment = await readFile(
+    join(process.cwd(), 'resources', 'prisma', 'efatura-sequence.prisma'),
+    'utf8',
+  );
   const header = [
     'generator client {',
     '  provider = "prisma-client-js"',
