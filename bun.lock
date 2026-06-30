@@ -59,6 +59,7 @@
   },
   "trustedDependencies": [
     "@prisma/adapter-better-sqlite3",
+    "better-sqlite3",
     "@prisma/client",
     "prisma",
   ],
