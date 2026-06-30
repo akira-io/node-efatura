@@ -2,7 +2,7 @@ import { createVerify } from 'node:crypto';
 import { rm } from 'node:fs/promises';
 import { DOMParser } from '@xmldom/xmldom';
 import { describe, expect, it } from 'vitest';
-import { C14nCanonicalization } from 'xml-crypto';
+import { C14nCanonicalization, findAncestorNs, SignedXml } from 'xml-crypto';
 import { createEfatura } from '../src/create-efatura';
 import { DocumentType } from '../src/domain/enums/document-type';
 import { EfaturaValidationError } from '../src/domain/errors';
@@ -44,6 +44,7 @@ describe('XAdES-BES signing', () => {
       expect(signed.profile).toBe('XAdES-BES');
       expect(signed.xml).toContain('<xades:SignedProperties');
       expect(verifySignatureValue(signed.xml, fixture.certificate)).toBe(true);
+      expect(verifySignedReferences(signed.xml, fixture.certificate)).toBe(true);
       await expect(
         efatura.validateDfeXml(signed.xml, DocumentType.ElectronicInvoice),
       ).resolves.toEqual({ valid: true, errors: [] });
@@ -65,16 +66,35 @@ function config() {
 }
 
 function verifySignatureValue(xml: string, certificate: string): boolean {
-  const signedInfo = matchXml(xml, 'ds:SignedInfo');
+  const document = new DOMParser().parseFromString(xml, 'application/xml');
+  const signedInfo = document.getElementsByTagName('ds:SignedInfo')[0];
   const signatureValue = matchText(xml, 'ds:SignatureValue').replace(/\s+/g, '');
-  const node = new DOMParser().parseFromString(signedInfo, 'application/xml').documentElement;
-  const canonicalSignedInfo = String(new C14nCanonicalization().process(node, {}));
+  const canonicalSignedInfo = String(
+    new C14nCanonicalization().process(signedInfo, {
+      ancestorNamespaces: findAncestorNs(document, "//*[local-name()='SignedInfo']"),
+    }),
+  );
   const verifier = createVerify('RSA-SHA256');
 
   verifier.update(canonicalSignedInfo);
   verifier.end();
 
   return verifier.verify(certificate, signatureValue, 'base64');
+}
+
+function verifySignedReferences(xml: string, certificate: string): boolean {
+  const document = new DOMParser().parseFromString(xml, 'application/xml');
+  const signature = document.getElementsByTagName('ds:Signature')[0];
+
+  if (!signature) {
+    throw new Error('ds:Signature not found.');
+  }
+
+  const verifier = new SignedXml({ publicCert: certificate });
+
+  verifier.loadSignature(signature);
+
+  return verifier.checkSignature(xml);
 }
 
 function matchText(xml: string, elementName: string): string {
@@ -85,14 +105,4 @@ function matchText(xml: string, elementName: string): string {
   }
 
   return match[1];
-}
-
-function matchXml(xml: string, elementName: string): string {
-  const match = new RegExp(`<${elementName}[^>]*>[\\s\\S]*?</${elementName}>`).exec(xml);
-
-  if (!match?.[0]) {
-    throw new Error(`${elementName} not found.`);
-  }
-
-  return match[0];
 }

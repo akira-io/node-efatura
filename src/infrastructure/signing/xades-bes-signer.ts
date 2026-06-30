@@ -1,9 +1,9 @@
 import { createHash, createSign, X509Certificate } from 'node:crypto';
 import { DOMParser } from '@xmldom/xmldom';
-import { C14nCanonicalization } from 'xml-crypto';
 import { escapeAttribute, escapeXml } from '../../application/xml/dfe-xml-fragments';
 import type { SignedXmlResult, XmlSigner, XmlSigningOptions } from '../../core/contracts';
 import { EfaturaValidationError } from '../../domain/errors';
+import { canonicalizeSignedInfo, digestSignedReference } from './xml-dsig-references';
 
 const C14N_ALGORITHM = 'http://www.w3.org/TR/2001/REC-xml-c14n-20010315';
 const DIGEST_ALGORITHM = 'http://www.w3.org/2001/04/xmlenc#sha256';
@@ -25,15 +25,32 @@ export class XadesBesSigner implements XmlSigner {
     const root = rootInfo(xml);
     const ids = signatureIds(options);
     const referenceUri = options.referenceUri ?? `#${root.id}`;
-    const dataDigest = sha256Base64(canonicalize(xml));
     const signedProperties = signedPropertiesXml(
       certificate,
       ids,
       signingTime(options.signingTime),
     );
-    const signedPropertiesDigest = sha256Base64(canonicalize(signedProperties));
+    const referenceSignatureXml = fullSignatureXml(ids, '', '', certificate, signedProperties);
+    const referenceDocumentXml = insertSignature(xml, root.name, referenceSignatureXml);
+    const dataDigest = digestSignedReference(referenceDocumentXml, referenceUri, {
+      removeSignatures: true,
+    });
+    const signedPropertiesDigest = digestSignedReference(
+      referenceDocumentXml,
+      `#${ids.signedPropertiesId}`,
+    );
     const signedInfo = signedInfoXml(ids, referenceUri, dataDigest, signedPropertiesDigest);
-    const signatureValue = signCanonicalXml(canonicalize(signedInfo), privateKey);
+    const unsignedSignatureXml = fullSignatureXml(
+      ids,
+      signedInfo,
+      '',
+      certificate,
+      signedProperties,
+    );
+    const canonicalSignedInfo = canonicalizeSignedInfo(
+      insertSignature(xml, root.name, unsignedSignatureXml),
+    );
+    const signatureValue = signCanonicalXml(canonicalSignedInfo, privateKey);
     const signatureXml = fullSignatureXml(
       ids,
       signedInfo,
@@ -145,12 +162,6 @@ function fullSignatureXml(
   )}</ds:X509Certificate></ds:X509Data></ds:KeyInfo><ds:Object><xades:QualifyingProperties xmlns:xades="${XADES_NAMESPACE}" Target="#${escapeAttribute(
     ids.signatureId,
   )}">${signedProperties}</xades:QualifyingProperties></ds:Object></ds:Signature>`;
-}
-
-function canonicalize(xml: string): string {
-  const node = new DOMParser().parseFromString(xml, 'application/xml').documentElement;
-
-  return String(new C14nCanonicalization().process(node, {}));
 }
 
 function sha256Base64(value: string | Buffer): string {
