@@ -186,8 +186,8 @@ function statusCheck(
 ): FiscalReadinessCheck {
   return {
     code,
-    status: passed && issues.length === 0 ? 'passed' : 'failed',
-    message: passed && issues.length === 0 ? passedMessage : (issues[0]?.message ?? failedMessage),
+    status: passed ? 'passed' : 'failed',
+    message: passed ? passedMessage : (issues[0]?.message ?? failedMessage),
     field: issues[0]?.field,
     details: issues[0]?.details,
     raw,

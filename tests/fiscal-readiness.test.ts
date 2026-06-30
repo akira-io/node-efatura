@@ -59,6 +59,25 @@ describe('fiscal readiness', () => {
       }),
     );
   });
+
+  it('keeps a passing check passed when only informational issues are present', async () => {
+    const efatura = createEfatura(config(), {
+      taxpayerRegistryClient: taxpayerClient([]),
+      softwareRegistryClient: {
+        async lookupSoftware() {
+          return { registered: true, issues: [{ message: 'Informational note.' }] };
+        },
+      },
+      emitterAuthorizationClient: authorizationClient(true),
+    });
+    const result = await efatura.validateFiscalReadiness(baseInvoicePayload(), {
+      accessToken: 'token',
+    });
+    const software = result.checks.find((check) => check.code === 'software.registered');
+
+    expect(software?.status).toBe('passed');
+    expect(result.ok).toBe(true);
+  });
 });
 
 function taxpayerClient(calls: string[]): TaxpayerRegistryClient {
