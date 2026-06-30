@@ -88,6 +88,31 @@ await sequenceStore.ensureSchema();
 
 Pass the resulting store as the `sequenceStore` dependency to `createEfatura`. Install only the driver you use; the root entry never pulls in `knex`.
 
+The Prisma store lives at `@akira-io/efatura/prisma`. Prisma generates its client from your own `schema.prisma`, so copy the shipped model into your schema, then migrate. The model fragment ships at `node_modules/@akira-io/efatura/prisma/efatura-sequence.prisma`:
+
+```prisma
+model EfaturaSequence {
+  id            String   @id
+  currentNumber BigInt
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+```
+
+On Prisma 5.15+ with a `prisma/schema/` folder, copy the whole file into it. Otherwise paste the model block into your `schema.prisma`. Then run your migration (`prisma migrate dev` or `prisma db push`).
+
+```ts
+import { PrismaClient } from '@prisma/client';
+import { PrismaSequenceStore } from '@akira-io/efatura/prisma';
+
+const prisma = new PrismaClient();
+const sequenceStore = new PrismaSequenceStore(prisma.efaturaSequence);
+```
+
+Prisma 7+ requires a driver adapter when constructing `PrismaClient`; configure it according to your Prisma setup before passing the client here.
+
+Pass `sequenceStore` to `createEfatura`. `next()` is gap-free where the database performs a native upsert (Postgres, MySQL, SQLite). Switching the sequence-store adapter does not transfer counters automatically; migrate the data once, or sequence numbers reset.
+
 ## Routes
 
 Adapters expose the same route set:
