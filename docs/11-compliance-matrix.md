@@ -8,7 +8,7 @@ This matrix tracks implementation coverage against the official e-Fatura v11 man
 | Manual 6.2 | XML must be UTF-8 and compact. | local | done | `buildDfeXml` | `tests/xml.test.ts` | Generates XML without pretty-print whitespace. |
 | Manual 6.2 | DFE root has `Version`, `Id`, and `DocumentTypeCode`. | xsd | done | `buildDfeXml` | `tests/xml.test.ts` | Root namespace is `urn:cv:efatura:xsd:v1.0`. |
 | Manual 6.2.2 | IUD has 45 characters and Luhn check digit. | local | done | `buildIud`, `validateIud` | `tests/iud.test.ts` | Luhn is for IUD, not NIF. |
-| Manual 6.3.1 | CV NIF format is `[1-9][0-9]{8}`. | local | done | `tax-id` value object | `tests/validation.test.ts` | Existence is PE/DNRE external validation. |
+| Manual 6.3.1 | CV NIF format is `[1-9][0-9]{8}`. | local | done | `tax-id` value object | `tests/validation.test.ts` | Existence is PE and DNRE external validation. |
 | Manual 6.3 | Party, address, contacts, payments, references, transport and rent receipt are structured fields. | local | done | domain value objects, reserved `ExtraFields` names | `tests/validation.test.ts` | Known official fields are first-class schemas and cannot be injected through `ExtraFields`. |
 | Manual 7.2 | Emitter party is mandatory and must include CV NIF, name, address, email and phone/mobile. | local | done | `invoice-fiscal-rules`, `dfe-party-xml` | `tests/official-rules.test.ts`, `tests/xml.test.ts` | Registry existence is external. |
 | Manual 7.2 | Receiver party rules vary by DFE type and threshold. | local | done | `documents`, `invoice-data` | `tests/validation.test.ts` | External NIF existence is separate. |

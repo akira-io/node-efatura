@@ -41,6 +41,8 @@ HTTP adapters use shared Zod schemas before calling the facade:
 - `eventXmlRequestSchema`
 - `dfeZipFileSchema`
 - `dfeZipRequestSchema`
+- `fiscalReadinessRequestSchema`
+- `dfaRenderRequestSchema`
 
 Adapters reject malformed payloads with `EfaturaValidationError` and do not place HTTP-specific validation in the domain or core layers.
 
@@ -63,6 +65,6 @@ The domain validates the rules that are cheap to catch before XSD validation:
 
 ## Fiscal Readiness
 
-`validateFiscalReadiness(invoice, options)` composes local invoice validation with optional PE/DNRE checks through core contracts. It validates taxpayer registry status, registered software, and emitter authorization when `options.accessToken` is provided. Without an access token, external checks are reported as `skipped`.
+`validateFiscalReadiness(invoice, options)` composes local invoice validation with optional PE and DNRE checks through core contracts. It validates taxpayer registry status, registered software, and emitter authorization when `options.accessToken` is provided. Without an access token, external checks are reported as `skipped`.
 
-Live PE/DNRE readiness tests are skipped by default. Run them only with `EFATURA_LIVE_TESTS=1` plus `EFATURA_LIVE_ACCESS_TOKEN`, `EFATURA_LIVE_BASE_URL`, taxpayer NIFs, and software identity environment variables.
+Live PE and DNRE readiness tests are skipped by default. Run them only with `EFATURA_LIVE_TESTS=1` plus `EFATURA_LIVE_ACCESS_TOKEN`, `EFATURA_LIVE_BASE_URL`, taxpayer NIFs, and software identity environment variables.

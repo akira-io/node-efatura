@@ -2,6 +2,8 @@
 
 This Svelte example builds DFE XML and opens the DFA PDF through the Fastify adapter. It assumes the adapter is available at the same authenticated boundary as the rest of the application.
 
+The `createInvoice` helper is shown in [Fastify Invoice Payload](invoice.md).
+
 ```svelte
 <script lang="ts">
   import { createInvoice } from './invoice';
@@ -30,7 +32,14 @@ This Svelte example builds DFE XML and opens the DFA PDF through the Fastify ada
     error = null;
 
     try {
-      const currentXml = xml || (await postJson<{ xml: string }>('/dfe/xml', { invoice })).xml;
+      const currentXml =
+        xml ||
+        (
+          await postJson<{ xml: string }>('/dfe/xml', {
+            invoice,
+            options: { documentNumber: 1 },
+          })
+        ).xml;
       const iud = requireIud(currentXml);
       const pdf = await postBinary('/dfa', {
         iud,

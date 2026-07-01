@@ -34,9 +34,12 @@ bun add express
 bun add fastify
 bun add @nestjs/common @nestjs/core reflect-metadata
 bun add knex
+bun add prisma @prisma/client
 ```
 
 `knex` is only required for the database-backed sequence store at `@akira-io/efatura/knex`. The in-memory and file sequence stores ship in the root entry and need no extra dependency.
+
+`prisma` and `@prisma/client` are only required for the Prisma-backed sequence store at `@akira-io/efatura/prisma`.
 
 ## Import
 

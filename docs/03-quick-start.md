@@ -31,7 +31,7 @@ const invoice = efatura
   .issueDate('2026-02-08')
   .receiver({ taxId: { countryCode: 'CV', value: '900800700' }, name: 'Receiver' })
   .line({
-    quantity: { value: 1, unitCode: 'EA' },
+    quantity: { value: 1, unitCode: 'UN' },
     price: 1000,
     priceExtension: 1000,
     netTotal: 1000,

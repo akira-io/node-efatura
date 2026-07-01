@@ -87,7 +87,7 @@ const invoice = efatura
   .issueDate('2026-02-08')
   .receiver({ taxId: { countryCode: 'CV', value: '900800700' }, name: 'Receiver' })
   .line({
-    quantity: { value: 1, unitCode: 'EA' },
+    quantity: { value: 1, unitCode: 'UN' },
     price: 1000,
     priceExtension: 1000,
     netTotal: 1000,
@@ -119,8 +119,16 @@ console.log(invoice.id);
 - [Validation And Zod](docs/06-validation-zod.md)
 - [Packaging](docs/07-packaging.md)
 - [Adapters](docs/08-adapters.md)
+- [Storage](docs/09-storage.md)
 - [Architecture](docs/10-architecture.md)
 - [Compliance Matrix](docs/11-compliance-matrix.md)
+- [API Reference](docs/12-api-reference.md)
+- [Workflows](docs/13-workflows.md)
+- [DFA](docs/14-dfa.md)
+- [Events](docs/15-events.md)
+- [Signing And Certificates](docs/16-signing-certificates.md)
+- [Troubleshooting](docs/17-troubleshooting.md)
+- [Fastify server and SPA examples](docs/examples/fastify/server.md)
 - API reference: https://www.npmjs.com/package/@akira-io/efatura
 
 ## Testing
@@ -129,7 +137,7 @@ console.log(invoice.id);
 bun run test
 ```
 
-Live PE/DNRE readiness tests are skipped by default. Enable them with `EFATURA_LIVE_TESTS=1` and the required `EFATURA_LIVE_*` credentials documented in [Configuration](docs/02-configuration.md).
+Live PE and DNRE readiness tests are skipped by default. Enable them with `EFATURA_LIVE_TESTS=1` and the required `EFATURA_LIVE_*` credentials documented in [Configuration](docs/02-configuration.md).
 
 ## Changelog
 

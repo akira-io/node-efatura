@@ -66,74 +66,9 @@ For Nest, use the standard guard system in the application that imports `Efatura
 
 ## Storage
 
-Document sequence stores implement the `SequenceStore` contract. The zero-dependency stores ship in the root entry:
+Adapters do not own fiscal numbering. Configure the `SequenceStore` dependency on the shared `Efatura` instance before mounting any HTTP adapter.
 
-```ts
-import { InMemorySequenceStore, FileSequenceStore } from '@akira-io/efatura';
-
-const sequenceStore = new FileSequenceStore('storage/efatura-sequences.json');
-```
-
-ORM-backed stores live behind their own subpath so the driver stays an optional peer dependency. The knex store is at `@akira-io/efatura/knex`:
-
-```ts
-import knex from 'knex';
-import { KnexSequenceStore } from '@akira-io/efatura/knex';
-
-const database = knex({ client: 'pg', connection: process.env.DATABASE_URL });
-const sequenceStore = new KnexSequenceStore(database);
-
-await sequenceStore.ensureSchema();
-```
-
-Pass the resulting store as the `sequenceStore` dependency to `createEfatura`. Install only the driver you use; the root entry never pulls in `knex`.
-
-The Prisma store lives at `@akira-io/efatura/prisma`. Prisma generates its client from your own schema, so copy the shipped sequence model, then migrate:
-
-```sh
-npx @akira-io/efatura prisma
-```
-
-The command writes to `prisma/schema/efatura-sequence.prisma` by default for Prisma multi-file schemas. Use the options below for other layouts:
-
-```sh
-# Write to a custom path
-npx @akira-io/efatura prisma --out prisma/efatura-sequence.prisma
-
-# Append only model blocks to a single schema.prisma file
-npx @akira-io/efatura prisma --models-only --print >> prisma/schema.prisma
-
-# Print the shipped model without writing files
-npx @akira-io/efatura prisma --print
-
-# Replace an existing output file
-npx @akira-io/efatura prisma --force
-```
-
-The model fragment also ships at `node_modules/@akira-io/efatura/resources/prisma/efatura-sequence.prisma` if you need to copy it manually:
-
-```prisma
-model EfaturaSequence {
-  id            String   @id
-  currentNumber BigInt
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-}
-```
-
-Then run your migration (`prisma migrate dev` or `prisma db push`).
-
-```ts
-import { PrismaClient } from '@prisma/client';
-import { PrismaSequenceStore } from '@akira-io/efatura/prisma';
-
-const prisma = new PrismaClient();
-const sequenceStore = new PrismaSequenceStore(prisma.efaturaSequence);
-```
-
-Prisma 7+ requires a driver adapter when constructing `PrismaClient`; configure it according to your Prisma setup before passing the client here.
-
-Pass `sequenceStore` to `createEfatura`. `next()` is gap-free where the database performs a native upsert (Postgres, MySQL, SQLite). Switching the sequence-store adapter does not transfer counters automatically; migrate the data once, or sequence numbers reset.
+See [Storage](09-storage.md) for `InMemorySequenceStore`, `FileSequenceStore`, `KnexSequenceStore`, `PrismaSequenceStore`, the Prisma model copy command, and counter migration notes.
 
 ## Routes
 
@@ -145,12 +80,12 @@ Adapters expose the same route set:
 | `POST` | `/event/xml` | Build official Event XML for `FDC` or `UDN` events |
 | `POST` | `/dfe/zip` | Build a ZIP payload from `{ iud, xml }` files |
 | `POST` | `/dfe/submit/middleware` | Submit a ZIP payload through the configured middleware transport |
-| `POST` | `/dfe/validate/fiscal-readiness` | Validate local invoice rules plus optional PE/DNRE readiness checks |
+| `POST` | `/dfe/validate/fiscal-readiness` | Validate local invoice rules plus optional PE and DNRE readiness checks |
 | `POST` | `/dfa` | Render a DFA PDF from an IUD and optional invoice data |
 | `GET` | `/dfa/:iud` | Render a DFA PDF for an IUD |
 
 Request payloads are validated with the shared Zod schemas documented in [Validation And Zod](06-validation-zod.md).
 
-Fiscal readiness accepts `{ invoice, options }`. Without `options.accessToken`, external PE/DNRE checks return `skipped`; with a token, the configured fiscal authority clients validate taxpayers, registered software, and emitter authorization.
+Fiscal readiness accepts `{ invoice, options }`. Without `options.accessToken`, external PE and DNRE checks return `skipped`; with a token, the configured fiscal authority clients validate taxpayers, registered software, and emitter authorization.
 
 `POST /dfa` accepts `{ iud, invoice?, options? }`. When `invoice` is present, the adapter validates it before rendering and includes the fiscal header, parties, line summary, taxes, totals, QR Code, and contingency notice in the PDF. `options` supports `emissionMode`, `contingencyIuc`, `title`, and `currency`. `GET /dfa/:iud` remains available for IUD-only rendering.

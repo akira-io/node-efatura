@@ -2,6 +2,8 @@
 
 This example mounts the e-Fatura adapter under `/efatura`. Keep this route behind the same authentication boundary as the back-office or billing area that issues fiscal documents.
 
+Use [Fastify Invoice Payload](invoice.md) for a complete invoice object that can be posted to these routes from React, Vue, or Svelte.
+
 ```sh
 npm install fastify @fastify/cors @akira-io/efatura
 ```
