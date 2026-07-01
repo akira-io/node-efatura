@@ -30,7 +30,22 @@ export const fiscalReadinessRequestSchema = z.object({
     .default({}),
 });
 
+export const dfaRenderRequestSchema = z.object({
+  iud: z.string().min(1),
+  invoice: z.record(z.string(), z.unknown()).optional(),
+  options: z
+    .object({
+      emissionMode: z.enum(['Online', 'Offline', 'Off']).optional(),
+      contingencyIuc: z.string().min(1).optional(),
+      title: z.string().min(1).optional(),
+      currency: z.string().min(1).optional(),
+    })
+    .optional()
+    .default({}),
+});
+
 export type DfeXmlRequest = z.infer<typeof dfeXmlRequestSchema>;
 export type EventXmlRequest = z.infer<typeof eventXmlRequestSchema>;
 export type DfeZipRequest = z.infer<typeof dfeZipRequestSchema>;
 export type FiscalReadinessRequest = z.infer<typeof fiscalReadinessRequestSchema>;
+export type DfaRenderRequest = z.infer<typeof dfaRenderRequestSchema>;

@@ -75,6 +75,7 @@ describe('HTTP adapters', () => {
     await efaturaFastifyPlugin(fastify as never, { efatura, authorization });
 
     expect(routes).toContain('POST /dfe/xml');
+    expect(routes).toContain('POST /dfa');
     expect(routes).toContain('POST /event/xml');
     expect(routes).toContain('POST /dfe/validate/fiscal-readiness');
     expect(routeOptions).toContainEqual({ preHandler: [authorization] });

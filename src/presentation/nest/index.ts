@@ -19,6 +19,7 @@ import {
   handleBuildZip,
   handleFiscalReadiness,
   handleRenderDfa,
+  handleRenderDfaFromBody,
   handleSubmitMiddleware,
 } from '../shared/http';
 
@@ -56,6 +57,11 @@ export class EfaturaController {
   @Post('dfe/validate/fiscal-readiness')
   async validateFiscalReadiness(@Body() body: unknown, @Res() response: Response): Promise<void> {
     send(response, await handleFiscalReadiness(this.efatura, body));
+  }
+
+  @Post('dfa')
+  async renderDfaFromBody(@Body() body: unknown, @Res() response: Response): Promise<void> {
+    send(response, await handleRenderDfaFromBody(this.efatura, body));
   }
 
   @Get('dfa/:iud')

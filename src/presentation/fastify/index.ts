@@ -8,6 +8,7 @@ import {
   handleBuildZip,
   handleFiscalReadiness,
   handleRenderDfa,
+  handleRenderDfaFromBody,
   handleSubmitMiddleware,
 } from '../shared/http';
 
@@ -41,6 +42,9 @@ export async function efaturaFastifyPlugin(
   });
   fastify.post('/dfe/validate/fiscal-readiness', routeOptions, async (request, reply) => {
     send(reply, await handleFiscalReadiness(efatura, request.body));
+  });
+  fastify.post('/dfa', routeOptions, async (request, reply) => {
+    send(reply, await handleRenderDfaFromBody(efatura, request.body));
   });
   fastify.get('/dfa/:iud', routeOptions, async (request, reply) => {
     const params = request.params as { iud?: string };
