@@ -2,6 +2,8 @@
 
 This Vue example calls the Fastify adapter from a single page application. It uses browser credentials so the server can authorize the request through the application session.
 
+The `createInvoice` helper is shown in [Fastify Invoice Payload](invoice.md).
+
 ```vue
 <script setup lang="ts">
 import { computed, ref } from 'vue';
@@ -32,7 +34,13 @@ async function openDfa(): Promise<void> {
 
   try {
     const currentXml =
-      xml.value || (await postJson<{ xml: string }>('/dfe/xml', { invoice: invoice.value })).xml;
+      xml.value ||
+      (
+        await postJson<{ xml: string }>('/dfe/xml', {
+          invoice: invoice.value,
+          options: { documentNumber: 1 },
+        })
+      ).xml;
     const iud = requireIud(currentXml);
     const pdf = await postBinary('/dfa', {
       iud,

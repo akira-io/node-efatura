@@ -67,9 +67,9 @@ const efatura = createEfatura(config, {
 
 Defaults are concrete infrastructure implementations: OpenSSL-backed certificate validation, in-memory sequence storage, bundled XSD validation through `xmllint`, XAdES-BES signing, DFA PDF rendering, fetch-based transports, fiscal authority fetch clients, and in-memory golden vectors.
 
-Override `sequenceStore` for durable numbering. `FileSequenceStore` ships in the root entry; the database-backed `KnexSequenceStore` lives at `@akira-io/efatura/knex` so `knex` stays an optional peer dependency. See [Adapters](08-adapters.md#storage) for both.
+Override `sequenceStore` for durable numbering. `FileSequenceStore` ships in the root entry; database-backed stores live at `@akira-io/efatura/knex` and `@akira-io/efatura/prisma` so ORM dependencies stay optional. See [Storage](09-storage.md).
 
-Fiscal authority clients are used by `validateFiscalReadiness(invoice, options)`. External PE/DNRE checks require `options.accessToken`; without it, those checks return `skipped` so offline validation remains deterministic.
+Fiscal authority clients are used by `validateFiscalReadiness(invoice, options)`. External PE and DNRE checks require `options.accessToken`; without it, those checks return `skipped` so offline validation remains deterministic.
 
 Live fiscal readiness tests are opt-in. Set `EFATURA_LIVE_TESTS=1` with `EFATURA_LIVE_ACCESS_TOKEN`, `EFATURA_LIVE_BASE_URL`, `EFATURA_LIVE_TRANSMITTER_NIF`, `EFATURA_LIVE_EMITTER_NIF`, `EFATURA_LIVE_RECEIVER_NIF`, `EFATURA_LIVE_SOFTWARE_CODE`, `EFATURA_LIVE_SOFTWARE_NAME`, and `EFATURA_LIVE_SOFTWARE_VERSION`.
 

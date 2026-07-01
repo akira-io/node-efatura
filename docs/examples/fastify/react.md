@@ -2,6 +2,8 @@
 
 This React example posts invoice data to the Fastify adapter and opens the rendered DFA PDF. It assumes the Fastify route is protected by the application session and accepts browser requests from the React origin.
 
+The `createInvoice` helper is shown in [Fastify Invoice Payload](invoice.md).
+
 ```tsx
 import { useMemo, useState } from 'react';
 import { createInvoice } from './invoice';
@@ -32,7 +34,12 @@ export function EfaturaPreview(): JSX.Element {
     setError(null);
 
     try {
-      const currentXml = xml || (await postJson<{ xml: string }>('/dfe/xml', { invoice })).xml;
+      const currentXml =
+        xml ||
+        (await postJson<{ xml: string }>('/dfe/xml', {
+          invoice,
+          options: { documentNumber: 1 },
+        })).xml;
       const iud = requireIud(currentXml);
       const response = await postBinary('/dfa', {
         iud,
