@@ -16,3 +16,12 @@
 | 08 | [Adapters](08-adapters.md) | Express, Fastify, and Nest adapters |
 | 10 | [Architecture](10-architecture.md) | Clean architecture layout and dependency direction |
 | 11 | [Compliance Matrix](11-compliance-matrix.md) | Manual v11 and XML-XSD coverage status |
+
+## Examples
+
+| Example | Description |
+|---------|-------------|
+| [Fastify Server](examples/fastify/server.md) | Mount the Fastify adapter behind application authentication |
+| [React](examples/fastify/react.md) | Call the Fastify adapter from a React SPA |
+| [Vue](examples/fastify/vue.md) | Call the Fastify adapter from a Vue SPA |
+| [Svelte](examples/fastify/svelte.md) | Call the Fastify adapter from a Svelte SPA |
