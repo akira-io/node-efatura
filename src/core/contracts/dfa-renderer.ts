@@ -5,12 +5,18 @@ export interface DfaRenderInput {
   qrCodeUrl: string;
   title?: string;
   documentTypeCode?: number;
+  series?: string;
+  documentNumber?: string;
   issueDate?: string;
   issueTime?: string | null;
   issuerTaxId?: string;
   issuerName?: string;
+  issuerAddress?: string;
+  issuerContact?: string;
   customerTaxId?: string;
   customerName?: string;
+  customerAddress?: string;
+  customerContact?: string;
   lines?: DfaLineInput[];
   totals?: DfaTotalsInput;
   total?: number;
@@ -20,9 +26,11 @@ export interface DfaRenderInput {
 }
 
 export interface DfaLineInput {
+  code: string;
   description: string;
   quantity: number;
   unitCode: string | null;
+  unitPrice: number;
   netTotal: number;
   taxTotal: number;
 }

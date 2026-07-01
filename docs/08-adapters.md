@@ -146,8 +146,11 @@ Adapters expose the same route set:
 | `POST` | `/dfe/zip` | Build a ZIP payload from `{ iud, xml }` files |
 | `POST` | `/dfe/submit/middleware` | Submit a ZIP payload through the configured middleware transport |
 | `POST` | `/dfe/validate/fiscal-readiness` | Validate local invoice rules plus optional PE/DNRE readiness checks |
+| `POST` | `/dfa` | Render a DFA PDF from an IUD and optional invoice data |
 | `GET` | `/dfa/:iud` | Render a DFA PDF for an IUD |
 
 Request payloads are validated with the shared Zod schemas documented in [Validation And Zod](06-validation-zod.md).
 
 Fiscal readiness accepts `{ invoice, options }`. Without `options.accessToken`, external PE/DNRE checks return `skipped`; with a token, the configured fiscal authority clients validate taxpayers, registered software, and emitter authorization.
+
+`POST /dfa` accepts `{ iud, invoice?, options? }`. When `invoice` is present, the adapter validates it before rendering and includes the fiscal header, parties, line summary, taxes, totals, QR Code, and contingency notice in the PDF. `options` supports `emissionMode`, `contingencyIuc`, `title`, and `currency`. `GET /dfa/:iud` remains available for IUD-only rendering.

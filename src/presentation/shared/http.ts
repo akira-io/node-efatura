@@ -2,6 +2,7 @@ import { EfaturaValidationError } from '../../domain/errors';
 import type { Efatura } from '../../efatura';
 import { isRecord } from '../../support/normalizers';
 import {
+  dfaRenderRequestSchema,
   dfeXmlRequestSchema,
   dfeZipRequestSchema,
   eventXmlRequestSchema,
@@ -59,6 +60,28 @@ export async function handleFiscalReadiness(efatura: Efatura, body: unknown): Pr
 export async function handleRenderDfa(efatura: Efatura, iud: string): Promise<HttpResult> {
   const document = await efatura.renderDfa({ iud });
 
+  return dfaDocumentResult(document);
+}
+
+export async function handleRenderDfaFromBody(
+  efatura: Efatura,
+  body: unknown,
+): Promise<HttpResult> {
+  const payload = parseRequest(body, dfaRenderRequestSchema, 'body');
+  const invoice = payload.invoice ? efatura.validateInvoice(payload.invoice) : undefined;
+  const document = await efatura.renderDfa({
+    iud: payload.iud,
+    invoice,
+    emissionMode: payload.options.emissionMode,
+    contingencyIuc: payload.options.contingencyIuc,
+    title: payload.options.title,
+    currency: payload.options.currency,
+  });
+
+  return dfaDocumentResult(document);
+}
+
+function dfaDocumentResult(document: Awaited<ReturnType<Efatura['renderDfa']>>): HttpResult {
   return {
     status: 200,
     headers: {

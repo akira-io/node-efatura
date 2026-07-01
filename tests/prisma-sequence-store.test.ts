@@ -14,6 +14,7 @@ let prisma: any;
 
 beforeAll(async () => {
   await mkdir(schemaDirectory, { recursive: true });
+  await rm(dbPath, { force: true });
 
   const fragment = await readFile(
     join(process.cwd(), 'resources', 'prisma', 'efatura-sequence.prisma'),
@@ -33,14 +34,6 @@ beforeAll(async () => {
   await writeFile(schemaPath, `${header}${fragment}`);
 
   execFileSync('bunx', ['prisma', 'generate', `--schema=${schemaPath}`], { stdio: 'pipe' });
-  execFileSync(
-    'bunx',
-    ['prisma', 'db', 'push', `--schema=${schemaPath}`, '--force-reset', `--url=file:${dbPath}`],
-    {
-      stdio: 'pipe',
-      env: { ...process.env, PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION: 'yes' },
-    },
-  );
 
   const { PrismaClient } = (await import('@prisma/client')) as unknown as {
     PrismaClient: new (options: { adapter: unknown }) => typeof prisma;
@@ -48,6 +41,16 @@ beforeAll(async () => {
   const { PrismaBetterSqlite3 } = await import('@prisma/adapter-better-sqlite3');
   const adapter = new PrismaBetterSqlite3({ url: `file:${dbPath}` });
   prisma = new PrismaClient({ adapter });
+  await prisma.$executeRawUnsafe(
+    [
+      'CREATE TABLE "EfaturaSequence" (',
+      '"id" TEXT NOT NULL PRIMARY KEY,',
+      '"currentNumber" BIGINT NOT NULL,',
+      '"createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,',
+      '"updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP',
+      ')',
+    ].join(' '),
+  );
 }, 120_000);
 
 afterAll(async () => {
