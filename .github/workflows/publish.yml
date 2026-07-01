@@ -50,11 +50,19 @@ jobs:
       - name: Build
         run: bun run build
 
+      - name: Resolve package identity
+        id: package
+        run: |
+          NAME=$(node -p "require('./package.json').name")
+          VERSION=$(node -p "require('./package.json').version")
+          echo "name=$NAME" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
       - name: Check if version already published
         id: version_check
         run: |
-          NAME=$(node -p "require('./package.json').name")
-          VER=$(node -p "require('./package.json').version")
+          NAME="${{ steps.package.outputs.name }}"
+          VER="${{ steps.package.outputs.version }}"
           if npm view "$NAME@$VER" version >/dev/null 2>&1; then
             echo "Already published: $NAME@$VER"
             echo "skip=true" >> "$GITHUB_OUTPUT"
@@ -70,3 +78,10 @@ jobs:
           else
             npx -y npm@11 publish --access public --provenance
           fi
+
+      - name: Sync prerelease dist-tags
+        if: contains(github.ref_name, '-')
+        run: |
+          PACKAGE="${{ steps.package.outputs.name }}@${{ steps.package.outputs.version }}"
+          npx -y npm@11 dist-tag add "$PACKAGE" beta
+          npx -y npm@11 dist-tag add "$PACKAGE" latest
