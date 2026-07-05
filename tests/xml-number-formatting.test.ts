@@ -79,4 +79,8 @@ describe('XML number formatting', () => {
   it('serializes large numbers without exponential notation', () => {
     expect(escapeXml(1e21)).toBe('1000000000000000000000');
   });
+
+  it('does not pre-round numbers beyond safe integer scaling', () => {
+    expect(escapeXml(100035982945.70169)).toBe('100035982945.70169');
+  });
 });

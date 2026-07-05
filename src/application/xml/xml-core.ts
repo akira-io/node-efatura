@@ -31,7 +31,11 @@ function xmlText(value: string | number | boolean): string {
 }
 
 function formatXmlNumber(value: number): string {
-  const roundedValue = Math.round(value * 100000) / 100000;
+  const scaledValue = value * 100000;
+  const roundedValue =
+    Number.isFinite(scaledValue) && Math.abs(scaledValue) <= Number.MAX_SAFE_INTEGER
+      ? Math.round(scaledValue) / 100000
+      : value;
   const formattedValue = roundedValue.toLocaleString('en-US', {
     maximumFractionDigits: 5,
     useGrouping: false,
