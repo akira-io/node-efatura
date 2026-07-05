@@ -31,10 +31,6 @@ export function taxTotalsFrom(lines: LineItemData[]): {
   const withholdingTotal = taxAccumulator();
 
   for (const line of lines) {
-    if (isIgnoredLine(line)) {
-      continue;
-    }
-
     const sign = lineSign(line);
 
     for (const tax of line.taxes) {
