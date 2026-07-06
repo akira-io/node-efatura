@@ -38,6 +38,7 @@ describe('coded value validation', () => {
 
   it('rejects quantity unit codes outside the local XSD format', () => {
     expect(quantityDataFrom({ value: 1, unitCode: 'EA' }).unitCode).toBe('EA');
+    expect(quantityDataFrom({ value: 1, unitCode: 'CODE_1' }).unitCode).toBe('CODE_1');
 
     expectValidation(
       () => quantityDataFrom({ value: 1, unitCode: 'EA-1' }),
