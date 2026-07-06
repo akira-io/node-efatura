@@ -113,8 +113,12 @@ function assertTotals(invoice: InvoiceData): void {
   }
 
   const payableRoundingAmount = invoice.totals.payableRoundingAmount ?? 0;
+  const withholdingTaxTotalAmount = invoice.totals.withholdingTaxTotalAmount ?? 0;
   const expectedPayableAmount =
-    invoice.totals.netTotalAmount + invoice.totals.taxTotalAmount + payableRoundingAmount;
+    invoice.totals.netTotalAmount +
+    invoice.totals.taxTotalAmount -
+    withholdingTaxTotalAmount +
+    payableRoundingAmount;
 
   assertMoneyEquals('totals.payableAmount', invoice.totals.payableAmount, expectedPayableAmount);
 }

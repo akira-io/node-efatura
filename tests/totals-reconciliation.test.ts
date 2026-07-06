@@ -16,6 +16,18 @@ function expectTotalsValidation(callback: () => unknown, field: string): void {
   }
 }
 
+function expectTotalsMismatch(callback: () => unknown, field: string): void {
+  try {
+    callback();
+    throw new Error('Expected validation to fail.');
+  } catch (error) {
+    expect(error).toBeInstanceOf(EfaturaValidationError);
+    const validationError = error as EfaturaValidationError;
+    expect(validationError.field).toBe(field);
+    expect(validationError.message).toBe('Document totals must match line amounts.');
+  }
+}
+
 function linePayload(overrides: Record<string, unknown> = {}): Record<string, unknown> {
   return {
     lineTypeCode: 'N',
@@ -30,6 +42,133 @@ function linePayload(overrides: Record<string, unknown> = {}): Record<string, un
 }
 
 describe('totals reconciliation', () => {
+  it('subtracts withholding from the payable amount', () => {
+    const lines = [
+      linePayload({
+        taxes: [
+          { taxTypeCode: TaxTypeCode.IVA, taxPercentage: 15, taxTotal: 150 },
+          { taxTypeCode: TaxTypeCode.IncomeTax, taxPercentage: 10, taxTotal: 100 },
+        ],
+      }),
+    ];
+
+    expectTotalsMismatch(
+      () =>
+        invoiceDataFrom(
+          baseInvoicePayload({
+            lines,
+            totals: {
+              priceExtensionTotalAmount: 1000,
+              chargeTotalAmount: 0,
+              discountTotalAmount: 0,
+              netTotalAmount: 1000,
+              taxTotalAmount: 150,
+              withholdingTaxTotalAmount: 100,
+              payableAmount: 1150,
+            },
+          }),
+        ),
+      'totals.payableAmount',
+    );
+
+    expect(() =>
+      invoiceDataFrom(
+        baseInvoicePayload({
+          lines,
+          totals: {
+            priceExtensionTotalAmount: 1000,
+            chargeTotalAmount: 0,
+            discountTotalAmount: 0,
+            netTotalAmount: 1000,
+            taxTotalAmount: 150,
+            withholdingTaxTotalAmount: 100,
+            payableAmount: 1050,
+          },
+        }),
+      ),
+    ).not.toThrow();
+  });
+
+  it('adds informational line tax while ignoring its net total', () => {
+    const lines = [
+      linePayload({ id: 'L1' }),
+      linePayload({
+        id: 'L2',
+        lineTypeCode: 'I',
+        price: 500,
+        priceExtension: 500,
+        netTotal: 500,
+        taxes: [{ taxTypeCode: TaxTypeCode.IVA, taxPercentage: 15, taxTotal: 75 }],
+      }),
+    ];
+
+    expectTotalsMismatch(
+      () =>
+        invoiceDataFrom(
+          baseInvoicePayload({
+            lines,
+            totals: {
+              priceExtensionTotalAmount: 1000,
+              chargeTotalAmount: 0,
+              discountTotalAmount: 0,
+              netTotalAmount: 1000,
+              taxTotalAmount: 150,
+              payableAmount: 1150,
+            },
+          }),
+        ),
+      'totals.taxTotalAmount',
+    );
+
+    expect(() =>
+      invoiceDataFrom(
+        baseInvoicePayload({
+          lines,
+          totals: {
+            priceExtensionTotalAmount: 1000,
+            chargeTotalAmount: 0,
+            discountTotalAmount: 0,
+            netTotalAmount: 1000,
+            taxTotalAmount: 225,
+            payableAmount: 1225,
+          },
+        }),
+      ),
+    ).not.toThrow();
+  });
+
+  it('does not let omitted informational line tax disable document tax reconciliation', () => {
+    const lines = [
+      linePayload({ id: 'L1' }),
+      linePayload({
+        id: 'L2',
+        lineTypeCode: 'I',
+        price: 500,
+        priceExtension: 500,
+        netTotal: 500,
+        taxes: [{ taxTypeCode: TaxTypeCode.IVA, taxPercentage: 15, taxTotal: null }],
+      }),
+    ];
+
+    expectTotalsMismatch(
+      () =>
+        invoiceDataFrom(
+          baseInvoicePayload({
+            lines,
+            totals: {
+              priceExtensionTotalAmount: 1000,
+              chargeTotalAmount: 0,
+              discountTotalAmount: 0,
+              netTotalAmount: 1000,
+              taxTotalAmount: 999,
+              payableAmount: 1999,
+            },
+          }),
+        ),
+      'totals.taxTotalAmount',
+    );
+  });
+
   it('requires line amounts before reconciling document totals', () => {
     expectTotalsValidation(
       () => invoiceDataFrom(baseInvoicePayload({ lines: [linePayload({ priceExtension: null })] })),
