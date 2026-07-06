@@ -137,6 +137,38 @@ describe('totals reconciliation', () => {
     ).not.toThrow();
   });
 
+  it('does not let omitted informational line tax disable document tax reconciliation', () => {
+    const lines = [
+      linePayload({ id: 'L1' }),
+      linePayload({
+        id: 'L2',
+        lineTypeCode: 'I',
+        price: 500,
+        priceExtension: 500,
+        netTotal: 500,
+        taxes: [{ taxTypeCode: TaxTypeCode.IVA, taxPercentage: 15, taxTotal: null }],
+      }),
+    ];
+
+    expectTotalsMismatch(
+      () =>
+        invoiceDataFrom(
+          baseInvoicePayload({
+            lines,
+            totals: {
+              priceExtensionTotalAmount: 1000,
+              chargeTotalAmount: 0,
+              discountTotalAmount: 0,
+              netTotalAmount: 1000,
+              taxTotalAmount: 999,
+              payableAmount: 1999,
+            },
+          }),
+        ),
+      'totals.taxTotalAmount',
+    );
+  });
+
   it('requires line amounts before reconciling document totals', () => {
     expectTotalsValidation(
       () => invoiceDataFrom(baseInvoicePayload({ lines: [linePayload({ priceExtension: null })] })),

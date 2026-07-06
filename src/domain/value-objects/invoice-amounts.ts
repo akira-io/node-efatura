@@ -35,7 +35,7 @@ export function taxTotalsFrom(lines: LineItemData[]): {
 
     for (const tax of line.taxes) {
       if (tax.taxTotal === null) {
-        if (tax.taxTypeCode === TaxTypeCode.NotApplicable) {
+        if (tax.taxTypeCode === TaxTypeCode.NotApplicable || isIgnoredLine(line)) {
           continue;
         }
 
