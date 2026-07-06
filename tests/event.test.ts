@@ -112,6 +112,31 @@ describe('official Event XML', () => {
     await expect(efatura.validateEventXml(xml)).resolves.toEqual({ valid: true, errors: [] });
   });
 
+  it('uses the configured emitter tax id in event XML', async () => {
+    const efatura = createEfatura({
+      ...config,
+      emitter: {
+        taxId: { value: '200300400' },
+      },
+    });
+    const iud = efatura.buildIud({
+      issueDate: '2026-02-08',
+      emitterNif: '200300400',
+      documentType: DocumentType.ElectronicInvoice,
+      documentNumber: 1,
+      randomCode: '1234567890',
+    });
+    const xml = efatura.buildEventXml({
+      type: EventType.FiscalDocumentCancellation,
+      issueDateTime: '2026-02-08T11:30:00',
+      issueReasonDescription: 'Documento emitido com dados incorretos.',
+      iuds: [iud],
+    });
+
+    expect(xml).toContain('<EmitterTaxId CountryCode="CV">200300400</EmitterTaxId>');
+    await expect(efatura.validateEventXml(xml)).resolves.toEqual({ valid: true, errors: [] });
+  });
+
   it('builds a UDN event for an unused document number range', async () => {
     const efatura = createEfatura(config);
     const xml = efatura.buildEventXml({
