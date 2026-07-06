@@ -12,7 +12,10 @@ export interface ContactsData {
 
 const phoneSchema = z.preprocess(
   normalizeOptionalText,
-  z.string().regex(/^\d+$/).max(20).nullable(),
+  z
+    .string()
+    .regex(/^\d{7,20}$/)
+    .nullable(),
 );
 
 export const contactsDataSchema = z.object({

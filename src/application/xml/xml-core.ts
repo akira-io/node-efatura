@@ -2,7 +2,7 @@ import { EfaturaValidationError } from '../../domain/errors';
 import type { PartyData } from '../../domain/value-objects/party-data';
 
 export function escapeXml(value: string | number | boolean): string {
-  return String(value)
+  return xmlText(value)
     .replaceAll('&', '&amp;')
     .replaceAll('<', '&lt;')
     .replaceAll('>', '&gt;')
@@ -20,6 +20,28 @@ export function element(name: string, value: string | number | boolean | null | 
 
 export function escapeAttribute(value: string | number | boolean): string {
   return escapeXml(value);
+}
+
+function xmlText(value: string | number | boolean): string {
+  if (typeof value !== 'number') {
+    return String(value);
+  }
+
+  return formatXmlNumber(value);
+}
+
+function formatXmlNumber(value: number): string {
+  const scaledValue = value * 100000;
+  const roundedValue =
+    Number.isFinite(scaledValue) && Math.abs(scaledValue) <= Number.MAX_SAFE_INTEGER
+      ? Math.round(scaledValue) / 100000
+      : value;
+  const formattedValue = roundedValue.toLocaleString('en-US', {
+    maximumFractionDigits: 5,
+    useGrouping: false,
+  });
+
+  return formattedValue === '-0' ? '0' : formattedValue;
 }
 
 export function requiredValue<T>(value: T | null | undefined, field: string): T {
