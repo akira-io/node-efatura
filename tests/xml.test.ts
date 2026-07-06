@@ -83,9 +83,67 @@ describe('DFE XML', () => {
 
     expect(xml).toContain('DocumentTypeCode="3"');
     expect(xml).toContain('<SalesReceipt>');
+    expect(xml).toContain('<Serie>SER-F</Serie>');
     expect(xml).toContain('<IssueMode>2</IssueMode>');
     expect(xml).toContain('<Contingency><LedCode>123</LedCode>');
     expect(xml).not.toContain('<Receiver>');
+  });
+
+  it('uses a dedicated default serie instead of the transmitter LED', () => {
+    const efatura = createEfatura({ ...config, defaultSerie: 'SER-A' }, { clock: fixedClock });
+    const xml = efatura.buildDfeXml(baseInvoicePayload({ serie: undefined }), {
+      documentNumber: 1,
+      randomCode: '1234567890',
+    });
+
+    expect(xml).toContain('<Serie>SER-A</Serie>');
+    expect(xml).not.toContain('<Serie>123</Serie>');
+  });
+
+  it('requires serie when no dedicated default serie is configured', () => {
+    const efatura = createEfatura(config, { clock: fixedClock });
+
+    expect(() =>
+      efatura.buildDfeXml(baseInvoicePayload({ serie: undefined }), {
+        documentNumber: 1,
+        randomCode: '1234567890',
+      }),
+    ).toThrow('serie is required.');
+  });
+
+  it('allows IssueTime to be omitted in Off emission mode', () => {
+    const efatura = createEfatura(config, { clock: fixedClock });
+    const xml = efatura.buildDfeXml(
+      baseInvoicePayload({
+        issueTime: undefined,
+        contingency: {
+          ledCode: '123',
+          iuc: 'IUC-123',
+          issueDate: '2026-02-08',
+          reasonTypeCode: '0',
+          reasonDescription: 'Offline sem hora.',
+        },
+      }),
+      {
+        documentNumber: 1,
+        randomCode: '1234567890',
+        emissionMode: EmissionMode.Off,
+      },
+    );
+
+    expect(xml).toContain('<IssueMode>3</IssueMode>');
+    expect(xml).not.toContain('<IssueTime>');
+  });
+
+  it('still requires IssueTime outside Off emission mode', () => {
+    const efatura = createEfatura(config, { clock: fixedClock });
+
+    expect(() =>
+      efatura.buildDfeXml(baseInvoicePayload({ issueTime: undefined }), {
+        documentNumber: 1,
+        randomCode: '1234567890',
+      }),
+    ).toThrow('issueTime is required.');
   });
 
   it('requires emitter contacts for v11 XML', () => {

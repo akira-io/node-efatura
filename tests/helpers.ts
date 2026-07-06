@@ -9,6 +9,7 @@ export function baseInvoicePayload(
       type: DocumentType.ElectronicInvoice,
       issueDate: '2026-02-08',
       issueTime: '10:30:00',
+      serie: 'SER-F',
       emitter: {
         taxId: {
           countryCode: 'CV',

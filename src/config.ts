@@ -39,6 +39,7 @@ export interface EfaturaConfig {
   transmitterNif?: string | number | null;
   transmitterLed?: string | number | null;
   transmitterKey?: string | number | null;
+  defaultSerie?: string | number | null;
   emitter?: EfaturaEmitterConfig | null;
   softwareCode?: string | number | null;
   softwareName?: string | number | null;
@@ -54,6 +55,7 @@ export interface ResolvedEfaturaConfig {
   transmitterNif: string;
   transmitterLed: string;
   transmitterKey: string | null;
+  defaultSerie: string | null;
   emitter: ResolvedEfaturaEmitter | null;
   softwareCode: string;
   softwareName: string;
@@ -113,6 +115,7 @@ export function resolveConfig(config: EfaturaConfig): ResolvedEfaturaConfig {
     transmitterNif,
     transmitterLed,
     transmitterKey: optionalText(config.transmitterKey),
+    defaultSerie: optionalText(config.defaultSerie),
     emitter: defaultEmitterFrom(config.emitter, transmitterNif),
     softwareCode: requiredText(
       config.softwareCode,

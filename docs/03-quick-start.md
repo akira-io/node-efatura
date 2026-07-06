@@ -6,6 +6,7 @@ import { DocumentType, TaxTypeCode, createEfatura } from '@akira-io/efatura';
 const efatura = createEfatura({
   transmitterNif: '100200300',
   transmitterLed: '123',
+  defaultSerie: 'SER-F',
   emitter: {
     name: 'Emitter',
     address: {

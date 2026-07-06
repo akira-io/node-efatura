@@ -36,10 +36,13 @@ describe('resolveConfig', () => {
   });
 
   it('returns configured values and config array shape', () => {
-    const config = resolveConfig(makeConfig({ environment: Environment.Homologation }));
+    const config = resolveConfig(
+      makeConfig({ environment: Environment.Homologation, defaultSerie: 'SER-A' }),
+    );
 
     expect(config.transmitterNif).toBe('100200300');
     expect(config.transmitterLed).toBe('123');
+    expect(config.defaultSerie).toBe('SER-A');
     expect(config.softwareCode).toBe('SW001');
     expect(config.middlewareBaseUrl).toBe('https://middleware.example');
     expect(config.dfaBaseUrl).toBe('https://pe.efatura.cv/dfe/view');
