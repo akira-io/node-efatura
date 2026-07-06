@@ -1,6 +1,10 @@
 import type { ResolvedEfaturaConfig } from '../../config';
 import { DocumentType, documentTypeCode } from '../../domain/enums/document-type';
-import type { EmissionModeInput } from '../../domain/enums/emission-mode';
+import {
+  EmissionMode,
+  type EmissionModeInput,
+  normalizeEmissionMode,
+} from '../../domain/enums/emission-mode';
 import { EfaturaValidationError } from '../../domain/errors';
 import { parseIud, validateIud } from '../../domain/iud/iud';
 import type { InvoiceData } from '../../domain/value-objects/invoice-data';
@@ -39,6 +43,13 @@ export interface BuildDfeXmlInput {
   invoice: InvoiceData;
   config: ResolvedEfaturaConfig;
   emissionMode?: EmissionModeInput;
+}
+
+interface DfeDocumentXmlContext {
+  invoice: InvoiceData;
+  config: ResolvedEfaturaConfig;
+  documentNumber: string;
+  emissionMode: EmissionModeInput | undefined;
 }
 
 const DOCUMENT_ROOTS: Record<DocumentType, string> = {
@@ -86,57 +97,58 @@ export { escapeXml };
 function documentXml(input: BuildDfeXmlInput): string {
   const documentNumber = parseIud(input.iud).documentNumber;
   const root = dfeDocumentElementName(input.invoice.type);
-  const content = documentContentXml(input.invoice, input.config, documentNumber);
+  const content = documentContentXml({
+    invoice: input.invoice,
+    config: input.config,
+    documentNumber,
+    emissionMode: input.emissionMode,
+  });
 
   return `<${root}>${content}</${root}>`;
 }
 
-function documentContentXml(
-  invoice: InvoiceData,
-  config: ResolvedEfaturaConfig,
-  documentNumber: string,
-): string {
+function documentContentXml(context: DfeDocumentXmlContext): string {
+  const { invoice } = context;
+
   if (invoice.type === DocumentType.ElectronicInvoice) {
-    return invoiceXml(invoice, config, documentNumber);
+    return invoiceXml(context);
   }
 
   if (invoice.type === DocumentType.ElectronicInvoiceReceipt) {
-    return invoiceReceiptXml(invoice, config, documentNumber);
+    return invoiceReceiptXml(context);
   }
 
   if (invoice.type === DocumentType.ElectronicSalesTicket) {
-    return salesReceiptXml(invoice, config, documentNumber);
+    return salesReceiptXml(context);
   }
 
   if (invoice.type === DocumentType.ElectronicTransportDocument) {
-    return transportXml(invoice, config, documentNumber);
+    return transportXml(context);
   }
 
   if (invoice.type === DocumentType.ElectronicReceipt) {
-    return receiptXml(invoice, config, documentNumber);
+    return receiptXml(context);
   }
 
   if (invoice.type === DocumentType.ElectronicCreditNote) {
-    return creditNoteXml(invoice, config, documentNumber);
+    return creditNoteXml(context);
   }
 
   if (invoice.type === DocumentType.ElectronicDebitNote) {
-    return debitNoteXml(invoice, config, documentNumber);
+    return debitNoteXml(context);
   }
 
   if (invoice.type === DocumentType.ElectronicReturnNote) {
-    return returnNoteXml(invoice, config, documentNumber);
+    return returnNoteXml(context);
   }
 
-  return registrationNoteXml(invoice, config, documentNumber);
+  return registrationNoteXml(context);
 }
 
-function invoiceXml(
-  invoice: InvoiceData,
-  config: ResolvedEfaturaConfig,
-  documentNumber: string,
-): string {
-  return `${headerXml(invoice, config, documentNumber)}${element('DueDate', invoice.dueDate)}${orderReferenceXml(
+function invoiceXml(context: DfeDocumentXmlContext): string {
+  const { invoice } = context;
+
+  return `${headerXml(context)}${element('DueDate', invoice.dueDate)}${orderReferenceXml(
     invoice.orderReferenceId,
   )}${element('TaxPointDate', invoice.taxPointDate)}${partyXml(
     'EmitterParty',
@@ -148,12 +160,10 @@ function invoiceXml(
   )}${footerXml(invoice)}`;
 }
 
-function invoiceReceiptXml(
-  invoice: InvoiceData,
-  config: ResolvedEfaturaConfig,
-  documentNumber: string,
-): string {
-  return `${headerXml(invoice, config, documentNumber)}${orderReferenceXml(
+function invoiceReceiptXml(context: DfeDocumentXmlContext): string {
+  const { invoice } = context;
+
+  return `${headerXml(context)}${orderReferenceXml(
     invoice.orderReferenceId,
   )}${element('TaxPointDate', invoice.taxPointDate)}${partyXml(
     'EmitterParty',
@@ -166,27 +176,20 @@ function invoiceReceiptXml(
   )}${deliveryXml(invoice.delivery)}${footerXml(invoice)}`;
 }
 
-function salesReceiptXml(
-  invoice: InvoiceData,
-  config: ResolvedEfaturaConfig,
-  documentNumber: string,
-): string {
-  return `${headerXml(invoice, config, documentNumber)}${partyXml('EmitterParty', invoice.emitter)}${
+function salesReceiptXml(context: DfeDocumentXmlContext): string {
+  const { invoice } = context;
+
+  return `${headerXml(context)}${partyXml('EmitterParty', invoice.emitter)}${
     invoice.receiver ? partyXml('ReceiverParty', invoice.receiver) : ''
   }${linesTotalsXml(invoice)}${paymentsPaymentXml(invoice.payments)}${deliveryXml(
     invoice.delivery,
   )}${footerXml(invoice)}`;
 }
 
-function transportXml(
-  invoice: InvoiceData,
-  config: ResolvedEfaturaConfig,
-  documentNumber: string,
-): string {
-  return `${headerXml(invoice, config, documentNumber)}${element(
-    'ReceiverTypeCode',
-    invoice.receiverTypeCode,
-  )}${element(
+function transportXml(context: DfeDocumentXmlContext): string {
+  const { invoice } = context;
+
+  return `${headerXml(context)}${element('ReceiverTypeCode', invoice.receiverTypeCode)}${element(
     'TransportDocumentTypeCode',
     requiredValue(invoice.transportDocumentTypeCode, 'transportDocumentTypeCode'),
   )}${partyXml('EmitterParty', invoice.emitter)}${
@@ -199,12 +202,10 @@ function transportXml(
   )}${referencesXml(invoice.references)}${footerXml(invoice)}`;
 }
 
-function receiptXml(
-  invoice: InvoiceData,
-  config: ResolvedEfaturaConfig,
-  documentNumber: string,
-): string {
-  return `${headerXml(invoice, config, documentNumber)}${partyXml(
+function receiptXml(context: DfeDocumentXmlContext): string {
+  const { invoice } = context;
+
+  return `${headerXml(context)}${partyXml(
     'EmitterParty',
     invoice.emitter,
   )}${partyXml('ReceiverParty', requiredParty(invoice.receiver, 'receiver'))}${optionalPartyXml(
@@ -215,12 +216,10 @@ function receiptXml(
   )}${referencesXml(invoice.references)}${paymentsPaymentXml(invoice.payments)}${footerXml(invoice)}`;
 }
 
-function creditNoteXml(
-  invoice: InvoiceData,
-  config: ResolvedEfaturaConfig,
-  documentNumber: string,
-): string {
-  return `${headerXml(invoice, config, documentNumber)}${element(
+function creditNoteXml(context: DfeDocumentXmlContext): string {
+  const { invoice } = context;
+
+  return `${headerXml(context)}${element(
     'IssueReasonCode',
     requiredValue(invoice.issueReasonCode, 'issueReasonCode'),
   )}${datePeriodXml('RappelPeriod', invoice.rappelPeriod)}${partyXml(
@@ -231,12 +230,10 @@ function creditNoteXml(
   )}${referencesXml(invoice.references)}${footerXml(invoice)}`;
 }
 
-function debitNoteXml(
-  invoice: InvoiceData,
-  config: ResolvedEfaturaConfig,
-  documentNumber: string,
-): string {
-  return `${headerXml(invoice, config, documentNumber)}${element(
+function debitNoteXml(context: DfeDocumentXmlContext): string {
+  const { invoice } = context;
+
+  return `${headerXml(context)}${element(
     'IssueReasonCode',
     requiredValue(invoice.issueReasonCode, 'issueReasonCode'),
   )}${partyXml('EmitterParty', invoice.emitter)}${partyXml(
@@ -245,12 +242,10 @@ function debitNoteXml(
   )}${linesTotalsXml(invoice)}${referencesXml(invoice.references)}${footerXml(invoice)}`;
 }
 
-function returnNoteXml(
-  invoice: InvoiceData,
-  config: ResolvedEfaturaConfig,
-  documentNumber: string,
-): string {
-  return `${headerXml(invoice, config, documentNumber)}${element(
+function returnNoteXml(context: DfeDocumentXmlContext): string {
+  const { invoice } = context;
+
+  return `${headerXml(context)}${element(
     'IssueReasonCode',
     requiredValue(invoice.issueReasonCode, 'issueReasonCode'),
   )}${element('IssueReasonDescription', invoice.issueReasonDescription)}${partyXml(
@@ -261,12 +256,10 @@ function returnNoteXml(
   )}${referencesXml(invoice.references)}${footerXml(invoice)}`;
 }
 
-function registrationNoteXml(
-  invoice: InvoiceData,
-  config: ResolvedEfaturaConfig,
-  documentNumber: string,
-): string {
-  return `${headerXml(invoice, config, documentNumber)}${partyXml(
+function registrationNoteXml(context: DfeDocumentXmlContext): string {
+  const { invoice } = context;
+
+  return `${headerXml(context)}${partyXml(
     'EmitterParty',
     invoice.emitter,
   )}${partyXml('ReceiverParty', requiredParty(invoice.receiver, 'receiver'))}${optionalPartyXml(
@@ -277,20 +270,22 @@ function registrationNoteXml(
   )}${footerXml(invoice)}`;
 }
 
-function headerXml(
-  invoice: InvoiceData,
-  config: ResolvedEfaturaConfig,
-  documentNumber: string,
-): string {
+function headerXml(context: DfeDocumentXmlContext): string {
+  const { invoice, config, documentNumber, emissionMode } = context;
+  const issueTime =
+    normalizeEmissionMode(emissionMode) === EmissionMode.Off
+      ? invoice.issueTime
+      : requiredValue(invoice.issueTime, 'issueTime');
+
   return [
     element('IsIsolatedAct', invoice.isIsolatedAct),
     selfBillingXml(invoice.selfBilling),
     element('LedCode', config.transmitterLed),
-    element('Serie', invoice.serie ?? config.transmitterLed),
+    element('Serie', requiredValue(invoice.serie ?? config.defaultSerie, 'serie')),
     element('DocumentNumber', documentNumber),
     element('InnerDocumentNumber', invoice.innerDocumentNumber),
     element('IssueDate', invoice.issueDate),
-    element('IssueTime', requiredValue(invoice.issueTime, 'issueTime')),
+    element('IssueTime', issueTime),
   ].join('');
 }
 

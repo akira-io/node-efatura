@@ -62,6 +62,7 @@ const efatura = createEfatura({
   transmitterNif: '123456789',
   transmitterLed: '001',
   transmitterKey: process.env.EFATURA_TRANSMITTER_KEY,
+  defaultSerie: 'SER-F',
   emitter: {
     name: 'Demo Emitter',
     address: {

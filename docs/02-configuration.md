@@ -7,6 +7,7 @@
 | `transmitterNif` | Issuer tax identifier |
 | `transmitterLed` | Numeric issuer LED code assigned by DNRE, up to 5 digits |
 | `transmitterKey` | Middleware credential or shared key |
+| `defaultSerie` | Default document series when an invoice does not set `serie` |
 | `emitter` | Default issuer party used when a document does not pass `.emitter(...)` |
 | `softwareCode` | Registered software code. The official XSD accepts uppercase letters and digits |
 | `softwareName` | Software name sent to middleware |
@@ -26,6 +27,7 @@ Use `config.emitter` for the taxpayer that usually issues documents through this
 const efatura = createEfatura({
   transmitterNif: '100200300',
   transmitterLed: '123',
+  defaultSerie: 'SER-F',
   emitter: {
     name: 'Emitter',
     address: {
