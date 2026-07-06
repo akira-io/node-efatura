@@ -10,7 +10,7 @@ export interface QuantityData {
 
 export const quantityDataSchema = z.object({
   value: z.coerce.number().finite().gt(0),
-  unitCode: z.preprocess(normalizeUnitCode, z.string().min(1).max(50)),
+  unitCode: z.preprocess(normalizeUnitCode, z.string().min(1).max(10).refine(isEfaturaUnitCode)),
   isStandardUnitCode: z.preprocess(optionalBoolean, z.boolean().nullable()),
 });
 
@@ -54,6 +54,24 @@ function normalizeQuantityInput(value: unknown, unitCode: unknown): Record<strin
 
 function normalizeUnitCode(value: unknown): string | null {
   return optionalText(value) ?? null;
+}
+
+function isEfaturaUnitCode(value: string): boolean {
+  for (const character of value) {
+    const code = character.charCodeAt(0);
+
+    if (code >= 48 && code <= 57) {
+      continue;
+    }
+
+    if (code >= 65 && code <= 122) {
+      continue;
+    }
+
+    return false;
+  }
+
+  return true;
 }
 
 function optionalBoolean(value: unknown): boolean | null {
