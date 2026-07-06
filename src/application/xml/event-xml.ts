@@ -20,12 +20,19 @@ export function buildEventXml(input: BuildEventXmlInput): string {
     throw new EfaturaValidationError('eventId', 'Event Id is invalid.', 'event.id_invalid');
   }
 
+  const emitterTaxId = input.config.emitter?.taxId ?? {
+    countryCode: 'CV',
+    value: input.config.transmitterNif,
+  };
+
   return [
     '<?xml version="1.0" encoding="UTF-8"?>',
     `<Event xmlns="${DFE_NAMESPACE}" Version="${DFE_XML_VERSION}" Id="${escapeAttribute(
       input.eventId,
     )}" EventTypeCode="${input.event.type}">`,
-    `<EmitterTaxId CountryCode="CV">${escapeXml(input.config.transmitterNif)}</EmitterTaxId>`,
+    `<EmitterTaxId CountryCode="${escapeAttribute(emitterTaxId.countryCode)}">${escapeXml(
+      emitterTaxId.value,
+    )}</EmitterTaxId>`,
     element('IssueDateTime', input.event.issueDateTime),
     element('IssueReasonDescription', input.event.issueReasonDescription),
     eventTargetXml(input.event),
