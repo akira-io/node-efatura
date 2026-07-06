@@ -24,6 +24,10 @@ export interface PaymentsData {
 }
 
 const dateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
+const paymentMeansCodeSchema = z
+  .string()
+  .max(50)
+  .refine(isPaymentMeansCode, 'PaymentMeansCode is invalid.');
 
 export const payeeFinancialAccountDataSchema = z
   .object({
@@ -53,7 +57,7 @@ export const payeeFinancialAccountDataSchema = z
   });
 
 export const paymentDataSchema = z.object({
-  paymentMeansCode: z.preprocess(normalizeOptionalText, z.string().max(50).nullable()),
+  paymentMeansCode: z.preprocess(normalizeOptionalText, paymentMeansCodeSchema.nullable()),
   paymentReference: z.preprocess(normalizeOptionalText, z.string().max(50).nullable()),
   paymentDate: z.preprocess(normalizeOptionalText, dateSchema.nullable()),
   paymentAmount: z.coerce.number().finite().gt(0).nullable(),
@@ -120,6 +124,28 @@ function arrayOf(value: unknown): Record<string, unknown>[] {
 
 function nullableNumber(value: unknown): unknown {
   return value === undefined || value === null || value === '' ? null : value;
+}
+
+function isPaymentMeansCode(value: string): boolean {
+  if (value === 'ZZZ') {
+    return true;
+  }
+
+  if (!/^\d+$/.test(value)) {
+    return false;
+  }
+
+  const code = Number(value);
+
+  if (code >= 1 && code <= 70) {
+    return true;
+  }
+
+  if (code >= 74 && code <= 78) {
+    return true;
+  }
+
+  return code >= 91 && code <= 97;
 }
 
 function normalizeOptionalText(value: unknown): string | null {
