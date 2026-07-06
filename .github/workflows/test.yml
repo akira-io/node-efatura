@@ -63,6 +63,12 @@ jobs:
         with:
           bun-version: latest
 
+      - name: Setup node-gyp for Node 20 native builds
+        if: matrix.node-version == 20
+        run: |
+          npm install --global node-gyp@12
+          echo "npm_config_node_gyp=$(npm root --global)/node-gyp/bin/node-gyp.js" >> "$GITHUB_ENV"
+
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
