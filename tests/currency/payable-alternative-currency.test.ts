@@ -22,7 +22,12 @@ describe('payable alternative currency validation', () => {
     expect(() =>
       efatura.validateInvoice(invoiceWithAlternativeCurrency(currencyCode)),
     ).toThrowError(
-      expect.objectContaining({ field: 'totals.payableAlternativeAmounts.0.currencyCode' }),
+      expect.objectContaining({
+        field: 'totals.payableAlternativeAmounts.0.currencyCode',
+        code: 'validation.payable_alternative_currency_unsupported',
+        message:
+          'Payable alternative amount currency code is unsupported. Use a canonical uppercase code from the active e-Fatura schema.',
+      }),
     );
   });
 

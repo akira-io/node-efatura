@@ -389,7 +389,7 @@ The embedded `Read Me.txt` records an earlier three-decimal revision. The active
 
 Automatic foreign-currency preparation rejects an invoice whose totals already contain any `payableAlternativeAmounts`. It cannot establish the provenance, direction, date, or compatibility of those existing values. The error code is `exchange_rate.alternatives_conflict`.
 
-The low-level `InvoiceData` and XML APIs continue to accept caller-supplied alternative amounts for applications that manage those values independently. Their currency codes use the same canonical schema set as provider quotes. `XAU`, `XTS`, and `XXX` remain valid; `IDR`, mixed-case `IdR`, and unknown `ZZZ` are rejected before XML generation. Do not pass such an invoice to `prepareInvoiceToCve()`.
+The low-level `InvoiceData` and XML APIs continue to accept caller-supplied alternative amounts for applications that manage those values independently. Their currency codes use the same canonical schema set as provider quotes. `XAU`, `XTS`, and `XXX` remain valid; `IDR`, mixed-case `IdR`, and unknown `ZZZ` are rejected before XML generation with `validation.payable_alternative_currency_unsupported`. Replace the invalid value with a canonical uppercase code from the active e-Fatura schema. Do not pass such an invoice to `prepareInvoiceToCve()`.
 
 For a CVE identity preparation, the provider is not called and no CVE alternative amount is created. Existing low-level alternative amounts are preserved by normal invoice validation because no foreign conversion runs.
 
@@ -452,7 +452,7 @@ const dfa = await efatura.renderDfa({
 
 A reprint must use the stored converted invoice and stored conversion metadata. It must not call `prepareInvoiceToCve()` again, fetch a new quote, replace `retrievedAt`, or recalculate CVE values. Provider caches are optional infrastructure concerns; a cache hit must retain the original retrieval time and remain within the configured date policy. Provider failures are not cached by the package.
 
-The default DFA displays the fiscal payable amount in CVE plus the original amount, source currency, normalized direction, effective date, provider, and optional source URL. Custom renderers receive the same `conversion` value through `DfaRenderInput`. DFA conversion metadata is validated against the invoice before rendering: the target must be CVE, totals must exist, the converted payable amount must match the invoice, and foreign original value, currency, and rate must match the sole alternative payable amount. Invalid direct metadata throws `dfa.conversion_invalid`.
+The default DFA displays the fiscal payable amount in CVE plus the original amount, source currency, normalized direction, effective date, provider, and optional source URL. Custom renderers receive the same `conversion` value through `DfaRenderInput`. DFA conversion metadata is validated against the invoice before rendering: the target must be CVE, totals must exist, and the converted payable amount must match both the invoice and the original payable amount multiplied by the normalized rate, rounded to two fractional digits with half-up rounding. Foreign original value, currency, and rate must match the sole alternative payable amount. Invalid direct metadata throws `dfa.conversion_invalid`.
 
 ## 15. Security And Adapter Boundary
 

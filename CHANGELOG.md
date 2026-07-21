@@ -21,6 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Parse the official BCV spanning publication row, use Cape Verde calendar dates, and validate provider bounds at construction.
 - Lock World Bank quotes to CPV provenance, supported indicator semantics, official hosts, and auditable observation-leg evidence.
 - Reject credential-bearing evidence URLs, documents without payable totals, invalid low-level alternative currencies, and inconsistent DFA conversion metadata.
+- Require direct DFA converted payable metadata to equal the two-decimal half-up product of the original payable amount and normalized rate.
+- Report unsupported low-level alternative currency codes with `validation.payable_alternative_currency_unsupported` instead of a negative-totals error.
 
 ### Deprecated
 

@@ -64,6 +64,14 @@ export function totalsDataFrom(data: Record<string, unknown>, prefix = ''): Tota
   if (!result.success) {
     const issuePath = result.error.issues[0]?.path.join('.') ?? 'totals';
 
+    if (isPayableAlternativeCurrencyIssue(issuePath)) {
+      throw new EfaturaValidationError(
+        field(issuePath),
+        messages.validation.payableAlternativeCurrencyUnsupported,
+        'validation.payable_alternative_currency_unsupported',
+      );
+    }
+
     throw new EfaturaValidationError(
       field(issuePath),
       messages.validation.totalsNegative,
@@ -72,6 +80,10 @@ export function totalsDataFrom(data: Record<string, unknown>, prefix = ''): Tota
   }
 
   return result.data;
+}
+
+function isPayableAlternativeCurrencyIssue(issuePath: string): boolean {
+  return /^payableAlternativeAmounts\.\d+\.currencyCode$/.test(issuePath);
 }
 
 function alternativeAmountsFrom(value: unknown): PayableAlternativeAmountData[] {

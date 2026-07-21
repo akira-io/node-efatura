@@ -158,6 +158,8 @@ new BcvExchangeRateProvider({
 
 `exchange_rate.currency_unsupported` means the input is absent from the active embedded e-Fatura XSD canonical currency list or the selected provider lacks a required mapping. The XSD has 179 enumeration entries, but only 178 are canonical uppercase codes. Its mixed-case `IdR` entry is an active schema typo and limitation: the schema rejects canonical `IDR`, while the package refuses to emit noncanonical `IdR`. Host `Intl` support does not change this contract. Invalid codes fail before the provider is called. `exchange_rate.pair_mismatch` means the quote pair or rate type differs from the request. Confirm that the source code is supported by the active schema, the target is CVE, BCV uses buy or sell, and World Bank uses reference.
 
+`validation.payable_alternative_currency_unsupported` identifies an unsupported `currencyCode` in a caller-supplied low-level `payableAlternativeAmounts` entry. Replace it with a canonical uppercase code from the active e-Fatura schema before generating XML.
+
 Rates follow `amountInTarget = amountInSource * rate`. A EUR to CVE rate must express CVE per EUR, not EUR per CVE.
 
 ## Exchange-Rate Precision Fails

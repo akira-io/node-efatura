@@ -9,6 +9,8 @@ export const messages = {
     invoiceRequired: 'Invoice is required.',
     linesRequired: 'At least one line item is required.',
     totalsNegative: 'Totals cannot be negative.',
+    payableAlternativeCurrencyUnsupported:
+      'Payable alternative amount currency code is unsupported. Use a canonical uppercase code from the active e-Fatura schema.',
     naTaxExemptionRequired: 'NA tax requires an exemption reason.',
   },
   invoice: {

@@ -1,3 +1,4 @@
+import Decimal from 'decimal.js';
 import type {
   CurrencyConversionMetadata,
   DfaLineInput,
@@ -75,6 +76,7 @@ function validatedConversion(
       quote.targetCurrency !== 'CVE' ||
       !isNonnegativeAmount(conversion.originalPayableAmount) ||
       !isNonnegativeAmount(conversion.convertedPayableAmount) ||
+      !hasConsistentConvertedPayableAmount(conversion, quote.rate) ||
       conversion.convertedPayableAmount !== invoice.totals.payableAmount
     ) {
       throw invalidDfaConversion();
@@ -91,6 +93,16 @@ function validatedConversion(
   } catch {
     throw invalidDfaConversion();
   }
+}
+
+function hasConsistentConvertedPayableAmount(
+  conversion: CurrencyConversionMetadata,
+  normalizedRate: number,
+): boolean {
+  return new Decimal(conversion.originalPayableAmount)
+    .mul(normalizedRate)
+    .toDecimalPlaces(2, Decimal.ROUND_HALF_UP)
+    .equals(conversion.convertedPayableAmount);
 }
 
 function assertAlternativeAmountAgreement(

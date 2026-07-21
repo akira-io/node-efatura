@@ -93,7 +93,10 @@ describe('currency conversion documentation', () => {
     expect(guide).toContain('only supported indicator is `PA.NUS.FCRF`');
     expect(guide).toContain('requires invoice totals and a payable amount');
     expect(guide).toContain('DFA conversion metadata is validated against the invoice');
+    expect(guide).toContain('validation.payable_alternative_currency_unsupported');
+    expect(guide).toContain('rounded to two fractional digits with half-up rounding');
     expect(apiReference).toContain('ExchangeRateEvidence');
+    expect(apiReference).toContain('validation.payable_alternative_currency_unsupported');
     expect(compliance).toContain('payableAlternativeAmountSchema');
   });
 });
