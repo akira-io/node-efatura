@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   BcvExchangeRateProvider,
   createEfatura,
+  EfaturaValidationError,
   ExchangeRateError,
   type ExchangeRateProvider,
   type ExchangeRateRequest,
@@ -68,6 +69,25 @@ describe('prepareInvoiceToCve', () => {
       }),
     ).rejects.toMatchObject({ code: 'validation.emitter_required' });
     expect(getQuote).not.toHaveBeenCalled();
+  });
+
+  it('validates fully shaped raw records before requesting a quote', async () => {
+    const getQuote = vi.fn(async (request: ExchangeRateRequest) => quoteFor(request));
+    const efatura = createEfatura(config, { exchangeRateProvider: { getQuote } });
+    const invalidInvoice = baseInvoicePayload({
+      emitter: null,
+      contingency: null,
+      references: [],
+      payments: null,
+      extraFields: [],
+    });
+    const before = structuredClone(invalidInvoice);
+    const preparation = efatura.prepareInvoiceToCve(invalidInvoice, { sourceCurrency: 'EUR' });
+
+    await expect(preparation).rejects.toBeInstanceOf(EfaturaValidationError);
+    await expect(preparation).rejects.toMatchObject({ code: 'validation.emitter_required' });
+    expect(getQuote).not.toHaveBeenCalled();
+    expect(invalidInvoice).toEqual(before);
   });
 
   it('revalidates the converted invoice and reports fiscal rounding inconsistencies', async () => {

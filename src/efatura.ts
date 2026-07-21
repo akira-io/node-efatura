@@ -178,7 +178,7 @@ export class Efatura extends EfaturaDocuments {
     data: Record<string, unknown> | InvoiceData,
     options: PrepareInvoiceToCveOptions,
   ): Promise<PreparedCurrencyInvoice> {
-    const invoice = isInvoiceData(data) ? data : this.validateInvoice(data);
+    const invoice = this.validateInvoice({ ...data });
 
     return prepareInvoiceToCveForInvoice(invoice, options, {
       provider: this.exchangeRateProvider,
