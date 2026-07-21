@@ -5,6 +5,10 @@ export type {
   TotalsInput,
 } from './application/builders/invoice-builder';
 export { InvoiceBuilder } from './application/builders/invoice-builder';
+export type {
+  PreparedCurrencyInvoice,
+  PrepareInvoiceToCveOptions,
+} from './application/currency/currency-conversion-types';
 export {
   CONTINGENCY_NOTICE,
   dfaContingencyNotice,

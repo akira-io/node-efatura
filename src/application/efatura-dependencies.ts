@@ -3,6 +3,7 @@ import type {
   Clock,
   DfaRenderer,
   EmitterAuthorizationClient,
+  ExchangeRateProvider,
   GoldenVectorRepository,
   MiddlewareTransport,
   PlatformTransport,
@@ -15,6 +16,7 @@ import type {
 import type { DocumentTypePolicy } from '../core/contracts/document-type-policy';
 import { DefaultDocumentTypePolicy } from '../domain/policies/default-document-type-policy';
 import { SystemClock } from '../infrastructure/clock/system-clock';
+import { BcvExchangeRateProvider } from '../infrastructure/currency/bcv-exchange-rate-provider';
 import { PdfDfaRenderer } from '../infrastructure/dfa/pdf-dfa-renderer';
 import {
   FetchEmitterAuthorizationClient,
@@ -44,15 +46,18 @@ export interface ResolvedEfaturaDependencies {
   taxpayerRegistryClient: TaxpayerRegistryClient;
   softwareRegistryClient: SoftwareRegistryClient;
   emitterAuthorizationClient: EmitterAuthorizationClient;
+  exchangeRateProvider: ExchangeRateProvider;
 }
 
 export function resolveEfaturaDependencies(
   dependencies: EfaturaDependencies,
 ): ResolvedEfaturaDependencies {
+  const clock = dependencies.clock ?? new SystemClock();
+
   return {
     certificateValidator: dependencies.certificateValidator ?? new OpensslCertificateValidator(),
     documentTypePolicy: dependencies.documentTypePolicy ?? new DefaultDocumentTypePolicy(),
-    clock: dependencies.clock ?? new SystemClock(),
+    clock,
     sequenceStore: dependencies.sequenceStore ?? new InMemorySequenceStore(),
     xsdValidator: dependencies.xsdValidator ?? new XmllintXsdValidator(),
     xmlSigner: dependencies.xmlSigner ?? new XadesBesSigner(),
@@ -66,5 +71,7 @@ export function resolveEfaturaDependencies(
       dependencies.softwareRegistryClient ?? new FetchSoftwareRegistryClient(),
     emitterAuthorizationClient:
       dependencies.emitterAuthorizationClient ?? new FetchEmitterAuthorizationClient(),
+    exchangeRateProvider:
+      dependencies.exchangeRateProvider ?? new BcvExchangeRateProvider({ clock }),
   };
 }

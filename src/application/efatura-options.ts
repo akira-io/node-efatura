@@ -3,6 +3,7 @@ import type {
   Clock,
   DfaRenderer,
   EmitterAuthorizationClient,
+  ExchangeRateProvider,
   GoldenVectorRepository,
   MiddlewareTransport,
   PlatformTransport,
@@ -31,6 +32,7 @@ export interface EfaturaDependencies {
   taxpayerRegistryClient?: TaxpayerRegistryClient;
   softwareRegistryClient?: SoftwareRegistryClient;
   emitterAuthorizationClient?: EmitterAuthorizationClient;
+  exchangeRateProvider?: ExchangeRateProvider;
 }
 
 export interface EfaturaBuildIudInput
