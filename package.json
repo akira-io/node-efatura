@@ -1,6 +1,6 @@
 {
   "name": "@akira-io/efatura",
-  "version": "1.0.0-beta3",
+  "version": "1.0.0-beta4",
   "description": "Cabo Verde e-Fatura fiscal document validation engine for Node.js",
   "license": "(MIT OR Apache-2.0)",
   "author": "Kidiatoliny <kidiatoliny@gmail.com>",

@@ -5,28 +5,45 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## [1.0.0-beta4](https://github.com/akira-io/node-efatura/compare/v1.0.0-beta3...v1.0.0-beta4) (2026-07-21)
+
+### Bug Fixes
+
+- **totals:** Reconcile retention and informational taxes ([c5cf0c3](https://github.com/akira-io/node-efatura/commit/c5cf0c33acda973e85837c48110c8903cd33ab3a))
+- **totals:** Keep informational null tax from suppressing totals ([d2a5c01](https://github.com/akira-io/node-efatura/commit/d2a5c01d512cebdfc79a621434d17b7f8b9d7b31))
+- **domain:** Enforce phone and XML decimal limits ([c010fe5](https://github.com/akira-io/node-efatura/commit/c010fe59014a5f3017762fb58645d2537484ec02))
+- **domain:** Guard XML decimal pre-rounding ([ef7c282](https://github.com/akira-io/node-efatura/commit/ef7c282e50573e2a7b7fa3f1a110a700ce42c2fd))
+- **domain:** Use emitter tax id in event XML ([ca0c49a](https://github.com/akira-io/node-efatura/commit/ca0c49a261f32858e420dbdb82fa049376af573b))
+- **domain:** Align DFE header compatibility rules ([9cfa181](https://github.com/akira-io/node-efatura/commit/9cfa181dfdc4df21b62737dc31542f94f68924bf))
+- **domain:** Validate coded fiscal values ([87c6fe3](https://github.com/akira-io/node-efatura/commit/87c6fe30912862a6fb3e926990f4820adcf66361))
+- **domain:** Match unit code schema range ([ae18cc5](https://github.com/akira-io/node-efatura/commit/ae18cc5c71ceb1808651f5c03e06d2cc4a5ea78f))
+- **domain:** Allow absent exchange rate source ([0bb47c7](https://github.com/akira-io/node-efatura/commit/0bb47c789ae007e6f507e6faf783e40d673fd99b))
+- **infra:** Harden bcv exchange rate provider ([7e2e9a9](https://github.com/akira-io/node-efatura/commit/7e2e9a9fb9f87d97a0fef47c5454e1c805ff3a3b))
+- **infra:** Sanitize world bank response failures ([d131dd1](https://github.com/akira-io/node-efatura/commit/d131dd1961ea9f122f3e3c6f6235a5579f7530c2))
+- **domain:** Validate currency invoice input ([81553f4](https://github.com/akira-io/node-efatura/commit/81553f4a3024c483f873f0a25e0b57e996f27858))
+- **dfa:** Preserve currency conversion evidence ([8a98b43](https://github.com/akira-io/node-efatura/commit/8a98b4321c6f8e3a3d8885805d827e69e3899437))
+- **domain:** Harden fiscal currency conversion ([2e16814](https://github.com/akira-io/node-efatura/commit/2e1681493fb7554abf991fe60caf5e8c8bce9b81))
+- **domain:** Align currency codes with fiscal schema ([3ef196f](https://github.com/akira-io/node-efatura/commit/3ef196ff47ff7d3ab0df00e1b9f117bdd2085734))
+- **domain:** Account for mixed-case IDR schema entry ([dc648d5](https://github.com/akira-io/node-efatura/commit/dc648d5781f74e04b30a2c802d6ce3a31c110d41))
+- **domain:** Enforce fiscal conversion integrity ([eb70666](https://github.com/akira-io/node-efatura/commit/eb70666127fe9129cbbc6848317dd15bc3b11c19))
+- **domain:** Tighten currency validation ([c6c1268](https://github.com/akira-io/node-efatura/commit/c6c1268f2d9b2d7fbcac941fba7243c65253dd39))
+- **infra:** Pin BCV exchange-rate source ([694d92a](https://github.com/akira-io/node-efatura/commit/694d92aa616ad5f0674cfc8bb3081e38f68e339b))
+- **domain:** Reconcile converted fiscal totals ([9918108](https://github.com/akira-io/node-efatura/commit/99181080d663779e74e4f8bc7b9bdc9a0a6c3937))
+- **domain:** Harden fiscal amount reconciliation ([b40a813](https://github.com/akira-io/node-efatura/commit/b40a8132f8074fb90e3ad1fcc37ae34a611c3510))
+- **dfa:** Harden currency deprecation warning ([f1573b3](https://github.com/akira-io/node-efatura/commit/f1573b383440d77998f8ebd95326df05b3050f9d))
+- **dfa:** Warn before HTTP request validation ([7ebae5b](https://github.com/akira-io/node-efatura/commit/7ebae5b59de087037c23b074137a02fa55e3a284))
+
 
 ### Features
 
-- Add `prepareInvoiceToCve()` with BCV as the default fiscal exchange-rate provider.
-- Add World Bank annual-reference, fixed-rate, and callback provider implementations.
-- Preserve normalized rate direction, effective and retrieval dates, provider identity, source URL, and original and converted payable values as conversion evidence.
-- Convert first-class monetary fields into a new CVE invoice and emit the original payable value as `PayableAlternativeAmount`.
-
-### Fixed
-
-- Match canonical currency codes to the active embedded e-Fatura XSD and reject `IDR`, whose schema entry is the noncanonical `IdR`.
-- Use the configured clock's Cape Verde time-of-day when an invoice has no issue time.
-- Parse the official BCV spanning publication row, use Cape Verde calendar dates, and validate provider bounds at construction.
-- Lock World Bank quotes to CPV provenance, supported indicator semantics, official hosts, and auditable observation-leg evidence.
-- Reject credential-bearing evidence URLs, documents without payable totals, invalid low-level alternative currencies, and inconsistent DFA conversion metadata.
-- Require direct DFA converted payable metadata to equal the two-decimal half-up product of the original payable amount and normalized rate.
-- Report unsupported low-level alternative currency codes with `validation.payable_alternative_currency_unsupported` instead of a negative-totals error.
-
-### Deprecated
-
-- Deprecate `renderDfa({ currency })` for removal in `v1.0.0`. Defined values emit `DeprecationWarning` once per process with code `EFATURA_RENDER_DFA_CURRENCY_DEPRECATED`. Fiscal DFA values are always CVE; use `prepareInvoiceToCve()` and pass its invoice and conversion metadata instead.
+- **domain:** Add exchange rate contracts ([cdbce47](https://github.com/akira-io/node-efatura/commit/cdbce478be2c28966b064bf4c84fd73e0a8eec0c))
+- **domain:** Convert invoice amounts to cve ([f6908a7](https://github.com/akira-io/node-efatura/commit/f6908a78b7561317f9075ae13fbd279928b5abbb))
+- **infra:** Add configurable exchange rate providers ([c1a9877](https://github.com/akira-io/node-efatura/commit/c1a98778d9e2ae53ae47f7de3fd6f0144ac9a063))
+- **infra:** Add bcv exchange rate provider ([ab72476](https://github.com/akira-io/node-efatura/commit/ab724760812a5e42b480522a694700c288413108))
+- **infra:** Add world bank exchange rate provider ([9bf1bd6](https://github.com/akira-io/node-efatura/commit/9bf1bd6ce2c84f8498b65099f4855b14bfd2b15b))
+- **domain:** Prepare invoices in cve ([5bd69dc](https://github.com/akira-io/node-efatura/commit/5bd69dcff4fef169972d0cc03eb663518326e8b9))
+- **dfa:** Show currency conversion evidence ([409d63a](https://github.com/akira-io/node-efatura/commit/409d63a64ffd27e20f979e13de74774a4c707050))
+- **dfa:** Warn on deprecated currency option ([527bbcd](https://github.com/akira-io/node-efatura/commit/527bbcd207820f528152f77b5cde7fc8cd6e98b2))
 
 ## [1.0.0-beta3](https://github.com/akira-io/node-efatura/compare/v1.0.0-beta2...v1.0.0-beta3) (2026-07-01)
 
@@ -94,3 +111,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **core:** Add fiscal readiness validation ([f21388a](https://github.com/akira-io/node-efatura/commit/f21388aa4bd827619ae27a9b81ea60b5e7c2a09b))
 - **adapters:** Expose fiscal readiness route ([d158d30](https://github.com/akira-io/node-efatura/commit/d158d30132bfd45593a17c04cbe54424564f4f8a))
 - **v11:** Close extra fields compliance ([fca2cde](https://github.com/akira-io/node-efatura/commit/fca2cde5df5adffec31ca01a9e462152ea58351f))
+
