@@ -41,6 +41,22 @@ const iud = await efatura.buildSequentialIud({
 });
 ```
 
+## Prepare A Foreign-Currency Invoice
+
+Prepare foreign application values before allocating downstream artifacts:
+
+```ts
+const prepared = await efatura.prepareInvoiceToCve(invoiceInEur, {
+  sourceCurrency: 'EUR',
+});
+
+const invoice = prepared.invoice;
+```
+
+The returned invoice contains CVE fiscal amounts and one alternative payable amount for the original EUR payable value. Use this `invoice` for IUD context, XML, XSD validation, DFA, signing, packaging, and submission. Pass `prepared.conversion` to DFA rendering.
+
+Persist both result fields with the fiscal record. A retry or DFA reprint must reuse them and must not obtain a new quote. BCV is the default provider. World Bank is an explicitly configured annual reference source and is not a daily fiscal fallback.
+
 ## Build XML
 
 ```ts
@@ -113,15 +129,28 @@ This uses `platformBaseUrl` from config unless `baseUrl` is supplied in options.
 const dfa = await efatura.renderDfa({
   iud,
   invoice,
-  currency: 'CVE',
 });
 ```
 
 When `invoice` is supplied, the renderer receives parties, issue data, line summaries, taxes, totals, QR code URL, and contingency data. When only `iud` is supplied, the renderer can still create an IUD-only document.
 
+For a prepared foreign-currency invoice, include conversion evidence:
+
+```ts
+const dfa = await efatura.renderDfa({
+  iud,
+  invoice: prepared.invoice,
+  conversion: prepared.conversion,
+});
+```
+
+The primary DFA amounts remain CVE. The evidence section identifies the original amount, normalized rate direction, effective date, provider, and optional source URL.
+
 ## HTTP Adapter Flow For SPAs
 
 Browser clients should call an authenticated application server. They must not receive transmitter keys, certificates, private keys, PE tokens, or DNRE credentials.
+
+Currency preparation is facade-only in this release. The package HTTP schemas do not accept client-supplied rates, provider names, source URLs, or conversion metadata. Trusted server code selects the provider and prepares the invoice before calling adapter-independent fiscal operations.
 
 Typical SPA flow:
 
@@ -136,3 +165,7 @@ See [Fastify Server Example](examples/fastify/server.md) and the SPA examples un
 ## Recovery Flow
 
 If a submission fails before the official platform accepts the document, keep the generated IUD, XML, ZIP payload, and transport response. Do not allocate a replacement number until the operational process decides that the original fiscal document number can no longer be used.
+
+If quote retrieval fails before preparation completes, no XML or DFA should be produced. Apply an explicit application recovery policy based on `ExchangeRateError.code`. Do not switch providers or accept a stale rate silently.
+
+See [Currency Conversion](18-currency-conversion.md) for the complete foreign-currency workflow and error decisions.
