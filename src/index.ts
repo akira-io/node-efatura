@@ -174,6 +174,7 @@ export type {
   BcvExchangeRateProviderOptions,
   ExchangeRateCallback,
   FixedExchangeRateProviderOptions,
+  WorldBankExchangeRateProviderOptions,
 } from './infrastructure';
 export {
   BcvExchangeRateProvider,
@@ -195,6 +196,7 @@ export {
   parseServiceBody,
   resolveDefaultSchemaPath,
   SystemClock,
+  WorldBankExchangeRateProvider,
   XadesBesSigner,
   XmllintXsdValidator,
 } from './infrastructure';

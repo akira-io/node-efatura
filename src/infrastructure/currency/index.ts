@@ -10,3 +10,7 @@ export {
   FixedExchangeRateProvider,
   type FixedExchangeRateProviderOptions,
 } from './fixed-exchange-rate-provider';
+export {
+  WorldBankExchangeRateProvider,
+  type WorldBankExchangeRateProviderOptions,
+} from './world-bank-exchange-rate-provider';

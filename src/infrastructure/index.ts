@@ -6,6 +6,8 @@ export {
   type ExchangeRateCallback,
   FixedExchangeRateProvider,
   type FixedExchangeRateProviderOptions,
+  WorldBankExchangeRateProvider,
+  type WorldBankExchangeRateProviderOptions,
 } from './currency';
 export { PdfDfaRenderer } from './dfa/pdf-dfa-renderer';
 export {
