@@ -43,10 +43,16 @@ export class BcvExchangeRateProvider implements ExchangeRateProvider {
     this.#fetch = options.fetcher ?? fetch;
     this.#clock = options.clock ?? new SystemClock();
     this.#sourceUrl = normalizeSourceUrl(options.sourceUrl ?? DEFAULT_BCV_SOURCE_URL);
-    this.#timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
-    this.#maxResponseBytes = options.maxResponseBytes ?? DEFAULT_MAX_RESPONSE_BYTES;
+    this.#timeoutMs = positiveSafeInteger(options.timeoutMs ?? DEFAULT_TIMEOUT_MS, 'timeout');
+    this.#maxResponseBytes = positiveSafeInteger(
+      options.maxResponseBytes ?? DEFAULT_MAX_RESPONSE_BYTES,
+      'response size limit',
+    );
     this.#allowPreviousPublication = options.allowPreviousPublication ?? false;
-    this.#maxPublicationAgeDays = options.maxPublicationAgeDays ?? 0;
+    this.#maxPublicationAgeDays = nonnegativeSafeInteger(
+      options.maxPublicationAgeDays ?? 0,
+      'maximum publication age',
+    );
   }
 
   async getQuote(request: ExchangeRateRequest): Promise<ExchangeRateQuote> {
@@ -80,8 +86,8 @@ export class BcvExchangeRateProvider implements ExchangeRateProvider {
         headers: { accept: 'text/html' },
         signal: AbortSignal.timeout(this.#timeoutMs),
       });
-    } catch (cause) {
-      throw providerUnavailable(undefined, cause);
+    } catch {
+      throw providerUnavailable();
     }
 
     if (!response.ok) {
@@ -90,18 +96,18 @@ export class BcvExchangeRateProvider implements ExchangeRateProvider {
 
     try {
       return await readBoundedResponse(response, this.#maxResponseBytes);
-    } catch (cause) {
-      if (cause instanceof ExchangeRateError) {
-        throw cause;
+    } catch (error) {
+      if (error instanceof ExchangeRateError) {
+        throw error;
       }
 
-      throw providerUnavailable(undefined, cause);
+      throw providerUnavailable();
     }
   }
 
   #assertPublicationDate(requestedAt: Date, publicationDate: Date): void {
-    const requestedDay = utcCalendarDay(requestedAt);
-    const publishedDay = utcCalendarDay(publicationDate);
+    const requestedDay = capeVerdeCalendarDay(requestedAt);
+    const publishedDay = publicationDate.getTime();
     const ageDays = (requestedDay - publishedDay) / MILLISECONDS_PER_DAY;
 
     if (ageDays < 0) {
@@ -139,7 +145,7 @@ function assertSupportedRequest(
   }
 }
 
-function utcCalendarDay(value: Date): number {
+function capeVerdeCalendarDay(value: Date): number {
   const timestamp = value instanceof Date ? value.getTime() : Number.NaN;
 
   if (!Number.isFinite(timestamp)) {
@@ -149,16 +155,21 @@ function utcCalendarDay(value: Date): number {
     );
   }
 
-  return Date.UTC(value.getUTCFullYear(), value.getUTCMonth(), value.getUTCDate());
+  const capeVerdeInstant = new Date(timestamp - 60 * 60 * 1000);
+
+  return Date.UTC(
+    capeVerdeInstant.getUTCFullYear(),
+    capeVerdeInstant.getUTCMonth(),
+    capeVerdeInstant.getUTCDate(),
+  );
 }
 
-function providerUnavailable(status?: number, cause?: unknown): ExchangeRateError {
+function providerUnavailable(status?: number): ExchangeRateError {
   const statusSuffix = status === undefined ? '' : ` (HTTP ${status})`;
 
   return new ExchangeRateError(
     'exchange_rate.provider_unavailable',
     `The BCV exchange-rate source is unavailable${statusSuffix}.`,
-    { cause },
   );
 }
 
@@ -205,18 +216,33 @@ function normalizeSourceUrl(sourceUrl: string): string {
   try {
     const url = new URL(sourceUrl);
 
-    if (url.protocol !== 'https:') {
+    if (url.protocol !== 'https:' || url.username.length > 0 || url.password.length > 0) {
       throw new Error('The BCV source URL must use HTTPS.');
     }
 
     return url.toString();
-  } catch (cause) {
+  } catch {
     throw new ExchangeRateError(
       'exchange_rate.source_required',
       'An HTTPS BCV exchange-rate source URL is required.',
-      { cause },
     );
   }
+}
+
+function positiveSafeInteger(candidate: number, label: string): number {
+  if (!Number.isSafeInteger(candidate) || candidate <= 0) {
+    throw invalidBcvResponse(`${label} must be a positive safe integer`);
+  }
+
+  return candidate;
+}
+
+function nonnegativeSafeInteger(candidate: number, label: string): number {
+  if (!Number.isSafeInteger(candidate) || candidate < 0) {
+    throw invalidBcvResponse(`${label} must be a nonnegative safe integer`);
+  }
+
+  return candidate;
 }
 
 function invalidBcvResponse(detail: string): ExchangeRateError {

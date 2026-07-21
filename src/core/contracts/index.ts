@@ -14,6 +14,9 @@ export type {
 } from './dfa-renderer';
 export type {
   CurrencyConversionMetadata,
+  ExchangeRateEvidence,
+  ExchangeRateEvidenceLeg,
+  ExchangeRateEvidenceLegRole,
   ExchangeRateProvider,
   ExchangeRateQuote,
   ExchangeRateRequest,

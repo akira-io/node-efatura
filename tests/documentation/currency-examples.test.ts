@@ -12,6 +12,9 @@ import {
   type ExchangeRateCallback,
   ExchangeRateError,
   type ExchangeRateErrorCode,
+  type ExchangeRateEvidence,
+  type ExchangeRateEvidenceLeg,
+  type ExchangeRateEvidenceLegRole,
   type ExchangeRateProvider,
   type ExchangeRateQuote,
   type ExchangeRateRequest,
@@ -75,6 +78,24 @@ describe('currency conversion documentation', () => {
     });
     expect(dfa.buffer.length).toBeGreaterThan(0);
   });
+
+  it('documents the final provider and metadata hardening rules', async () => {
+    const [guide, apiReference, compliance] = await Promise.all([
+      readFile(new URL('../../docs/18-currency-conversion.md', import.meta.url), 'utf8'),
+      readFile(new URL('../../docs/12-api-reference.md', import.meta.url), 'utf8'),
+      readFile(new URL('../../docs/11-compliance-matrix.md', import.meta.url), 'utf8'),
+    ]);
+
+    expect(guide).toContain('spanning `th[colspan="5"]` publication row');
+    expect(guide).toContain('fixed UTC-01 Cape Verde calendar date');
+    expect(guide).toContain('positive safe integers');
+    expect(guide).toContain('The `CVE` to `CPV` mapping is locked');
+    expect(guide).toContain('only supported indicator is `PA.NUS.FCRF`');
+    expect(guide).toContain('requires invoice totals and a payable amount');
+    expect(guide).toContain('DFA conversion metadata is validated against the invoice');
+    expect(apiReference).toContain('ExchangeRateEvidence');
+    expect(compliance).toContain('payableAlternativeAmountSchema');
+  });
 });
 
 function extractTypeScriptBlock(markdown: string): string {
@@ -93,6 +114,9 @@ type DocumentedCurrencyTypes = {
   dfaInput: DfaRenderInput;
   dfaRenderer: DfaRenderer;
   errorCode: ExchangeRateErrorCode;
+  evidence: ExchangeRateEvidence;
+  evidenceLeg: ExchangeRateEvidenceLeg;
+  evidenceLegRole: ExchangeRateEvidenceLegRole;
   fixedOptions: FixedExchangeRateProviderOptions;
   prepared: PreparedCurrencyInvoice;
   preparationOptions: PrepareInvoiceToCveOptions;

@@ -1,5 +1,7 @@
 import Decimal from 'decimal.js';
 import type {
+  ExchangeRateEvidence,
+  ExchangeRateEvidenceLeg,
   ExchangeRateQuote,
   ExchangeRateRequest,
   ExchangeRateType,
@@ -67,6 +69,7 @@ export function validateExchangeRateQuote(
   }
 
   const sourceUrl = validateSourceUrl(quote.sourceUrl);
+  const evidence = validateEvidence(quote.evidence);
   const rate = normalizeRate(quote.rate);
 
   return {
@@ -77,6 +80,7 @@ export function validateExchangeRateQuote(
     effectiveAt: new Date(effectiveAt),
     retrievedAt: new Date(retrievedAt),
     sourceUrl,
+    ...(evidence === undefined ? {} : { evidence }),
   };
 }
 
@@ -108,16 +112,82 @@ function validateSourceUrl(sourceUrl: string | undefined): string | undefined {
   try {
     const url = new URL(sourceUrl);
 
-    if (url.protocol !== 'https:') {
+    if (url.protocol !== 'https:' || url.username.length > 0 || url.password.length > 0) {
       throw new Error('The source URL must use HTTPS.');
     }
 
     return url.toString();
-  } catch (cause) {
+  } catch {
     throw new ExchangeRateError(
       'exchange_rate.source_required',
       'An HTTPS exchange-rate source URL is required.',
-      { cause },
+    );
+  }
+}
+
+function validateEvidence(
+  evidence: ExchangeRateEvidence | undefined,
+): ExchangeRateEvidence | undefined {
+  if (evidence === undefined) {
+    return undefined;
+  }
+
+  if (
+    evidence.source.trim().length === 0 ||
+    evidence.indicator.trim().length === 0 ||
+    evidence.observationPeriod.trim().length === 0 ||
+    evidence.legs.length === 0
+  ) {
+    throw new ExchangeRateError(
+      'exchange_rate.response_invalid',
+      'The exchange-rate observation evidence is invalid.',
+    );
+  }
+
+  return {
+    source: evidence.source.trim(),
+    indicator: evidence.indicator.trim(),
+    observationPeriod: evidence.observationPeriod.trim(),
+    legs: evidence.legs.map(validateEvidenceLeg),
+  };
+}
+
+function validateEvidenceLeg(leg: ExchangeRateEvidenceLeg): ExchangeRateEvidenceLeg {
+  const economy = leg.economy?.trim().toUpperCase() ?? null;
+  const observationValue = normalizeEvidenceDecimal(leg.value);
+
+  if (
+    (leg.role !== 'source' && leg.role !== 'target') ||
+    (economy !== null && economy.length === 0)
+  ) {
+    throw new ExchangeRateError(
+      'exchange_rate.response_invalid',
+      'The exchange-rate observation evidence is invalid.',
+    );
+  }
+
+  return {
+    role: leg.role,
+    currency: normalizeCurrencyCode(leg.currency),
+    economy,
+    value: observationValue,
+    sourceUrl: validateSourceUrl(leg.sourceUrl),
+  };
+}
+
+function normalizeEvidenceDecimal(observationValue: string): string {
+  try {
+    const decimalValue = new Decimal(observationValue);
+
+    if (!decimalValue.isFinite() || decimalValue.lte(0)) {
+      throw new Error('Observation value must be positive and finite.');
+    }
+
+    return decimalValue.toString();
+  } catch {
+    throw new ExchangeRateError(
+      'exchange_rate.response_invalid',
+      'The exchange-rate observation evidence is invalid.',
     );
   }
 }

@@ -57,6 +57,8 @@ The returned invoice contains CVE fiscal amounts and one alternative payable amo
 
 Persist both result fields with the fiscal record. A retry or DFA reprint must reuse them and must not obtain a new quote. BCV is the default provider. World Bank is an explicitly configured annual reference source and is not a daily fiscal fallback.
 
+Currency preparation requires invoice totals with a payable amount. Documents without totals must skip this workflow; the package rejects them instead of creating zero payable metadata.
+
 ## Build XML
 
 ```ts

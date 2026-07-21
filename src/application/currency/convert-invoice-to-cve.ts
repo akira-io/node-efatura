@@ -12,6 +12,10 @@ export function convertInvoiceToCve(
   invoice: InvoiceData,
   quote: ExchangeRateQuote,
 ): PreparedCurrencyInvoice {
+  if (invoice.totals === null) {
+    throw payableTotalsRequired();
+  }
+
   const rate = new Decimal(quote.rate);
 
   if ((invoice.totals?.payableAlternativeAmounts.length ?? 0) > 0) {
@@ -40,8 +44,12 @@ export function convertInvoiceToCve(
     totals: convertTotals(invoice.totals, quote, rate),
   };
 
-  const originalPayableAmount = invoice.totals?.payableAmount ?? 0;
-  const convertedPayableAmount = converted.totals?.payableAmount ?? 0;
+  const originalPayableAmount = invoice.totals.payableAmount;
+  const convertedPayableAmount = converted.totals?.payableAmount;
+
+  if (convertedPayableAmount === undefined) {
+    throw payableTotalsRequired();
+  }
 
   return {
     invoice: converted,
@@ -53,6 +61,13 @@ export function convertInvoiceToCve(
       convertedPayableAmount,
     },
   };
+}
+
+function payableTotalsRequired(): ExchangeRateError {
+  return new ExchangeRateError(
+    'exchange_rate.invoice_invalid',
+    'Invoice totals with a payable amount are required for currency conversion.',
+  );
 }
 
 function convertAmount(value: number | null, rate: Decimal): number | null {

@@ -5,6 +5,7 @@ import { ExchangeRateError } from '../../domain/currency/exchange-rate-error';
 import { normalizeCurrencyCode } from '../../domain/currency/exchange-rate-quote';
 
 interface BcvRateTable {
+  element: Element;
   rows: string[][];
   headerIndex: number;
   currencyIndex: number;
@@ -27,21 +28,18 @@ export function parseBcvExchangeRateHtml(
   rateType: 'buy' | 'sell',
 ): ParsedBcvRate {
   const $ = load(html);
-  const publicationDate = parsePublicationDate($);
   const rateTable = parseRateTable($);
+  const publicationDate = parsePublicationDate($, rateTable.element);
   const rate = parseCurrencyRate(rateTable, sourceCurrency, rateType);
 
   return { publicationDate, rate };
 }
 
-function parsePublicationDate($: CheerioAPI): Date {
-  const matchingHeadings = $('h1,h2,h3,h4,h5,h6')
-    .toArray()
-    .map((heading) => normalizedText($(heading)))
-    .filter((heading) => PUBLICATION_HEADING_PATTERN.test(heading));
+function parsePublicationDate($: CheerioAPI, rateTable: Element): Date {
+  const matchingHeadings = publicationDateCandidates($, rateTable);
 
   if (matchingHeadings.length !== 1) {
-    throw invalidBcvResponse('publication heading is missing or ambiguous');
+    throw invalidBcvResponse('publication header is missing or ambiguous');
   }
 
   const dateMatch = PUBLICATION_HEADING_PATTERN.exec(matchingHeadings[0] ?? '');
@@ -67,6 +65,37 @@ function parsePublicationDate($: CheerioAPI): Date {
   return publicationDate;
 }
 
+function publicationDateCandidates($: CheerioAPI, rateTable: Element): string[] {
+  const spanningHeaders = tableRows($, $(rateTable)).flatMap((row) => {
+    const cells = $(row).children('th,td').toArray();
+    const cell = cells[0];
+
+    if (
+      cells.length !== 1 ||
+      cell?.tagName !== 'th' ||
+      $(cell).attr('colspan') !== String(REQUIRED_HEADERS.length)
+    ) {
+      return [];
+    }
+
+    const publicationText = normalizedText($(cell));
+    return PUBLICATION_HEADING_PATTERN.test(publicationText) ? [publicationText] : [];
+  });
+  const adjacentElement = $(rateTable).prev();
+
+  if (!adjacentElement.is('h1,h2,h3,h4,h5,h6')) {
+    return spanningHeaders;
+  }
+
+  const compatibilityHeading = normalizedText(adjacentElement);
+
+  if (!PUBLICATION_HEADING_PATTERN.test(compatibilityHeading)) {
+    return spanningHeaders;
+  }
+
+  return [...spanningHeaders, compatibilityHeading];
+}
+
 function parseRateTable($: CheerioAPI): BcvRateTable {
   const rateTables = $('table')
     .toArray()
@@ -81,15 +110,18 @@ function parseRateTable($: CheerioAPI): BcvRateTable {
 }
 
 function findRateTables($: CheerioAPI, table: Cheerio<Element>): BcvRateTable[] {
-  const rows = table
-    .find('tr')
-    .toArray()
-    .map((row) =>
-      $(row)
-        .find('th,td')
-        .toArray()
-        .map((cell) => $(cell).text().trim()),
-    );
+  const tableElement = table.get(0);
+
+  if (!tableElement) {
+    return [];
+  }
+
+  const rows = tableRows($, table).map((row) =>
+    $(row)
+      .children('th,td')
+      .toArray()
+      .map((cell) => $(cell).text().trim()),
+  );
 
   return rows.flatMap((row, headerIndex) => {
     const headers = row.map(headerName);
@@ -100,6 +132,7 @@ function findRateTables($: CheerioAPI, table: Cheerio<Element>): BcvRateTable[] 
 
     return [
       {
+        element: tableElement,
         rows,
         headerIndex,
         currencyIndex: headers.indexOf('MOEDA'),
@@ -109,6 +142,19 @@ function findRateTables($: CheerioAPI, table: Cheerio<Element>): BcvRateTable[] 
       },
     ];
   });
+}
+
+function tableRows($: CheerioAPI, table: Cheerio<Element>): Element[] {
+  const tableElement = table.get(0);
+
+  if (!tableElement) {
+    return [];
+  }
+
+  return table
+    .find('tr')
+    .toArray()
+    .filter((row) => $(row).closest('table').get(0) === tableElement);
 }
 
 function parseCurrencyRate(
@@ -154,11 +200,10 @@ function normalizePublishedRate(
     }
 
     return rate.dividedBy(units).toNumber();
-  } catch (cause) {
+  } catch {
     throw new ExchangeRateError(
       'exchange_rate.rate_invalid',
       'The BCV rate or unit count is invalid.',
-      { cause },
     );
   }
 }

@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { messages } from '../../support/messages';
 import { isRecord } from '../../support/normalizers';
+import { SCHEMA_CURRENCY_CODES } from '../currency/schema-currency-codes';
 import { EfaturaValidationError } from '../errors';
 import { type DiscountData, discountDataFrom } from './discount-data';
 
@@ -25,7 +26,10 @@ export interface TotalsData {
 
 export const payableAlternativeAmountSchema = z.object({
   value: z.coerce.number().finite().min(0),
-  currencyCode: z.preprocess((value) => String(value ?? '').toUpperCase(), z.string().length(3)),
+  currencyCode: z.preprocess(
+    (value) => String(value ?? '').toUpperCase(),
+    z.enum(SCHEMA_CURRENCY_CODES),
+  ),
   exchangeRate: z.coerce.number().finite().gt(0),
 });
 

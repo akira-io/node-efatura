@@ -101,7 +101,6 @@ describe('convertInvoiceToCve', () => {
       ...payments,
       payments: [{ ...payment, paymentAmount: null }],
     };
-    source.totals = null;
 
     const prepared = convertInvoiceToCve(source, quote);
 
@@ -117,11 +116,22 @@ describe('convertInvoiceToCve', () => {
       tax: { taxAmount: null, taxTotal: null },
     });
     expect(prepared.invoice.payments?.payments[0]?.paymentAmount).toBeNull();
-    expect(prepared.invoice.totals).toBeNull();
     expect(prepared.conversion).toMatchObject({
-      originalPayableAmount: 0,
-      convertedPayableAmount: 0,
+      originalPayableAmount: 2.2,
+      convertedPayableAmount: 242.58,
     });
+  });
+
+  it('rejects conversion when invoice totals are absent', () => {
+    const source = conversionSource();
+    source.totals = null;
+
+    expect(() => convertInvoiceToCve(source, quote)).toThrowError(
+      expect.objectContaining({
+        code: 'exchange_rate.invoice_invalid',
+        message: 'Invoice totals with a payable amount are required for currency conversion.',
+      }),
+    );
   });
 
   it('converts signed payable rounding amounts with half-up rounding', () => {

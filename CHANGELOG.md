@@ -18,6 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Match canonical currency codes to the active embedded e-Fatura XSD and reject `IDR`, whose schema entry is the noncanonical `IdR`.
 - Use the configured clock's Cape Verde time-of-day when an invoice has no issue time.
+- Parse the official BCV spanning publication row, use Cape Verde calendar dates, and validate provider bounds at construction.
+- Lock World Bank quotes to CPV provenance, supported indicator semantics, official hosts, and auditable observation-leg evidence.
+- Reject credential-bearing evidence URLs, documents without payable totals, invalid low-level alternative currencies, and inconsistent DFA conversion metadata.
 
 ### Deprecated
 

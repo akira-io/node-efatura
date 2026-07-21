@@ -141,6 +141,8 @@ The default PDF renderer shows:
 
 Conversion evidence paginates when it does not fit below the totals. Persist `prepared.invoice` and `prepared.conversion`, and use the stored values for reprints. Fetching a second quote could make the DFA disagree with the signed DFE.
 
+Before rendering, direct conversion metadata is checked against the invoice. The invoice must contain totals, the target must be CVE, the converted payable amount must equal the invoice payable amount, and foreign original value, currency, and rate must equal the sole alternative payable amount. A mismatch throws `EfaturaValidationError` with code `dfa.conversion_invalid`.
+
 ## Deprecated Currency Label
 
 `RenderDfaOptions.currency` is deprecated. It relabeled values without converting them and could produce a misleading fiscal document.

@@ -2,12 +2,13 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   BcvExchangeRateProvider,
   createEfatura,
+  DocumentType,
   EfaturaValidationError,
   ExchangeRateError,
   type ExchangeRateProvider,
   type ExchangeRateRequest,
 } from '../../src';
-import { baseInvoicePayload } from '../helpers';
+import { baseInvoicePayload, transportRoutePayload } from '../helpers';
 
 const config = {
   transmitterNif: '100200300',
@@ -123,6 +124,22 @@ describe('prepareInvoiceToCve', () => {
       originalPayableAmount: 1150,
       convertedPayableAmount: 1150,
     });
+  });
+
+  it.each([
+    'EUR',
+    'CVE',
+  ])('rejects %s preparation without totals before provider access', async (sourceCurrency) => {
+    const getQuote = vi.fn(async (request: ExchangeRateRequest) => quoteFor(request));
+    const efatura = createEfatura(config, { exchangeRateProvider: { getQuote } });
+
+    await expect(
+      efatura.prepareInvoiceToCve(invoiceWithoutTotals(), { sourceCurrency }),
+    ).rejects.toMatchObject({
+      code: 'exchange_rate.invoice_invalid',
+      message: 'Invoice totals with a payable amount are required for currency conversion.',
+    });
+    expect(getQuote).not.toHaveBeenCalled();
   });
 
   it.each([
@@ -245,5 +262,17 @@ function roundingConflictPayload(): Record<string, unknown> {
       taxTotalAmount: 0.04,
       payableAmount: 0.08,
     },
+  });
+}
+
+function invoiceWithoutTotals(): Record<string, unknown> {
+  return baseInvoicePayload({
+    type: DocumentType.ElectronicTransportDocument,
+    receiver: null,
+    receiverTypeCode: '1',
+    transportDocumentTypeCode: '1',
+    transportServiceProviderParty: baseInvoicePayload().emitter,
+    transportRoute: transportRoutePayload(),
+    totals: undefined,
   });
 }

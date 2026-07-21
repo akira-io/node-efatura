@@ -135,24 +135,28 @@ describe('official XSD validation', () => {
     const efatura = createEfatura(config(), {
       clock: { now: () => new Date('2026-02-08T12:00:00Z') },
     });
+    const payload = baseInvoicePayload();
+    const totals = payload.totals as Record<string, unknown>;
     const generatedXml = efatura.buildDfeXml(
       baseInvoicePayload({
         totals: {
-          payableAlternativeAmounts: [{ value: 1150, currencyCode: 'IdR', exchangeRate: 1 }],
+          ...totals,
+          payableAlternativeAmounts: [{ value: 1150, currencyCode: 'XAU', exchangeRate: 1 }],
         },
       }),
       { documentNumber: 1, randomCode: '1234567890' },
     );
-    const anomalousSchemaXml = generatedXml.replace('CurrencyCode="IDR"', 'CurrencyCode="IdR"');
+    const canonicalIdrXml = generatedXml.replace('CurrencyCode="XAU"', 'CurrencyCode="IDR"');
+    const anomalousSchemaXml = generatedXml.replace('CurrencyCode="XAU"', 'CurrencyCode="IdR"');
     const validator = new XmllintXsdValidator();
     const context = {
       documentType: DocumentType.ElectronicInvoice,
       schemaVersion: '1.0',
     } as const;
 
-    expect(generatedXml).toContain('CurrencyCode="IDR"');
+    expect(generatedXml).toContain('CurrencyCode="XAU"');
     expect(generatedXml).not.toContain('CurrencyCode="IdR"');
-    await expect(validator.validate(generatedXml, context)).resolves.toMatchObject({
+    await expect(validator.validate(canonicalIdrXml, context)).resolves.toMatchObject({
       valid: false,
     });
     await expect(validator.validate(anomalousSchemaXml, context)).resolves.toEqual({

@@ -145,11 +145,14 @@ interface ExchangeRateProvider {
 | `effectiveAt` | `Date` | yes | Publication or observation date |
 | `retrievedAt` | `Date` | yes | Time the source was retrieved |
 | `provider` | `string` | yes | Non-empty source identity |
-| `sourceUrl` | `string` | no | HTTPS evidence URL |
+| `sourceUrl` | `string` | no | HTTPS evidence URL without user information |
+| `evidence` | `ExchangeRateEvidence` | no | Structured observation evidence supplied by the provider |
+
+`ExchangeRateEvidence` records the source, indicator, observation period, and `legs`. Each `ExchangeRateEvidenceLeg` records a source or target role, canonical currency, optional economy, exact positive decimal value, and optional HTTPS observation URL. World Bank quotes use this field to preserve the exact cross-rate inputs and endpoints. `ExchangeRateEvidenceLegRole` is `source` or `target`.
 
 Rate direction is `amountInTarget = amountInSource * rate`.
 
-`normalizeCurrencyCode(currencyCode)` trims and uppercases a code, then checks a runtime set copied from the active embedded `ISO_ISO3AlphaCurrencyCode_2012-08-31.xsd` enumeration. The package does not read the schema at runtime. The XSD contains 179 entries: 178 canonical uppercase codes plus the anomalous mixed-case `IdR`. The exhaustive test requires `IdR` to remain the only noncanonical entry and compares the checked-in set with all 178 usable codes. Canonical `IDR` is rejected because the active XSD rejects it, and the package does not emit noncanonical `IdR`. Schema-listed special codes such as `XAU`, `XTS`, and `XXX` remain accepted. Host `Intl` support does not change this contract. Unsupported codes fail with `exchange_rate.currency_unsupported`. `validateExchangeRateQuote(request, quote)` applies the same currency check before it verifies the pair, requested rate type, dates, provider, optional HTTPS source URL, and positive rate.
+`normalizeCurrencyCode(currencyCode)` trims and uppercases a code, then checks a runtime set copied from the active embedded `ISO_ISO3AlphaCurrencyCode_2012-08-31.xsd` enumeration. The package does not read the schema at runtime. The XSD contains 179 entries: 178 canonical uppercase codes plus the anomalous mixed-case `IdR`. The exhaustive test requires `IdR` to remain the only noncanonical entry and compares the checked-in set with all 178 usable codes. Canonical `IDR` is rejected because the active XSD rejects it, and the package does not emit noncanonical `IdR`. Schema-listed special codes such as `XAU`, `XTS`, and `XXX` remain accepted. `payableAlternativeAmountSchema` uses the same canonical set for low-level invoice input. Host `Intl` support does not change this contract. Unsupported codes fail with `exchange_rate.currency_unsupported`. `validateExchangeRateQuote(request, quote)` applies the same currency check before it verifies the pair, requested rate type, dates, provider, optional HTTPS URLs without user information, structured evidence, and positive rate.
 
 Set `EfaturaDependencies.exchangeRateProvider` in the second `createEfatura()` argument to replace the provider. Omission constructs `BcvExchangeRateProvider` with the facade clock.
 
@@ -169,7 +172,7 @@ new BcvExchangeRateProvider(options?: BcvExchangeRateProviderOptions)
 | `allowPreviousPublication` | `boolean` | `false` |
 | `maxPublicationAgeDays` | `number` | `0` |
 
-`getQuote()` supports buy and sell quotes targeting CVE and defaults to buy when called without a rate type. It normalizes rates published for multiple units. Previous publications require both an enabled policy and an adequate maximum age. The current BCV page is dynamic and is not a documented historical API.
+`getQuote()` supports buy and sell quotes targeting CVE and defaults to buy when called without a rate type. It requires exactly one rate table and one anchored spanning publication row, with one adjacent semantic-heading compatibility shape when the spanning row is absent. It normalizes rates published for multiple units and compares the requested instant by the fixed UTC-01 Cape Verde calendar date. `timeoutMs` and `maxResponseBytes` must be positive safe integers; `maxPublicationAgeDays` must be a nonnegative safe integer. Previous publications require both an enabled policy and an adequate maximum age. The current BCV page is dynamic and is not a documented historical API.
 
 ### `WorldBankExchangeRateProvider`
 
@@ -187,7 +190,7 @@ new WorldBankExchangeRateProvider(options?: WorldBankExchangeRateProviderOptions
 | `timeoutMs` | `number` | `10000` |
 | `maxResponseBytes` | `number` | `1048576` |
 
-The provider supports `reference` quotes only and uses annual observations for one UTC year. USD needs no mapping; other source currencies need an explicit economy mapping. World Bank is an annual reference source, not a fiscal daily default.
+The provider supports `reference` quotes only and uses annual observations for one UTC year. The CVE mapping is locked to CPV. USD needs no mapping; other source currencies need an explicit economy mapping. Only `PA.NUS.FCRF` and the official `https://api.worldbank.org` origin are accepted, preventing false World Bank attribution. Returned evidence preserves the period, economy, endpoint, role, currency, and exact leg value. World Bank is an annual reference source, not a fiscal daily default.
 
 ### `FixedExchangeRateProvider`
 
@@ -309,7 +312,7 @@ const document = await efatura.renderDfa({
 | `dfaQrCodeUrl(iud)` | Builds the official DFA lookup URL from `dfaBaseUrl` |
 | `renderDfa(options)` | Renders a PDF through the configured DFA renderer |
 
-`RenderDfaOptions.conversion?: CurrencyConversionMetadata` supplies conversion evidence to the default or custom renderer. `DfaRenderInput.conversion` exposes the same optional field. `RenderDfaOptions.currency` is deprecated because fiscal values are always CVE. Remove it when an invoice is supplied; a foreign value in IUD-only rendering throws `dfa.currency_invalid`.
+`RenderDfaOptions.conversion?: CurrencyConversionMetadata` supplies conversion evidence to the default or custom renderer. `DfaRenderInput.conversion` exposes the same optional field. Direct metadata requires an invoice with totals, a CVE target, a converted payable value equal to invoice totals, and foreign original value, currency, and rate equal to the sole alternative payable amount. Invalid metadata throws `dfa.conversion_invalid`. `RenderDfaOptions.currency` is deprecated because fiscal values are always CVE. Remove it when an invoice is supplied; a foreign value in IUD-only rendering throws `dfa.currency_invalid`.
 
 The default renderer returns:
 

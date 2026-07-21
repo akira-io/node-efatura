@@ -7,6 +7,23 @@ export interface ExchangeRateRequest {
   rateType?: ExchangeRateType;
 }
 
+export type ExchangeRateEvidenceLegRole = 'source' | 'target';
+
+export interface ExchangeRateEvidenceLeg {
+  role: ExchangeRateEvidenceLegRole;
+  currency: string;
+  economy: string | null;
+  value: string;
+  sourceUrl?: string;
+}
+
+export interface ExchangeRateEvidence {
+  source: string;
+  indicator: string;
+  observationPeriod: string;
+  legs: readonly ExchangeRateEvidenceLeg[];
+}
+
 export interface ExchangeRateQuote {
   sourceCurrency: string;
   targetCurrency: string;
@@ -16,6 +33,7 @@ export interface ExchangeRateQuote {
   retrievedAt: Date;
   provider: string;
   sourceUrl?: string;
+  evidence?: ExchangeRateEvidence;
 }
 
 export interface CurrencyConversionMetadata extends ExchangeRateQuote {

@@ -25,6 +25,8 @@ The DFE XML has no official fields for the provider name, retrieval time, or sou
 
 When `sourceCurrency` is `CVE`, preparation uses an identity quote with rate `1`, provider `identity`, and rate type `reference`. It does not call the configured provider or add a CVE alternative amount.
 
+Preparation requires invoice totals and a payable amount for both foreign and CVE identity paths. A document without totals cannot produce truthful original and converted payable metadata, so preparation fails with `exchange_rate.invoice_invalid` instead of recording zero.
+
 ## 2. Installation And Prerequisites
 
 Install the package with Node.js 20 or newer:
@@ -120,6 +122,21 @@ export interface ExchangeRateRequest {
   rateType?: ExchangeRateType;
 }
 
+export interface ExchangeRateEvidenceLeg {
+  role: 'source' | 'target';
+  currency: string;
+  economy: string | null;
+  value: string;
+  sourceUrl?: string;
+}
+
+export interface ExchangeRateEvidence {
+  source: string;
+  indicator: string;
+  observationPeriod: string;
+  legs: readonly ExchangeRateEvidenceLeg[];
+}
+
 export interface ExchangeRateQuote {
   sourceCurrency: string;
   targetCurrency: string;
@@ -129,6 +146,7 @@ export interface ExchangeRateQuote {
   retrievedAt: Date;
   provider: string;
   sourceUrl?: string;
+  evidence?: ExchangeRateEvidence;
 }
 
 export interface ExchangeRateProvider {
@@ -170,11 +188,11 @@ export interface PreparedCurrencyInvoice {
 }
 ```
 
-The result contains a new normalized invoice. The source object is not mutated. `normalizeCurrencyCode()` trims and uppercases a code, then enforces membership in the active e-Fatura XSD's canonical uppercase currency entries. Schema-listed special codes such as `XAU`, `XTS`, and `XXX` are accepted. Canonical `IDR` and other codes absent from the usable set are rejected even when the host runtime recognizes them. `validateExchangeRateQuote()` applies the same currency check plus the package pair, date, provenance, HTTPS source URL, and rate validations before returning a normalized quote.
+The result contains a new normalized invoice. The source object is not mutated. `normalizeCurrencyCode()` trims and uppercases a code, then enforces membership in the active e-Fatura XSD's canonical uppercase currency entries. Schema-listed special codes such as `XAU`, `XTS`, and `XXX` are accepted. Canonical `IDR` and other codes absent from the usable set are rejected even when the host runtime recognizes them. The low-level `payableAlternativeAmountSchema` reuses this canonical set, so `IDR`, `IdR`, and unknown three-letter values fail before XML generation. `validateExchangeRateQuote()` applies the same currency check plus the package pair, date, provenance, HTTPS source URL, evidence URL, and rate validations before returning a normalized quote. HTTPS URLs with user information are rejected.
 
 ## 6. BCV Rate Type, Units, Publication Date, Weekend, Staleness, Timeout, And Current-Page Limitation
 
-`BcvExchangeRateProvider` is the fiscal default. It reads the official BCV dated print view and identifies the publication heading and rate table. Despite the `_expType=PDF` query parameter, the current response is textual HTML.
+`BcvExchangeRateProvider` is the fiscal default. It reads the official BCV dated print view and requires exactly one identified rate table. The official date comes from one anchored spanning `th[colspan="5"]` publication row inside that table. One immediately adjacent semantic heading remains a compatibility shape when the spanning row is absent. Multiple date candidates, rate tables, header rows, or requested-currency rows fail closed. Unrelated tables and headings are ignored. Despite the `_expType=PDF` query parameter, the current response is textual HTML.
 
 ```ts
 import { BcvExchangeRateProvider, createEfatura } from '@akira-io/efatura';
@@ -193,17 +211,19 @@ const efatura = createEfatura(config, { exchangeRateProvider: provider });
 |---|---:|---|
 | `fetcher` | global `fetch` | HTTP implementation used for the official page |
 | `clock` | `SystemClock` | Supplies `retrievedAt` |
-| `sourceUrl` | official BCV print URL | Must use HTTPS |
-| `timeoutMs` | `10000` | Aborts a slow request |
-| `maxResponseBytes` | `1048576` | Rejects a response above 1 MiB |
+| `sourceUrl` | official BCV print URL | Must use HTTPS without user information |
+| `timeoutMs` | `10000` | Positive safe integer that aborts a slow request |
+| `maxResponseBytes` | `1048576` | Positive safe integer that rejects a response above 1 MiB |
 | `allowPreviousPublication` | `false` | Permits an earlier publication only when enabled |
-| `maxPublicationAgeDays` | `0` | Maximum UTC calendar-day age of an earlier publication |
+| `maxPublicationAgeDays` | `0` | Nonnegative safe integer for the earlier-publication age |
 
 The provider defaults to the BCV buy column. Set `rateType: 'sell'` in preparation options when the sell column is required and available. `reference` and `custom` are rejected for BCV.
 
 BCV can publish a row for more than one source-currency unit. The parser divides the published CVE value by the unit count. A row of `11,026.50 CVE` for `100 EUR` becomes `110.265 CVE` for one EUR. Missing currencies, malformed tables, non-positive units, non-positive rates, absent publication dates, HTTP failures, oversized responses, and timeouts fail closed.
 
-By default, the publication date must equal the requested UTC calendar date. For a weekend or public holiday, enable `allowPreviousPublication` and set a positive `maxPublicationAgeDays`. The provider records the actual earlier publication date and rejects future or older publications. Setting `allowPreviousPublication: true` while leaving the maximum age at `0` does not permit an earlier date.
+`timeoutMs` and `maxResponseBytes` must be positive safe integers. `maxPublicationAgeDays` must be a finite nonnegative safe integer. Fractions, infinities, unsafe integers, and invalid signs fail at construction.
+
+By default, the publication date must equal the requested instant's fixed UTC-01 Cape Verde calendar date. The comparison changes date at `01:00Z`, including month and year boundaries; it does not use the UTC date directly. For a weekend or public holiday, enable `allowPreviousPublication` and set a positive `maxPublicationAgeDays`. The provider records the actual earlier publication date and rejects future or older publications. Setting `allowPreviousPublication: true` while leaving the maximum age at `0` does not permit an earlier date.
 
 The BCV print page is current and dynamic. It is not a documented historical-rate API. Changing `effectiveAt` does not make that page return an archived publication. An earlier request fails unless `sourceUrl` points to a separately configured, trusted historical source with the same expected page shape. For audited historical rates, prefer `FixedExchangeRateProvider` or a trusted `CallbackExchangeRateProvider`.
 
@@ -229,19 +249,21 @@ const prepared = await efatura.prepareInvoiceToCve(invoiceInEur, {
 });
 ```
 
-The API is organized by economy, not currency. The built-in mapping contains `CVE: 'CPV'`, and USD is treated as one USD per USD without a lookup. Every other currency needs an explicit unambiguous `economyByCurrency` entry. Consumer entries are normalized and merged with the CVE mapping.
+The API is organized by economy, not currency. The `CVE` to `CPV` mapping is locked and cannot be replaced by consumer configuration. USD is treated as one USD per USD without a lookup. Every other currency needs an explicit unambiguous `economyByCurrency` entry.
 
 | Option | Default | Behaviour |
 |---|---:|---|
 | `fetcher` | global `fetch` | HTTP implementation used for World Bank requests |
 | `clock` | `SystemClock` | Supplies `retrievedAt` |
-| `economyByCurrency` | `{ CVE: 'CPV' }` | Adds currency-to-economy mappings |
-| `indicator` | `PA.NUS.FCRF` | Indicator used for both cross-rate legs |
-| `baseUrl` | `https://api.worldbank.org` | HTTPS API base URL |
+| `economyByCurrency` | `{ CVE: 'CPV' }` | Adds mappings without replacing CVE to CPV |
+| `indicator` | `PA.NUS.FCRF` | The only supported indicator is `PA.NUS.FCRF` |
+| `baseUrl` | `https://api.worldbank.org` | Must remain the official HTTPS World Bank API origin |
 | `timeoutMs` | `10000` | Aborts slow requests |
 | `maxResponseBytes` | `1048576` | Rejects a response above 1 MiB |
 
-The provider reads source and target observations for the same requested UTC year, calculates the normalized multiplier, rounds it to five fractional digits, and returns `rateType: 'reference'`. `effectiveAt` is January 1 of the observation year, `retrievedAt` is the fetch time, and `sourceUrl` identifies the official indicator page. Missing mappings, missing observations, mismatched periods, invalid responses, and non-reference rate requests fail.
+The provider reads source and target observations for the same requested UTC year, calculates the normalized multiplier, rounds it to five fractional digits, and returns `rateType: 'reference'`. `effectiveAt` is January 1 of the observation year, `retrievedAt` is the fetch time, and `sourceUrl` identifies the official indicator page. Custom hosts and indicators are rejected so a custom service cannot receive World Bank attribution.
+
+World Bank quotes include optional `ExchangeRateEvidence` metadata. It records `source: 'World Bank'`, the indicator, observation period, and both cross-rate legs. Each leg preserves its role, currency, exact economy mapping, decimal observation value, and exact API endpoint. USD identity legs record value `1` without an observation endpoint. Persist this metadata with `CurrencyConversionMetadata` for audit replay. Missing mappings, missing observations, mismatched periods, invalid responses, and non-reference rate requests fail.
 
 ## 8. Fixed User Rate
 
@@ -367,7 +389,7 @@ The embedded `Read Me.txt` records an earlier three-decimal revision. The active
 
 Automatic foreign-currency preparation rejects an invoice whose totals already contain any `payableAlternativeAmounts`. It cannot establish the provenance, direction, date, or compatibility of those existing values. The error code is `exchange_rate.alternatives_conflict`.
 
-The low-level `InvoiceData` and XML APIs continue to accept caller-supplied alternative amounts for applications that manage those values independently. Do not pass such an invoice to `prepareInvoiceToCve()`.
+The low-level `InvoiceData` and XML APIs continue to accept caller-supplied alternative amounts for applications that manage those values independently. Their currency codes use the same canonical schema set as provider quotes. `XAU`, `XTS`, and `XXX` remain valid; `IDR`, mixed-case `IdR`, and unknown `ZZZ` are rejected before XML generation. Do not pass such an invoice to `prepareInvoiceToCve()`.
 
 For a CVE identity preparation, the provider is not called and no CVE alternative amount is created. Existing low-level alternative amounts are preserved by normal invoice validation because no foreign conversion runs.
 
@@ -386,7 +408,7 @@ For a CVE identity preparation, the provider is not called and no CVE alternativ
 | `exchange_rate.date_invalid` | Requested or returned date is invalid or a BCV publication is in the future | Correct the date source before issuance. |
 | `exchange_rate.stale` | BCV publication exceeds `maxPublicationAgeDays` | Obtain a newer publication or change policy through an approved configuration change. |
 | `exchange_rate.source_required` | A configured source URL is empty, invalid, or not HTTPS | Supply a trusted HTTPS URL or omit the optional URL where supported. |
-| `exchange_rate.invoice_invalid` | The converted invoice fails fiscal validation | Inspect the cause and correct the source invoice or conversion inputs. |
+| `exchange_rate.invoice_invalid` | Totals are absent or the converted invoice fails fiscal validation | Supply totals or inspect the validation cause and correct the source invoice. |
 | `exchange_rate.alternatives_conflict` | Existing alternative amounts cannot be merged safely | Remove them before automatic preparation or use the low-level API. |
 
 ```ts
@@ -403,7 +425,7 @@ try {
 }
 ```
 
-Error messages omit credentials and complete upstream response bodies. Logs may contain the code, provider, pair, and dates when the application has those fields.
+Error messages and causes derived from built-in upstream response values omit credentials, invalid decimal text, and complete response bodies. Provider and evidence URLs reject user information. Logs may contain the code, provider, pair, and dates when the application has those fields.
 
 ## 14. Audit Persistence And DFA Reprints
 
@@ -430,7 +452,7 @@ const dfa = await efatura.renderDfa({
 
 A reprint must use the stored converted invoice and stored conversion metadata. It must not call `prepareInvoiceToCve()` again, fetch a new quote, replace `retrievedAt`, or recalculate CVE values. Provider caches are optional infrastructure concerns; a cache hit must retain the original retrieval time and remain within the configured date policy. Provider failures are not cached by the package.
 
-The default DFA displays the fiscal payable amount in CVE plus the original amount, source currency, normalized direction, effective date, provider, and optional source URL. Custom renderers receive the same `conversion` value through `DfaRenderInput`.
+The default DFA displays the fiscal payable amount in CVE plus the original amount, source currency, normalized direction, effective date, provider, and optional source URL. Custom renderers receive the same `conversion` value through `DfaRenderInput`. DFA conversion metadata is validated against the invoice before rendering: the target must be CVE, totals must exist, the converted payable amount must match the invoice, and foreign original value, currency, and rate must match the sole alternative payable amount. Invalid direct metadata throws `dfa.conversion_invalid`.
 
 ## 15. Security And Adapter Boundary
 
@@ -470,6 +492,6 @@ await efatura.renderDfa({
 });
 ```
 
-When `invoice` is supplied, the renderer always receives `currency: 'CVE'`; remove the legacy option. For IUD-only rendering, `currency: 'CVE'` remains accepted during the compatibility period, while a foreign value throws `EfaturaValidationError` with code `dfa.currency_invalid`. The package does not emit a deprecation warning at runtime. TypeScript users receive the `@deprecated` annotation from `RenderDfaOptions`.
+When `invoice` is supplied, the renderer always receives `currency: 'CVE'`; remove the legacy option. For IUD-only rendering, `currency: 'CVE'` remains accepted during the compatibility period, while a foreign value throws `EfaturaValidationError` with code `dfa.currency_invalid`. The package does not emit a deprecation warning at runtime.
 
-Migration is complete when the application prepares foreign invoices before XML or DFA creation, persists the result, removes foreign DFA labels, and reuses stored conversion evidence for every reprint.
+Migration is complete when the application prepares foreign invoices before XML or DFA creation, persists the result, removes foreign DFA labels, and reuses stored conversion evidence for every reprint. Migration guidance remains in this chapter rather than a source-level deprecation annotation.

@@ -135,7 +135,110 @@ describe('currency conversion DFA mapping', () => {
       ),
     ).toThrowError(EfaturaValidationError);
   });
+
+  it('rejects direct DFA conversion metadata without an invoice', async () => {
+    const prepared = await preparedForDfa();
+
+    expect(() =>
+      dfaRenderInputFrom(
+        { iud, conversion: prepared.conversion },
+        'https://pe.efatura.cv/dfe/view/example',
+      ),
+    ).toThrowError(
+      expect.objectContaining({ field: 'conversion', code: 'dfa.conversion_invalid' }),
+    );
+  });
+
+  it('rejects direct DFA conversion metadata with a non-CVE target', async () => {
+    const prepared = await preparedForDfa();
+
+    expect(() =>
+      dfaRenderInputFrom(
+        {
+          iud,
+          invoice: prepared.invoice,
+          conversion: { ...prepared.conversion, targetCurrency: 'USD' },
+        },
+        'https://pe.efatura.cv/dfe/view/example',
+      ),
+    ).toThrowError(
+      expect.objectContaining({ field: 'conversion', code: 'dfa.conversion_invalid' }),
+    );
+  });
+
+  it('rejects direct DFA conversion metadata that disagrees with payable values', async () => {
+    const prepared = await preparedForDfa();
+
+    expect(() =>
+      dfaRenderInputFrom(
+        {
+          iud,
+          invoice: prepared.invoice,
+          conversion: { ...prepared.conversion, convertedPayableAmount: 1 },
+        },
+        'https://pe.efatura.cv/dfe/view/example',
+      ),
+    ).toThrowError(
+      expect.objectContaining({ field: 'conversion', code: 'dfa.conversion_invalid' }),
+    );
+    expect(() =>
+      dfaRenderInputFrom(
+        {
+          iud,
+          invoice: prepared.invoice,
+          conversion: { ...prepared.conversion, originalPayableAmount: 1 },
+        },
+        'https://pe.efatura.cv/dfe/view/example',
+      ),
+    ).toThrowError(
+      expect.objectContaining({ field: 'conversion', code: 'dfa.conversion_invalid' }),
+    );
+  });
+
+  it('rejects direct DFA URL credentials without retaining them in the error', async () => {
+    const credentialSentinel = 'DFA_SECRET_PASSWORD';
+    const prepared = await preparedForDfa();
+
+    try {
+      dfaRenderInputFrom(
+        {
+          iud,
+          invoice: prepared.invoice,
+          conversion: {
+            ...prepared.conversion,
+            sourceUrl: `https://user:${credentialSentinel}@rates.example/evidence`,
+          },
+        },
+        'https://pe.efatura.cv/dfe/view/example',
+      );
+      throw new Error('Expected DFA conversion validation to fail.');
+    } catch (error) {
+      expect(error).toMatchObject({ field: 'conversion', code: 'dfa.conversion_invalid' });
+      expect(String(error)).not.toContain(credentialSentinel);
+      expect(String((error as Error & { cause?: unknown }).cause)).not.toContain(
+        credentialSentinel,
+      );
+    }
+  });
 });
+
+async function preparedForDfa() {
+  const effectiveAt = new Date('2026-07-21T11:30:00Z');
+  const efatura = createEfatura(config, {
+    exchangeRateProvider: new FixedExchangeRateProvider({
+      sourceCurrency: 'EUR',
+      targetCurrency: 'CVE',
+      rate: 110.265,
+      effectiveAt,
+      provider: 'Test provider',
+    }),
+  });
+
+  return efatura.prepareInvoiceToCve(invoicePayableAt200(), {
+    sourceCurrency: 'EUR',
+    effectiveAt,
+  });
+}
 
 function invoicePayableAt200(): Record<string, unknown> {
   return baseInvoicePayload({

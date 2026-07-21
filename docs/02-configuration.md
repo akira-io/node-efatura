@@ -90,7 +90,7 @@ The expected layout is `resources/golden-vectors/{kind}/{name}.{extension}`, whe
 
 ## Exchange-Rate Provider
 
-`EfaturaDependencies.exchangeRateProvider` accepts any `ExchangeRateProvider`. When omitted, `createEfatura()` constructs `BcvExchangeRateProvider` with the global `fetch` implementation and the resolved facade clock. The BCV provider defaults to a buy quote, a 10-second timeout, a 1 MiB response limit, strict publication-date matching, and no previous-publication allowance.
+`EfaturaDependencies.exchangeRateProvider` accepts any `ExchangeRateProvider`. When omitted, `createEfatura()` constructs `BcvExchangeRateProvider` with the global `fetch` implementation and the resolved facade clock. The BCV provider defaults to a buy quote, a 10-second timeout, a 1 MiB response limit, strict publication-date matching on the fixed UTC-01 Cape Verde calendar, and no previous-publication allowance.
 
 ```ts
 import { BcvExchangeRateProvider, createEfatura } from '@akira-io/efatura';
@@ -107,6 +107,8 @@ const efatura = createEfatura(config, { exchangeRateProvider });
 
 Set both `allowPreviousPublication` and a positive `maxPublicationAgeDays` to permit an earlier BCV publication for a weekend or public holiday. The current BCV print page is dynamic and is not a documented historical API.
 
+BCV `timeoutMs` and `maxResponseBytes` must be positive safe integers. `maxPublicationAgeDays` must be a finite nonnegative safe integer. Provider URLs must use HTTPS without user information.
+
 Provider-specific options:
 
 | Provider | Options and defaults |
@@ -117,6 +119,8 @@ Provider-specific options:
 | `CallbackExchangeRateProvider` | Requires one asynchronous `ExchangeRateCallback` |
 
 World Bank data is an annual reference and is never selected automatically. No provider failure triggers a silent fallback. See [Currency Conversion](18-currency-conversion.md) for contracts, date policy, rate direction, and audit requirements.
+
+The World Bank provider locks CVE to CPV, accepts only `PA.NUS.FCRF`, and permits only the official `https://api.worldbank.org` origin. Consumer mappings cannot replace CVE provenance. Quotes retain exact observation-leg evidence for audit storage.
 
 ## UUID Generators
 

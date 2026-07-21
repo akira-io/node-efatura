@@ -84,6 +84,28 @@ describe('WorldBankExchangeRateProvider', () => {
       retrievedAt,
       provider: 'World Bank PA.NUS.FCRF',
       sourceUrl: 'https://data.worldbank.org/indicator/PA.NUS.FCRF',
+      evidence: {
+        source: 'World Bank',
+        indicator: 'PA.NUS.FCRF',
+        observationPeriod: '2025',
+        legs: [
+          {
+            role: 'source',
+            currency: 'USD',
+            economy: null,
+            value: '1',
+            sourceUrl: undefined,
+          },
+          {
+            role: 'target',
+            currency: 'CVE',
+            economy: 'CPV',
+            value: '101.7495',
+            sourceUrl:
+              'https://api.worldbank.org/v2/country/CPV/indicator/PA.NUS.FCRF?format=json&date=2025&per_page=1',
+          },
+        ],
+      },
     });
   });
 

@@ -1,6 +1,8 @@
 import Decimal from 'decimal.js';
 import type { Clock } from '../../core/contracts/clock';
 import type {
+  ExchangeRateEvidenceLeg,
+  ExchangeRateEvidenceLegRole,
   ExchangeRateProvider,
   ExchangeRateQuote,
   ExchangeRateRequest,
@@ -32,6 +34,12 @@ const DEFAULT_INDICATOR = 'PA.NUS.FCRF';
 const DEFAULT_BASE_URL = 'https://api.worldbank.org';
 const DEFAULT_TIMEOUT_MS = 10_000;
 const DEFAULT_MAX_RESPONSE_BYTES = 1024 * 1024;
+const WORLD_BANK_API_HOST = 'api.worldbank.org';
+
+interface WorldBankObservation {
+  rate: Decimal;
+  evidence: ExchangeRateEvidenceLeg;
+}
 
 export class WorldBankExchangeRateProvider implements ExchangeRateProvider {
   readonly #fetch: typeof fetch;
@@ -73,12 +81,12 @@ export class WorldBankExchangeRateProvider implements ExchangeRateProvider {
     this.#assertSupportedCurrency(sourceCurrency);
     this.#assertSupportedCurrency(targetCurrency);
 
-    const [sourcePerUsd, targetPerUsd] = await Promise.all([
-      this.#currencyPerUsd(sourceCurrency, year),
-      this.#currencyPerUsd(targetCurrency, year),
+    const [sourceObservation, targetObservation] = await Promise.all([
+      this.#currencyPerUsd(sourceCurrency, year, 'source'),
+      this.#currencyPerUsd(targetCurrency, year, 'target'),
     ]);
-    const rate = targetPerUsd
-      .div(sourcePerUsd)
+    const rate = targetObservation.rate
+      .div(sourceObservation.rate)
       .toDecimalPlaces(5, Decimal.ROUND_HALF_UP)
       .toNumber();
 
@@ -91,6 +99,12 @@ export class WorldBankExchangeRateProvider implements ExchangeRateProvider {
       retrievedAt: this.#clock.now(),
       provider: `World Bank ${this.#indicator}`,
       sourceUrl: this.#indicatorUrl,
+      evidence: {
+        source: 'World Bank',
+        indicator: this.#indicator,
+        observationPeriod: String(year),
+        legs: [sourceObservation.evidence, targetObservation.evidence],
+      },
     });
   }
 
@@ -103,9 +117,16 @@ export class WorldBankExchangeRateProvider implements ExchangeRateProvider {
     }
   }
 
-  async #currencyPerUsd(currency: string, year: number): Promise<Decimal> {
+  async #currencyPerUsd(
+    currency: string,
+    year: number,
+    role: ExchangeRateEvidenceLegRole,
+  ): Promise<WorldBankObservation> {
     if (currency === 'USD') {
-      return new Decimal(1);
+      return {
+        rate: new Decimal(1),
+        evidence: { role, currency, economy: null, value: '1' },
+      };
     }
 
     const economy = this.#economyByCurrency[currency];
@@ -126,7 +147,23 @@ export class WorldBankExchangeRateProvider implements ExchangeRateProvider {
     endpointUrl.searchParams.set('per_page', '1');
 
     const worldBankPayload = await this.#fetchWorldBankJson(endpointUrl);
-    return parseWorldBankObservation(worldBankPayload, economy, this.#indicator, year);
+    const observationRate = parseWorldBankObservation(
+      worldBankPayload,
+      economy,
+      this.#indicator,
+      year,
+    );
+
+    return {
+      rate: observationRate,
+      evidence: {
+        role,
+        currency,
+        economy,
+        value: observationRate.toString(),
+        sourceUrl: endpointUrl.toString(),
+      },
+    };
   }
 
   async #fetchWorldBankJson(endpointUrl: URL): Promise<unknown> {
@@ -137,8 +174,8 @@ export class WorldBankExchangeRateProvider implements ExchangeRateProvider {
         headers: { accept: 'application/json' },
         signal: AbortSignal.timeout(this.#timeoutMs),
       });
-    } catch (cause) {
-      throw providerUnavailable(undefined, cause);
+    } catch {
+      throw providerUnavailable();
     }
 
     if (!httpResponse.ok) {
@@ -180,8 +217,14 @@ function normalizeEconomyMapping(
       );
     }
 
+    if (currencyCode === 'CVE' && economyCode !== 'CPV') {
+      throw invalidWorldBankResponse('the CVE economy mapping must remain CPV');
+    }
+
     normalizedMapping[currencyCode] = economyCode;
   }
+
+  normalizedMapping.CVE = 'CPV';
 
   return normalizedMapping;
 }
@@ -193,6 +236,10 @@ function normalizeIndicator(indicator: string): string {
     throw invalidWorldBankResponse('indicator must not be empty');
   }
 
+  if (normalized !== DEFAULT_INDICATOR) {
+    throw invalidWorldBankResponse(`indicator must be ${DEFAULT_INDICATOR}`);
+  }
+
   return normalized;
 }
 
@@ -200,16 +247,21 @@ function normalizeBaseUrl(baseUrl: string): string {
   try {
     const parsedBaseUrl = new URL(baseUrl);
 
-    if (parsedBaseUrl.protocol !== 'https:') {
+    if (
+      parsedBaseUrl.protocol !== 'https:' ||
+      parsedBaseUrl.hostname !== WORLD_BANK_API_HOST ||
+      parsedBaseUrl.port.length > 0 ||
+      parsedBaseUrl.username.length > 0 ||
+      parsedBaseUrl.password.length > 0
+    ) {
       throw new Error('The World Bank base URL must use HTTPS.');
     }
 
-    return parsedBaseUrl.toString();
-  } catch (cause) {
+    return parsedBaseUrl.origin;
+  } catch {
     throw new ExchangeRateError(
       'exchange_rate.source_required',
-      'An HTTPS World Bank base URL is required.',
-      { cause },
+      'The official HTTPS World Bank API base URL is required.',
     );
   }
 }
@@ -235,12 +287,11 @@ function observationYear(effectiveAt: Date): number {
   return effectiveAt.getUTCFullYear();
 }
 
-function providerUnavailable(status?: number, cause?: unknown): ExchangeRateError {
+function providerUnavailable(status?: number): ExchangeRateError {
   const statusSuffix = status === undefined ? '' : ` (HTTP ${status})`;
 
   return new ExchangeRateError(
     'exchange_rate.provider_unavailable',
     `The World Bank exchange-rate source is unavailable${statusSuffix}.`,
-    { cause },
   );
 }

@@ -72,7 +72,6 @@ export interface RenderDfaOptions {
   emissionMode?: EmissionModeInput;
   contingencyIuc?: string;
   title?: string;
-  /** @deprecated Fiscal DFA values are always denominated in CVE. */
   currency?: string;
   conversion?: CurrencyConversionMetadata;
 }

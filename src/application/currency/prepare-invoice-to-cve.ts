@@ -31,6 +31,13 @@ export async function prepareInvoiceToCve(
   const sourceCurrency = normalizeCurrencyCode(options.sourceCurrency);
   const effectiveAt = effectiveAtFrom(invoice, options.effectiveAt, dependencies.clock);
 
+  if (invoice.totals === null) {
+    throw new ExchangeRateError(
+      'exchange_rate.invoice_invalid',
+      'Invoice totals with a payable amount are required for currency conversion.',
+    );
+  }
+
   if (sourceCurrency === 'CVE') {
     return prepareIdentityInvoice(invoice, effectiveAt, dependencies);
   }
@@ -62,7 +69,14 @@ function prepareIdentityInvoice(
   };
   const quote = validateExchangeRateQuote(request, identityQuote(effectiveAt, dependencies.clock));
   const normalizedInvoice = validateConvertedInvoice(invoice, dependencies.validateInvoice);
-  const payableAmount = normalizedInvoice.totals?.payableAmount ?? 0;
+  const payableAmount = normalizedInvoice.totals?.payableAmount;
+
+  if (payableAmount === undefined) {
+    throw new ExchangeRateError(
+      'exchange_rate.invoice_invalid',
+      'Invoice totals with a payable amount are required for currency conversion.',
+    );
+  }
 
   return {
     invoice: normalizedInvoice,

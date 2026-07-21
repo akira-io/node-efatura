@@ -148,6 +148,87 @@ describe('exchange-rate quotes', () => {
     );
   });
 
+  it('rejects source URL credentials without retaining them in the error', () => {
+    const credentialSentinel = 'QUOTE_SECRET_PASSWORD';
+
+    try {
+      validateExchangeRateQuote(
+        request,
+        validQuote({ sourceUrl: `https://user:${credentialSentinel}@www.bcv.cv/rates` }),
+      );
+      throw new Error('Expected quote validation to fail.');
+    } catch (error) {
+      expect(error).toMatchObject({ code: 'exchange_rate.source_required' });
+      expect(String(error)).not.toContain(credentialSentinel);
+      expect(String((error as Error & { cause?: unknown }).cause)).not.toContain(
+        credentialSentinel,
+      );
+    }
+  });
+
+  it('rejects evidence URL credentials without retaining them in the error', () => {
+    const credentialSentinel = 'EVIDENCE_SECRET_PASSWORD';
+
+    try {
+      validateExchangeRateQuote(
+        request,
+        validQuote({
+          evidence: {
+            source: 'World Bank',
+            indicator: 'PA.NUS.FCRF',
+            observationPeriod: '2025',
+            legs: [
+              {
+                role: 'target',
+                currency: 'CVE',
+                economy: 'CPV',
+                value: '101.7495',
+                sourceUrl: `https://user:${credentialSentinel}@api.worldbank.org/observation`,
+              },
+            ],
+          },
+        }),
+      );
+      throw new Error('Expected quote validation to fail.');
+    } catch (error) {
+      expect(error).toMatchObject({ code: 'exchange_rate.source_required' });
+      expect(String(error)).not.toContain(credentialSentinel);
+      expect(String((error as Error & { cause?: unknown }).cause)).not.toContain(
+        credentialSentinel,
+      );
+    }
+  });
+
+  it('rejects invalid observation text without retaining it in the error', () => {
+    const responseSentinel = 'UPSTREAM_OBSERVATION_SECRET';
+
+    try {
+      validateExchangeRateQuote(
+        request,
+        validQuote({
+          evidence: {
+            source: 'World Bank',
+            indicator: 'PA.NUS.FCRF',
+            observationPeriod: '2025',
+            legs: [
+              {
+                role: 'target',
+                currency: 'CVE',
+                economy: 'CPV',
+                value: responseSentinel,
+              },
+            ],
+          },
+        }),
+      );
+      throw new Error('Expected quote validation to fail.');
+    } catch (error) {
+      expect(error).toMatchObject({ code: 'exchange_rate.response_invalid' });
+      expect(String(error)).not.toContain(responseSentinel);
+      expect(String((error as Error & { cause?: unknown }).cause)).not.toContain(responseSentinel);
+    }
+  });
+
   it('exposes exchange-rate failures as ExchangeRateError instances', () => {
     expect(() => validateExchangeRateQuote(request, validQuote({ rate: 0 }))).toThrowError(
       ExchangeRateError,
