@@ -26,7 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Deprecated
 
-- Deprecate `renderDfa({ currency })`. Fiscal DFA values are always CVE; pass the prepared invoice and conversion metadata instead.
+- Deprecate `renderDfa({ currency })` for removal in `v1.0.0`. Defined values emit `DeprecationWarning` once per process with code `EFATURA_RENDER_DFA_CURRENCY_DEPRECATED`. Fiscal DFA values are always CVE; use `prepareInvoiceToCve()` and pass its invoice and conversion metadata instead.
 
 ## [1.0.0-beta3](https://github.com/akira-io/node-efatura/compare/v1.0.0-beta2...v1.0.0-beta3) (2026-07-01)
 

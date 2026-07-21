@@ -97,7 +97,6 @@ await fetch('/efatura/dfa', {
     iud,
     invoice,
     options: {
-      currency: 'CVE',
       title: 'Documento Fiscal Auxiliar',
     },
   }),
@@ -145,11 +144,11 @@ Before rendering, direct conversion metadata is checked against the invoice. The
 
 ## Deprecated Currency Label
 
-`RenderDfaOptions.currency` is deprecated. It relabeled values without converting them and could produce a misleading fiscal document.
+`RenderDfaOptions.currency` is deprecated and will be removed in `v1.0.0`. It relabeled values without converting them and could produce a misleading fiscal document.
 
-When `invoice` is present, renderer input is fixed to `CVE` and the legacy label is ignored. When rendering by IUD alone, `currency: 'CVE'` remains accepted during the compatibility period; another value throws `EfaturaValidationError` with code `dfa.currency_invalid`. No runtime deprecation warning is emitted.
+When `currency` is defined, the package emits a Node.js `DeprecationWarning` once per process with code `EFATURA_RENDER_DFA_CURRENCY_DEPRECATED`. The warning occurs before legacy validation. When `invoice` is present, renderer input is fixed to `CVE` and the legacy label is ignored. When rendering by IUD alone, `currency: 'CVE'` remains accepted during the compatibility period; another value emits the warning and then throws `EfaturaValidationError` with code `dfa.currency_invalid`. Omitting `currency` emits no warning.
 
-Remove `currency` and pass the prepared invoice plus `conversion`. See [Currency Conversion](18-currency-conversion.md) for the migration flow.
+Remove `currency`. For foreign invoices, use `prepareInvoiceToCve()` and pass its prepared invoice plus `conversion`. See [Currency Conversion](18-currency-conversion.md) for the migration flow.
 
 ## Pagination
 

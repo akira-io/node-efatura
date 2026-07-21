@@ -184,7 +184,7 @@ await efatura.renderDfa({
 });
 ```
 
-Do not use the deprecated `currency` field to label an unconverted invoice. A foreign label in IUD-only rendering throws `dfa.currency_invalid`. Reprints must reconstruct stored date strings as `Date` objects and reuse the original converted invoice and metadata instead of obtaining a new quote.
+Do not use the deprecated `currency` field to label an unconverted invoice. It will be removed in `v1.0.0`. A defined value emits one Node.js `DeprecationWarning` per process with code `EFATURA_RENDER_DFA_CURRENCY_DEPRECATED`; a foreign label in IUD-only rendering then throws `dfa.currency_invalid`. Remove the field. Use `prepareInvoiceToCve()` for a foreign invoice and pass the stored prepared invoice and conversion metadata to `renderDfa()`. Reprints must reconstruct stored date strings as `Date` objects and reuse the original converted invoice and metadata instead of obtaining a new quote.
 
 Direct metadata that lacks an invoice, targets a currency other than CVE, or disagrees with invoice and alternative payable values throws `dfa.conversion_invalid`. Reuse both members of the same stored `PreparedCurrencyInvoice` result.
 

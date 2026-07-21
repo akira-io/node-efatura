@@ -104,6 +104,44 @@ describe('currency conversion documentation', () => {
     expect(compliance).toContain('payableAlternativeAmountSchema');
     expect(configuration).toContain('exactly `https://www.bcv.cv`');
   });
+
+  it('documents the render DFA currency deprecation contract and migration', async () => {
+    const [optionsSource, changelog, apiReference, dfaGuide, troubleshooting, currencyGuide] =
+      await Promise.all([
+        readFile(new URL('../../src/application/efatura-options.ts', import.meta.url), 'utf8'),
+        readFile(new URL('../../CHANGELOG.md', import.meta.url), 'utf8'),
+        readFile(new URL('../../docs/12-api-reference.md', import.meta.url), 'utf8'),
+        readFile(new URL('../../docs/14-dfa.md', import.meta.url), 'utf8'),
+        readFile(new URL('../../docs/17-troubleshooting.md', import.meta.url), 'utf8'),
+        readFile(new URL('../../docs/18-currency-conversion.md', import.meta.url), 'utf8'),
+      ]);
+    const contractDocuments = [changelog, apiReference, dfaGuide, troubleshooting, currencyGuide];
+
+    expect(optionsSource).toContain(
+      '@deprecated Use prepareInvoiceToCve() and pass invoice with conversion metadata. Removed in v1.0.0.',
+    );
+    for (const document of contractDocuments) {
+      expect(document).toContain('EFATURA_RENDER_DFA_CURRENCY_DEPRECATED');
+      expect(document).toContain('v1.0.0');
+      expect(document).toContain('prepareInvoiceToCve()');
+    }
+    expect(dfaGuide).toContain('once per process');
+    expect(currencyGuide).toContain('once per process');
+    expect(dfaGuide).not.toContain('No runtime deprecation warning is emitted.');
+    expect(currencyGuide).not.toContain('does not emit a deprecation warning at runtime');
+  });
+
+  it('does not use the deprecated currency option in framework examples', async () => {
+    const examples = await Promise.all([
+      readFile(new URL('../../docs/examples/fastify/react.md', import.meta.url), 'utf8'),
+      readFile(new URL('../../docs/examples/fastify/svelte.md', import.meta.url), 'utf8'),
+      readFile(new URL('../../docs/examples/fastify/vue.md', import.meta.url), 'utf8'),
+    ]);
+
+    for (const example of examples) {
+      expect(example).not.toContain("options: { currency: 'CVE' }");
+    }
+  });
 });
 
 function extractTypeScriptBlock(markdown: string): string {

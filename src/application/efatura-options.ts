@@ -72,6 +72,7 @@ export interface RenderDfaOptions {
   emissionMode?: EmissionModeInput;
   contingencyIuc?: string;
   title?: string;
+  /** @deprecated Use prepareInvoiceToCve() and pass invoice with conversion metadata. Removed in v1.0.0. */
   currency?: string;
   conversion?: CurrencyConversionMetadata;
 }

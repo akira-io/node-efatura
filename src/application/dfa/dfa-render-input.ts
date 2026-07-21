@@ -16,8 +16,11 @@ import type { InvoiceData } from '../../domain/value-objects/invoice-data';
 import type { LineItemData } from '../../domain/value-objects/line-item-data';
 import type { TotalsData } from '../../domain/value-objects/totals-data';
 import type { RenderDfaOptions } from '../efatura-options';
+import { warnRenderDfaCurrencyDeprecation } from './render-dfa-currency-deprecation';
 
 export function dfaRenderInputFrom(options: RenderDfaOptions, qrCodeUrl: string): DfaRenderInput {
+  warnRenderDfaCurrencyDeprecation(options.currency);
+
   const parsedIud = parseIud(options.iud);
   const conversion = validatedConversion(options.invoice, options.conversion);
 

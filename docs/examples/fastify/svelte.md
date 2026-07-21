@@ -44,7 +44,6 @@ The `createInvoice` helper is shown in [Fastify Invoice Payload](invoice.md).
       const pdf = await postBinary('/dfa', {
         iud,
         invoice,
-        options: { currency: 'CVE' },
       });
 
       window.open(URL.createObjectURL(pdf), '_blank', 'noopener,noreferrer');

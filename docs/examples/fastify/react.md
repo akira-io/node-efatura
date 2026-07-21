@@ -44,7 +44,6 @@ export function EfaturaPreview(): JSX.Element {
       const response = await postBinary('/dfa', {
         iud,
         invoice,
-        options: { currency: 'CVE' },
       });
       const url = URL.createObjectURL(response);
 

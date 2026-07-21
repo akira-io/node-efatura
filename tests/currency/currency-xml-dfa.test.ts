@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   type CurrencyConversionMetadata,
   createEfatura,
@@ -20,8 +20,19 @@ const config = {
   softwareVersion: '1.0.0',
   middlewareBaseUrl: 'https://middleware.example',
 };
+const warningStateKey = Symbol.for('@akira-io/efatura/render-dfa-currency-deprecation');
 
 describe('currency conversion DFA mapping', () => {
+  beforeEach(() => {
+    Reflect.deleteProperty(globalThis, warningStateKey);
+    vi.spyOn(process, 'emitWarning').mockImplementation(() => undefined);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    Reflect.deleteProperty(globalThis, warningStateKey);
+  });
+
   it('builds synchronous XML with CVE payable and foreign alternative amounts', async () => {
     const effectiveAt = new Date('2026-07-21T11:30:00Z');
     const efatura = createEfatura(config, {

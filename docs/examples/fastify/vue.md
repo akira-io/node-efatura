@@ -45,7 +45,6 @@ async function openDfa(): Promise<void> {
     const pdf = await postBinary('/dfa', {
       iud,
       invoice: invoice.value,
-      options: { currency: 'CVE' },
     });
 
     window.open(URL.createObjectURL(pdf), '_blank', 'noopener,noreferrer');

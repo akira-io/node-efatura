@@ -314,7 +314,9 @@ const document = await efatura.renderDfa({
 | `dfaQrCodeUrl(iud)` | Builds the official DFA lookup URL from `dfaBaseUrl` |
 | `renderDfa(options)` | Renders a PDF through the configured DFA renderer |
 
-`RenderDfaOptions.conversion?: CurrencyConversionMetadata` supplies conversion evidence to the default or custom renderer. `DfaRenderInput.conversion` exposes the same optional field. Direct metadata requires an invoice with totals, a CVE target, a converted payable value equal to invoice totals and to the original payable amount multiplied by the normalized rate with two-decimal half-up rounding, and foreign original value, currency, and rate equal to the sole alternative payable amount. Invalid metadata throws `dfa.conversion_invalid`. `RenderDfaOptions.currency` is deprecated because fiscal values are always CVE. Remove it when an invoice is supplied; a foreign value in IUD-only rendering throws `dfa.currency_invalid`.
+`RenderDfaOptions.conversion?: CurrencyConversionMetadata` supplies conversion evidence to the default or custom renderer. `DfaRenderInput.conversion` exposes the same optional field. Direct metadata requires an invoice with totals, a CVE target, a converted payable value equal to invoice totals and to the original payable amount multiplied by the normalized rate with two-decimal half-up rounding, and foreign original value, currency, and rate equal to the sole alternative payable amount. Invalid metadata throws `dfa.conversion_invalid`.
+
+`RenderDfaOptions.currency` is deprecated because fiscal values are always CVE and will be removed in `v1.0.0`. Supplying it emits one Node.js `DeprecationWarning` per process with code `EFATURA_RENDER_DFA_CURRENCY_DEPRECATED`, including when an invoice causes the legacy label to be ignored. A foreign value in IUD-only rendering still throws `dfa.currency_invalid` after the warning. Remove the option. For foreign invoices, use `prepareInvoiceToCve()` and pass the returned `invoice` and `conversion` values to `renderDfa()`.
 
 The default renderer returns:
 

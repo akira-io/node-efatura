@@ -473,7 +473,7 @@ The package performs no silent fallback. Applications that implement an explicit
 
 ## 16. Migration From `renderDfa({ currency })`
 
-`RenderDfaOptions.currency` is deprecated. It changed a display label without proving that invoice values had been converted, which could misrepresent foreign values as fiscal amounts.
+`RenderDfaOptions.currency` is deprecated and will be removed in `v1.0.0`. It changed a display label without proving that invoice values had been converted, which could misrepresent foreign values as fiscal amounts.
 
 Old code:
 
@@ -499,6 +499,6 @@ await efatura.renderDfa({
 });
 ```
 
-When `invoice` is supplied, the renderer always receives `currency: 'CVE'`; remove the legacy option. For IUD-only rendering, `currency: 'CVE'` remains accepted during the compatibility period, while a foreign value throws `EfaturaValidationError` with code `dfa.currency_invalid`. The package does not emit a deprecation warning at runtime.
+When `currency` is defined, the package emits a Node.js `DeprecationWarning` once per process with code `EFATURA_RENDER_DFA_CURRENCY_DEPRECATED`. The warning occurs before legacy normalization. When `invoice` is supplied, the renderer always receives `currency: 'CVE'`; remove the legacy option. For IUD-only rendering, `currency: 'CVE'` remains accepted during the compatibility period, while a foreign value emits the warning and then throws `EfaturaValidationError` with code `dfa.currency_invalid`. Omitting the option emits no warning.
 
-Migration is complete when the application prepares foreign invoices before XML or DFA creation, persists the result, removes foreign DFA labels, and reuses stored conversion evidence for every reprint. Migration guidance remains in this chapter rather than a source-level deprecation annotation.
+Migration is complete when the application uses `prepareInvoiceToCve()` before XML or DFA creation, persists the result, removes foreign DFA labels, and reuses stored conversion evidence for every reprint. TypeScript consumers also receive the source-level deprecation annotation.
