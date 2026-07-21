@@ -82,8 +82,12 @@ function validateDate(value: Date, label: string): number {
   return timestamp;
 }
 
-function validateSourceUrl(sourceUrl: string | undefined): string {
-  if (sourceUrl === undefined || sourceUrl.trim().length === 0) {
+function validateSourceUrl(sourceUrl: string | undefined): string | undefined {
+  if (sourceUrl === undefined) {
+    return undefined;
+  }
+
+  if (sourceUrl.trim().length === 0) {
     throw new ExchangeRateError(
       'exchange_rate.source_required',
       'An HTTPS exchange-rate source URL is required.',

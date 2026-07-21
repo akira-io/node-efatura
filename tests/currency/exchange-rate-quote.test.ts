@@ -99,12 +99,17 @@ describe('exchange-rate quotes', () => {
     );
   });
 
+  it('preserves an absent source URL', () => {
+    const quote = validateExchangeRateQuote(request, validQuote({ sourceUrl: undefined }));
+
+    expect(quote.sourceUrl).toBeUndefined();
+  });
+
   it.each([
-    undefined,
     '',
     'http://www.bcv.cv/rates',
     'not a URL',
-  ])('rejects a missing or non-HTTPS source URL: %s', (sourceUrl) => {
+  ])('rejects a supplied invalid source URL: %s', (sourceUrl) => {
     expect(() => validateExchangeRateQuote(request, validQuote({ sourceUrl }))).toThrowError(
       expect.objectContaining({ code: 'exchange_rate.source_required' }),
     );
