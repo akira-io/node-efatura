@@ -98,6 +98,7 @@
   "sideEffects": false,
   "dependencies": {
     "@xmldom/xmldom": "^0.9.10",
+    "cheerio": "1.0.0",
     "decimal.js": "^10.6.0",
     "pdfkit": "^0.17.2",
     "qrcode": "^1.5.4",

@@ -1,5 +1,7 @@
 export { SystemClock } from './clock/system-clock';
 export {
+  BcvExchangeRateProvider,
+  type BcvExchangeRateProviderOptions,
   CallbackExchangeRateProvider,
   type ExchangeRateCallback,
   FixedExchangeRateProvider,
