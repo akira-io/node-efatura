@@ -64,10 +64,11 @@ const efatura = createEfatura(config, {
   taxpayerRegistryClient,
   softwareRegistryClient,
   emitterAuthorizationClient,
+  exchangeRateProvider,
 });
 ```
 
-Defaults are concrete infrastructure implementations: OpenSSL-backed certificate validation, in-memory sequence storage, bundled XSD validation through `xmllint`, XAdES-BES signing, DFA PDF rendering, fetch-based transports, fiscal authority fetch clients, and in-memory golden vectors.
+Defaults are concrete infrastructure implementations: OpenSSL-backed certificate validation, in-memory sequence storage, bundled XSD validation through `xmllint`, XAdES-BES signing, DFA PDF rendering, fetch-based transports, fiscal authority fetch clients, in-memory golden vectors, and BCV exchange rates.
 
 Override `sequenceStore` for durable numbering. `FileSequenceStore` ships in the root entry; database-backed stores live at `@akira-io/efatura/knex` and `@akira-io/efatura/prisma` so ORM dependencies stay optional. See [Storage](09-storage.md).
 
@@ -86,6 +87,40 @@ const efatura = createEfatura(config, {
 ```
 
 The expected layout is `resources/golden-vectors/{kind}/{name}.{extension}`, where `kind` is `iud`, `xml`, `zip`, or `signature`. Optional metadata can live next to a vector as `{name}.meta.json`.
+
+## Exchange-Rate Provider
+
+`EfaturaDependencies.exchangeRateProvider` accepts any `ExchangeRateProvider`. When omitted, `createEfatura()` constructs `BcvExchangeRateProvider` with the global `fetch` implementation and the resolved facade clock. The BCV provider defaults to a buy quote, a 10-second timeout, a 1 MiB response limit, strict publication-date matching on the fixed UTC-01 Cape Verde calendar, and no previous-publication allowance.
+
+```ts
+import { BcvExchangeRateProvider, createEfatura } from '@akira-io/efatura';
+
+const exchangeRateProvider = new BcvExchangeRateProvider({
+  timeoutMs: 10_000,
+  maxResponseBytes: 1024 * 1024,
+  allowPreviousPublication: true,
+  maxPublicationAgeDays: 3,
+});
+
+const efatura = createEfatura(config, { exchangeRateProvider });
+```
+
+Set both `allowPreviousPublication` and a positive `maxPublicationAgeDays` to permit an earlier BCV publication for a weekend or public holiday. The current BCV print page is dynamic and is not a documented historical API.
+
+BCV `timeoutMs` and `maxResponseBytes` must be positive safe integers. `maxPublicationAgeDays` must be a finite nonnegative safe integer. The BCV `sourceUrl` origin must be exactly `https://www.bcv.cv`; credentials, non-default ports, and redirect responses are rejected. Other provider evidence URLs must use HTTPS without user information.
+
+Provider-specific options:
+
+| Provider | Options and defaults |
+|---|---|
+| `BcvExchangeRateProvider` | `fetcher`: global `fetch`; `clock`: `SystemClock`; `sourceUrl`: official print page; `timeoutMs`: `10000`; `maxResponseBytes`: `1048576`; `allowPreviousPublication`: `false`; `maxPublicationAgeDays`: `0` |
+| `WorldBankExchangeRateProvider` | `fetcher`: global `fetch`; `clock`: `SystemClock`; `economyByCurrency`: `{ CVE: 'CPV' }`; `indicator`: `PA.NUS.FCRF`; `baseUrl`: `https://api.worldbank.org`; `timeoutMs`: `10000`; `maxResponseBytes`: `1048576` |
+| `FixedExchangeRateProvider` | Required pair, rate, effective date, and provider name; `retrievedAt` defaults to `effectiveAt`; `rateType` defaults to `custom`; `sourceUrl` is optional |
+| `CallbackExchangeRateProvider` | Requires one asynchronous `ExchangeRateCallback` |
+
+World Bank data is an annual reference and is never selected automatically. No provider failure triggers a silent fallback. See [Currency Conversion](18-currency-conversion.md) for contracts, date policy, rate direction, and audit requirements.
+
+The World Bank provider locks CVE to CPV, accepts only `PA.NUS.FCRF`, and permits only the official `https://api.worldbank.org` origin. Consumer mappings cannot replace CVE provenance. Quotes retain exact observation-leg evidence for audit storage.
 
 ## UUID Generators
 

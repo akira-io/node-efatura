@@ -128,10 +128,65 @@ Without a token, the result can still pass local validation, but external checks
 Pass the invoice to `renderDfa()` or `POST /dfa`:
 
 ```ts
-await efatura.renderDfa({ iud, invoice, currency: 'CVE' });
+await efatura.renderDfa({ iud, invoice });
 ```
 
 IUD-only rendering can create a PDF, but it cannot include parties, lines, tax totals, or invoice issue details that are not present in the IUD.
+
+## BCV Quote Is Unavailable
+
+`exchange_rate.provider_unavailable` covers network, timeout, and HTTP failures. `exchange_rate.response_invalid` means the current page no longer contains exactly one identified rate table and anchored spanning publication row, or provider options are invalid. Check network access, the HTTPS source without user information, positive safe-integer timeout and response limit, nonnegative safe-integer publication age, and BCV page format.
+
+The package does not switch to World Bank or another provider. World Bank is an annual reference source, not a fiscal daily fallback. Stop issuance or apply an explicit application policy with accurate provenance.
+
+## BCV Date Is Unavailable Or Stale
+
+The current BCV print page is dynamic and is not a documented historical API. Strict matching is the default, so an earlier page publication produces `exchange_rate.date_unavailable`. Matching uses the requested instant's fixed UTC-01 Cape Verde calendar date, including month and year rollovers, rather than the UTC date.
+
+For a weekend or public holiday, configure both fields:
+
+```ts
+new BcvExchangeRateProvider({
+  allowPreviousPublication: true,
+  maxPublicationAgeDays: 3,
+});
+```
+
+`exchange_rate.stale` means the earlier publication exceeds the configured maximum age. `exchange_rate.date_invalid` can mean the request date is invalid or the page returned a future publication. Use a fixed or callback provider for an approved historical quote when the current page cannot satisfy the date.
+
+## Exchange-Rate Pair Or Currency Does Not Match
+
+`exchange_rate.currency_unsupported` means the input is absent from the active embedded e-Fatura XSD canonical currency list or the selected provider lacks a required mapping. The XSD has 179 enumeration entries, but only 178 are canonical uppercase codes. Its mixed-case `IdR` entry is an active schema typo and limitation: the schema rejects canonical `IDR`, while the package refuses to emit noncanonical `IdR`. Host `Intl` support does not change this contract. Invalid codes fail before the provider is called. `exchange_rate.pair_mismatch` means the quote pair or rate type differs from the request. Confirm that the source code is supported by the active schema, the target is CVE, BCV uses buy or sell, and World Bank uses reference.
+
+`validation.payable_alternative_currency_unsupported` identifies an unsupported `currencyCode` in a caller-supplied low-level `payableAlternativeAmounts` entry. Replace it with a canonical uppercase code from the active e-Fatura schema before generating XML.
+
+Rates follow `amountInTarget = amountInSource * rate`. A EUR to CVE rate must express CVE per EUR, not EUR per CVE.
+
+## Exchange-Rate Precision Fails
+
+`exchange_rate.rate_invalid` means the rate is non-finite, non-positive, or rounds to zero at five fractional digits. The active XSD limits `ExchangeRate` to five fractional digits. Supply a positive source-to-CVE multiplier and let the package normalize it.
+
+`exchange_rate.invoice_invalid` means totals are absent or independently rounded CVE fields no longer pass fiscal consistency validation. Currency preparation requires a payable amount and never records zero metadata for a document without totals. When totals exist, inspect the validation cause and correct the source values. Do not alter one converted line to force totals to match.
+
+## Alternative Amounts Conflict
+
+`exchange_rate.alternatives_conflict` means the source invoice already contains `payableAlternativeAmounts`. Automatic preparation cannot verify those values. Remove them before preparation or manage them through the low-level invoice and XML APIs without calling `prepareInvoiceToCve()`.
+
+## DFA Conversion Evidence Is Missing
+
+Pass both fields from the stored preparation result:
+
+```ts
+await efatura.renderDfa({
+  iud,
+  invoice: prepared.invoice,
+  conversion: prepared.conversion,
+});
+```
+
+Do not use the deprecated `currency` field to label an unconverted invoice. It will be removed in `v1.0.0`. A defined value emits one Node.js `DeprecationWarning` per process with code `EFATURA_RENDER_DFA_CURRENCY_DEPRECATED`; a foreign label in IUD-only rendering then throws `dfa.currency_invalid`. Remove the field. Use `prepareInvoiceToCve()` for a foreign invoice and pass the stored prepared invoice and conversion metadata to `renderDfa()`. Reprints must reconstruct stored date strings as `Date` objects and reuse the original converted invoice and metadata instead of obtaining a new quote.
+
+Direct metadata that lacks an invoice, targets a currency other than CVE, or disagrees with invoice and alternative payable values throws `dfa.conversion_invalid`. Reuse both members of the same stored `PreparedCurrencyInvoice` result.
 
 ## Runtime Uses The Wrong Node Version
 

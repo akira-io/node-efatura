@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Features
+
+- Add `prepareInvoiceToCve()` with BCV as the default fiscal exchange-rate provider.
+- Add World Bank annual-reference, fixed-rate, and callback provider implementations.
+- Preserve normalized rate direction, effective and retrieval dates, provider identity, source URL, and original and converted payable values as conversion evidence.
+- Convert first-class monetary fields into a new CVE invoice and emit the original payable value as `PayableAlternativeAmount`.
+
+### Fixed
+
+- Match canonical currency codes to the active embedded e-Fatura XSD and reject `IDR`, whose schema entry is the noncanonical `IdR`.
+- Use the configured clock's Cape Verde time-of-day when an invoice has no issue time.
+- Parse the official BCV spanning publication row, use Cape Verde calendar dates, and validate provider bounds at construction.
+- Lock World Bank quotes to CPV provenance, supported indicator semantics, official hosts, and auditable observation-leg evidence.
+- Reject credential-bearing evidence URLs, documents without payable totals, invalid low-level alternative currencies, and inconsistent DFA conversion metadata.
+- Require direct DFA converted payable metadata to equal the two-decimal half-up product of the original payable amount and normalized rate.
+- Report unsupported low-level alternative currency codes with `validation.payable_alternative_currency_unsupported` instead of a negative-totals error.
+
+### Deprecated
+
+- Deprecate `renderDfa({ currency })` for removal in `v1.0.0`. Defined values emit `DeprecationWarning` once per process with code `EFATURA_RENDER_DFA_CURRENCY_DEPRECATED`. Fiscal DFA values are always CVE; use `prepareInvoiceToCve()` and pass its invoice and conversion metadata instead.
+
 ## [1.0.0-beta3](https://github.com/akira-io/node-efatura/compare/v1.0.0-beta2...v1.0.0-beta3) (2026-07-01)
 
 ### Bug Fixes
@@ -71,4 +94,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **core:** Add fiscal readiness validation ([f21388a](https://github.com/akira-io/node-efatura/commit/f21388aa4bd827619ae27a9b81ea60b5e7c2a09b))
 - **adapters:** Expose fiscal readiness route ([d158d30](https://github.com/akira-io/node-efatura/commit/d158d30132bfd45593a17c04cbe54424564f4f8a))
 - **v11:** Close extra fields compliance ([fca2cde](https://github.com/akira-io/node-efatura/commit/fca2cde5df5adffec31ca01a9e462152ea58351f))
-

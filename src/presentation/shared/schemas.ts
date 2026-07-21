@@ -38,7 +38,8 @@ export const dfaRenderRequestSchema = z.object({
       emissionMode: z.enum(['Online', 'Offline', 'Off']).optional(),
       contingencyIuc: z.string().min(1).optional(),
       title: z.string().min(1).optional(),
-      currency: z.string().min(1).optional(),
+      currency: z.literal('CVE').optional(),
+      conversion: z.never().optional(),
     })
     .optional()
     .default({}),

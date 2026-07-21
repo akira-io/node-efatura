@@ -4,10 +4,10 @@
 
 ```text
 src/
-  core/                 Contracts only. No Zod, no HTTP, no filesystem, no framework imports.
-  domain/               Fiscal enums, value objects, policies, IUD logic, and domain errors.
-  application/          Builders, XML v11 generation, DFA helpers, packaging, and use-case validation.
-  infrastructure/       Default clocks, sequence stores, transports, PDF renderer, XSD validator, and signer.
+  core/                 Contracts only, including ExchangeRateProvider.
+  domain/               Fiscal enums, value objects, policies, IUD logic, and currency errors.
+  application/          Builders, currency preparation, XML, DFA helpers, packaging, and validation.
+  infrastructure/       BCV, World Bank, fixed, and callback providers plus other adapters.
   presentation/         Express, Fastify, Nest, and shared HTTP request schemas.
   support/              Internal messages, normalizers, and UUID helpers.
   config.ts             Config resolution and defaults.
@@ -25,6 +25,28 @@ infrastructure -> core contracts and application contracts
 ```
 
 The `core` folder is intentionally small. It defines contracts such as `XsdValidator`, `XmlSigner`, `CertificateValidator`, `SequenceStore`, `DfaRenderer`, `MiddlewareTransport`, `PlatformTransport`, fiscal authority registry clients, and `GoldenVectorRepository`.
+
+## Currency Boundary
+
+Currency conversion keeps policy and external access separate:
+
+```text
+src/core/contracts/exchange-rate-provider.ts
+  defines ExchangeRateProvider, request, quote, and metadata
+
+src/domain/currency/
+  validates quote direction, dates, precision, and error codes
+
+src/application/currency/
+  prepares one CVE projection and converts known monetary fields
+
+src/infrastructure/currency/
+  integrates BCV, World Bank, fixed quotes, and application callbacks
+```
+
+The application use case depends on `ExchangeRateProvider`, not on BCV or World Bank. Infrastructure normalizes upstream units and annual or daily source shapes into one source-to-target multiplier. `buildDfeXml()` and `renderDfa()` do not fetch rates.
+
+Presentation adapters do not accept conversion provenance in HTTP payloads in this release. Trusted server code calls `prepareInvoiceToCve()` through the facade, persists the returned invoice and metadata, and supplies them to XML and DFA operations. This prevents a client from claiming that a submitted rate or URL came from BCV.
 
 ## Official Artifacts
 

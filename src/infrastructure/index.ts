@@ -1,4 +1,14 @@
 export { SystemClock } from './clock/system-clock';
+export {
+  BcvExchangeRateProvider,
+  type BcvExchangeRateProviderOptions,
+  CallbackExchangeRateProvider,
+  type ExchangeRateCallback,
+  FixedExchangeRateProvider,
+  type FixedExchangeRateProviderOptions,
+  WorldBankExchangeRateProvider,
+  type WorldBankExchangeRateProviderOptions,
+} from './currency';
 export { PdfDfaRenderer } from './dfa/pdf-dfa-renderer';
 export {
   FetchEmitterAuthorizationClient,

@@ -5,6 +5,10 @@ export type {
   TotalsInput,
 } from './application/builders/invoice-builder';
 export { InvoiceBuilder } from './application/builders/invoice-builder';
+export type {
+  PreparedCurrencyInvoice,
+  PrepareInvoiceToCveOptions,
+} from './application/currency/currency-conversion-types';
 export {
   CONTINGENCY_NOTICE,
   dfaContingencyNotice,
@@ -64,6 +68,10 @@ export * from './core';
 export type { DocumentTypePolicy } from './core/contracts/document-type-policy';
 export { createEfatura } from './create-efatura';
 export {
+  normalizeCurrencyCode,
+  validateExchangeRateQuote,
+} from './domain/currency/exchange-rate-quote';
+export {
   DOCUMENT_TYPES,
   DocumentType,
   documentTypeCode,
@@ -97,6 +105,8 @@ export {
 export {
   EfaturaError,
   EfaturaValidationError,
+  ExchangeRateError,
+  type ExchangeRateErrorCode,
   OfficialArtifactMissingError,
 } from './domain/errors';
 export {
@@ -164,13 +174,22 @@ export {
 export type { TotalsData } from './domain/value-objects/totals-data';
 export { totalsDataFrom, totalsDataSchema } from './domain/value-objects/totals-data';
 export { Efatura } from './efatura';
+export type {
+  BcvExchangeRateProviderOptions,
+  ExchangeRateCallback,
+  FixedExchangeRateProviderOptions,
+  WorldBankExchangeRateProviderOptions,
+} from './infrastructure';
 export {
+  BcvExchangeRateProvider,
+  CallbackExchangeRateProvider,
   FetchEmitterAuthorizationClient,
   FetchMiddlewareTransport,
   FetchPlatformTransport,
   FetchSoftwareRegistryClient,
   FetchTaxpayerRegistryClient,
   FileSequenceStore,
+  FixedExchangeRateProvider,
   InMemoryGoldenVectorRepository,
   InMemorySequenceStore,
   MissingOfficialXsdValidator,
@@ -181,6 +200,7 @@ export {
   parseServiceBody,
   resolveDefaultSchemaPath,
   SystemClock,
+  WorldBankExchangeRateProvider,
   XadesBesSigner,
   XmllintXsdValidator,
 } from './infrastructure';

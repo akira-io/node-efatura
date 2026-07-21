@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import { FixedExchangeRateProvider } from '../src';
 import { createEfatura } from '../src/create-efatura';
 import { DocumentType } from '../src/domain/enums/document-type';
 import { resolveDefaultSchemaPath, XmllintXsdValidator } from '../src/infrastructure';
@@ -60,6 +61,108 @@ describe('official XSD validation', () => {
     const result = await efatura.validateDfeXml(xml, DocumentType.ElectronicInvoice);
 
     expect(result).toEqual({ valid: true, errors: [] });
+  });
+
+  it.each([
+    'XAU',
+    'XTS',
+    'XXX',
+  ])('validates a prepared %s alternative amount against the official schema', async (sourceCurrency) => {
+    const effectiveAt = new Date('2026-07-21T11:30:00Z');
+    const efatura = createEfatura(config(), {
+      clock: { now: () => new Date('2026-07-21T12:00:00Z') },
+      exchangeRateProvider: new FixedExchangeRateProvider({
+        sourceCurrency,
+        targetCurrency: 'CVE',
+        rate: 1,
+        effectiveAt,
+        provider: 'Test provider',
+      }),
+    });
+    const prepared = await efatura.prepareInvoiceToCve(
+      baseInvoicePayload({
+        issueDate: '2026-07-21',
+        lines: [
+          {
+            lineTypeCode: 'N',
+            quantity: { value: 1, unitCode: 'EA' },
+            price: 173.91,
+            priceExtension: 173.91,
+            netTotal: 173.91,
+            taxes: [{ taxTypeCode: 'IVA', taxPercentage: 15, taxTotal: 26.09 }],
+            item: { description: 'Item', emitterIdentification: 'ITEM1' },
+          },
+        ],
+        totals: {
+          priceExtensionTotalAmount: 173.91,
+          chargeTotalAmount: 0,
+          discountTotalAmount: 0,
+          netTotalAmount: 173.91,
+          taxTotalAmount: 26.09,
+          payableAmount: 200,
+        },
+      }),
+      { sourceCurrency },
+    );
+    const xml = efatura.buildDfeXml(prepared.invoice, {
+      documentNumber: 1,
+      randomCode: '1234567890',
+    });
+    const validator = new XmllintXsdValidator();
+
+    const result = await validator.validate(xml, {
+      documentType: DocumentType.ElectronicInvoice,
+      schemaVersion: '1.0',
+    });
+
+    expect(xml).toContain(`CurrencyCode="${sourceCurrency}"`);
+    expect(result).toEqual({ valid: true, errors: [] });
+  });
+
+  it('rejects canonical IDR before provider access', async () => {
+    const getQuote = vi.fn(async () => {
+      throw new Error('Provider must not be called.');
+    });
+    const efatura = createEfatura(config(), { exchangeRateProvider: { getQuote } });
+
+    await expect(
+      efatura.prepareInvoiceToCve(baseInvoicePayload(), { sourceCurrency: 'IDR' }),
+    ).rejects.toMatchObject({ code: 'exchange_rate.currency_unsupported' });
+    expect(getQuote).not.toHaveBeenCalled();
+  });
+
+  it('records the active XSD mixed-case IDR lexical anomaly', async () => {
+    const efatura = createEfatura(config(), {
+      clock: { now: () => new Date('2026-02-08T12:00:00Z') },
+    });
+    const payload = baseInvoicePayload();
+    const totals = payload.totals as Record<string, unknown>;
+    const generatedXml = efatura.buildDfeXml(
+      baseInvoicePayload({
+        totals: {
+          ...totals,
+          payableAlternativeAmounts: [{ value: 1150, currencyCode: 'XAU', exchangeRate: 1 }],
+        },
+      }),
+      { documentNumber: 1, randomCode: '1234567890' },
+    );
+    const canonicalIdrXml = generatedXml.replace('CurrencyCode="XAU"', 'CurrencyCode="IDR"');
+    const anomalousSchemaXml = generatedXml.replace('CurrencyCode="XAU"', 'CurrencyCode="IdR"');
+    const validator = new XmllintXsdValidator();
+    const context = {
+      documentType: DocumentType.ElectronicInvoice,
+      schemaVersion: '1.0',
+    } as const;
+
+    expect(generatedXml).toContain('CurrencyCode="XAU"');
+    expect(generatedXml).not.toContain('CurrencyCode="IdR"');
+    await expect(validator.validate(canonicalIdrXml, context)).resolves.toMatchObject({
+      valid: false,
+    });
+    await expect(validator.validate(anomalousSchemaXml, context)).resolves.toEqual({
+      valid: true,
+      errors: [],
+    });
   });
 
   it.each(

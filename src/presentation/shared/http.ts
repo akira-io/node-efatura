@@ -1,3 +1,4 @@
+import { warnRenderDfaCurrencyDeprecation } from '../../application/dfa/render-dfa-currency-deprecation';
 import { EfaturaValidationError } from '../../domain/errors';
 import type { Efatura } from '../../efatura';
 import { isRecord } from '../../support/normalizers';
@@ -67,6 +68,8 @@ export async function handleRenderDfaFromBody(
   efatura: Efatura,
   body: unknown,
 ): Promise<HttpResult> {
+  warnRenderDfaCurrencyDeprecation(deprecatedDfaCurrencyFromBody(body));
+
   const payload = parseRequest(body, dfaRenderRequestSchema, 'body');
   const invoice = payload.invoice ? efatura.validateInvoice(payload.invoice) : undefined;
   const document = await efatura.renderDfa({
@@ -79,6 +82,34 @@ export async function handleRenderDfaFromBody(
   });
 
   return dfaDocumentResult(document);
+}
+
+function deprecatedDfaCurrencyFromBody(body: unknown): unknown {
+  try {
+    if (!isRecord(body)) {
+      return undefined;
+    }
+
+    const optionsDescriptor = Object.getOwnPropertyDescriptor(body, 'options');
+
+    if (
+      optionsDescriptor === undefined ||
+      !('value' in optionsDescriptor) ||
+      !isRecord(optionsDescriptor.value)
+    ) {
+      return undefined;
+    }
+
+    const currencyDescriptor = Object.getOwnPropertyDescriptor(optionsDescriptor.value, 'currency');
+
+    if (currencyDescriptor === undefined) {
+      return undefined;
+    }
+
+    return 'value' in currencyDescriptor ? currencyDescriptor.value : true;
+  } catch {
+    return undefined;
+  }
 }
 
 function dfaDocumentResult(document: Awaited<ReturnType<Efatura['renderDfa']>>): HttpResult {

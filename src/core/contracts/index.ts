@@ -13,6 +13,16 @@ export type {
   DfaTotalsInput,
 } from './dfa-renderer';
 export type {
+  CurrencyConversionMetadata,
+  ExchangeRateEvidence,
+  ExchangeRateEvidenceLeg,
+  ExchangeRateEvidenceLegRole,
+  ExchangeRateProvider,
+  ExchangeRateQuote,
+  ExchangeRateRequest,
+  ExchangeRateType,
+} from './exchange-rate-provider';
+export type {
   EmitterAuthorizationClient,
   EmitterAuthorizationInput,
   EmitterAuthorizationResult,

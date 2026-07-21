@@ -1,8 +1,10 @@
 import type {
   CertificateValidator,
   Clock,
+  CurrencyConversionMetadata,
   DfaRenderer,
   EmitterAuthorizationClient,
+  ExchangeRateProvider,
   GoldenVectorRepository,
   MiddlewareTransport,
   PlatformTransport,
@@ -31,6 +33,7 @@ export interface EfaturaDependencies {
   taxpayerRegistryClient?: TaxpayerRegistryClient;
   softwareRegistryClient?: SoftwareRegistryClient;
   emitterAuthorizationClient?: EmitterAuthorizationClient;
+  exchangeRateProvider?: ExchangeRateProvider;
 }
 
 export interface EfaturaBuildIudInput
@@ -69,7 +72,9 @@ export interface RenderDfaOptions {
   emissionMode?: EmissionModeInput;
   contingencyIuc?: string;
   title?: string;
+  /** @deprecated Use prepareInvoiceToCve() and pass invoice with conversion metadata. Removed in v1.0.0. */
   currency?: string;
+  conversion?: CurrencyConversionMetadata;
 }
 
 export interface SubmitPlatformOptions {

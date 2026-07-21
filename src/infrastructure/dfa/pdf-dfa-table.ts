@@ -14,13 +14,12 @@ export function renderDfaItemsTable(
   onContinuationPage: () => void,
 ): number {
   const lines = input.lines ?? [];
-  const currency = input.currency ?? 'CVE';
   let runningTotal = 0;
   let rowY = drawHeader(document, firstTableY);
 
   lines.forEach((line) => {
     if (rowY + 18 > pageBottomY) {
-      carryForward(document, runningTotal, currency);
+      carryForward(document, runningTotal);
       onContinuationPage();
       rowY = drawHeader(document, continuedTableY);
     }
@@ -79,11 +78,11 @@ function grossLineTotal(line: DfaLineInput): number {
   return line.netTotal + line.taxTotal;
 }
 
-function carryForward(document: PDFKit.PDFDocument, amount: number, currency: string): void {
+function carryForward(document: PDFKit.PDFDocument, amount: number): void {
   drawLine(document, 318, pageBottomY + 6, page.right, pageBottomY + 6, colors.border);
   document.fillColor(colors.black).font('Helvetica-Bold').fontSize(10);
   document.text('A transportar', 318, pageBottomY + 15, { width: 96 });
-  document.text(money(amount, currency), 410, pageBottomY + 15, {
+  document.text(money(amount, 'CVE'), 410, pageBottomY + 15, {
     width: 130,
     align: 'right',
   });

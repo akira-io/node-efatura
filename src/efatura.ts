@@ -1,6 +1,12 @@
 import { assertContingencyMatchesEmissionMode } from './application/contingency-validation';
+import type {
+  PreparedCurrencyInvoice,
+  PrepareInvoiceToCveOptions,
+} from './application/currency/currency-conversion-types';
+import { prepareInvoiceToCve as prepareInvoiceToCveForInvoice } from './application/currency/prepare-invoice-to-cve';
 import { dfaQrCodeUrl } from './application/dfa/dfa';
 import { dfaRenderInputFrom } from './application/dfa/dfa-render-input';
+import { warnRenderDfaCurrencyDeprecation } from './application/dfa/render-dfa-currency-deprecation';
 import { resolveEfaturaDependencies } from './application/efatura-dependencies';
 import {
   isInvoiceData,
@@ -40,6 +46,7 @@ import type {
   DfaDocument,
   DfaRenderer,
   EmitterAuthorizationClient,
+  ExchangeRateProvider,
   GoldenVectorKind,
   GoldenVectorRepository,
   MiddlewareSubmissionResult,
@@ -76,6 +83,7 @@ export class Efatura extends EfaturaDocuments {
   readonly taxpayerRegistryClient: TaxpayerRegistryClient;
   readonly softwareRegistryClient: SoftwareRegistryClient;
   readonly emitterAuthorizationClient: EmitterAuthorizationClient;
+  readonly exchangeRateProvider: ExchangeRateProvider;
 
   constructor(config: ResolvedEfaturaConfig, dependencies: EfaturaDependencies = {}) {
     const resolvedDependencies = resolveEfaturaDependencies(dependencies);
@@ -93,6 +101,7 @@ export class Efatura extends EfaturaDocuments {
     this.taxpayerRegistryClient = resolvedDependencies.taxpayerRegistryClient;
     this.softwareRegistryClient = resolvedDependencies.softwareRegistryClient;
     this.emitterAuthorizationClient = resolvedDependencies.emitterAuthorizationClient;
+    this.exchangeRateProvider = resolvedDependencies.exchangeRateProvider;
   }
 
   generateSubmissionId(): string {
@@ -164,6 +173,20 @@ export class Efatura extends EfaturaDocuments {
     };
 
     return buildDfeXml(input);
+  }
+
+  async prepareInvoiceToCve(
+    data: Record<string, unknown> | InvoiceData,
+    options: PrepareInvoiceToCveOptions,
+  ): Promise<PreparedCurrencyInvoice> {
+    const invoice = this.validateInvoice({ ...data });
+
+    return prepareInvoiceToCveForInvoice(invoice, options, {
+      provider: this.exchangeRateProvider,
+      clock: this.clock,
+      validateInvoice: (candidate) =>
+        this.validateInvoice(candidate as unknown as Record<string, unknown>),
+    });
   }
 
   validateEvent(data: Record<string, unknown>): EventData {
@@ -243,6 +266,8 @@ export class Efatura extends EfaturaDocuments {
   }
 
   async renderDfa(options: RenderDfaOptions): Promise<DfaDocument> {
+    warnRenderDfaCurrencyDeprecation(options.currency);
+
     return this.dfaRenderer.render(dfaRenderInputFrom(options, this.dfaQrCodeUrl(options.iud)));
   }
 

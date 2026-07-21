@@ -23,6 +23,7 @@
 | 15 | [Events](15-events.md) | FDC and UDN event XML |
 | 16 | [Signing And Certificates](16-signing-certificates.md) | XAdES-BES signing and certificate validation |
 | 17 | [Troubleshooting](17-troubleshooting.md) | Prisma, adapters, CORS, signing, XSD, and runtime issues |
+| 18 | [Currency Conversion](18-currency-conversion.md) | Fiscal CVE preparation, exchange-rate providers, evidence, and reprints |
 
 ## Examples
 
@@ -33,3 +34,4 @@
 | [React](examples/fastify/react.md) | Call the Fastify adapter from a React SPA |
 | [Vue](examples/fastify/vue.md) | Call the Fastify adapter from a Vue SPA |
 | [Svelte](examples/fastify/svelte.md) | Call the Fastify adapter from a Svelte SPA |
+| [EUR To CVE With A Fixed Rate](examples/currency/eur-to-cve.md) | Prepare XML and DFA output with deterministic conversion evidence |

@@ -109,6 +109,25 @@ const invoice = efatura
 console.log(invoice.id);
 ```
 
+## Currency conversion
+
+DFE fiscal values remain in CVE. The default provider obtains a BCV buy quote, and `prepareInvoiceToCve()` returns one CVE invoice with the original payable amount and conversion evidence.
+
+```ts
+const efatura = createEfatura(config);
+const prepared = await efatura.prepareInvoiceToCve(invoiceInEur, {
+  sourceCurrency: 'EUR',
+});
+const xml = efatura.buildDfeXml(prepared.invoice, { iud });
+const dfa = await efatura.renderDfa({
+  iud,
+  invoice: prepared.invoice,
+  conversion: prepared.conversion,
+});
+```
+
+BCV is a network provider. Use the [Currency Conversion guide](docs/18-currency-conversion.md) for date policies, fixed and callback providers, precision rules, audit persistence, and the tested offline example.
+
 ## Documentation
 
 - [Documentation index](docs/00-index.md)
@@ -129,6 +148,7 @@ console.log(invoice.id);
 - [Events](docs/15-events.md)
 - [Signing And Certificates](docs/16-signing-certificates.md)
 - [Troubleshooting](docs/17-troubleshooting.md)
+- [Currency Conversion](docs/18-currency-conversion.md)
 - [Fastify server and SPA examples](docs/examples/fastify/server.md)
 - API reference: https://www.npmjs.com/package/@akira-io/efatura
 

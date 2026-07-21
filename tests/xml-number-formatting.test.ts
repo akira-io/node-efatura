@@ -76,6 +76,26 @@ describe('XML number formatting', () => {
     );
   });
 
+  it.each([
+    [110.265004, '110.265'],
+    [110.265006, '110.26501'],
+  ])('rounds payable alternative exchange rate %d to %s at five decimal places', (exchangeRate, expected) => {
+    const totals: TotalsData = {
+      priceExtensionTotalAmount: 100,
+      chargeTotalAmount: null,
+      discountTotalAmount: null,
+      netTotalAmount: 100,
+      discount: null,
+      taxTotalAmount: 15,
+      withholdingTaxTotalAmount: null,
+      payableRoundingAmount: null,
+      payableAmount: 115,
+      payableAlternativeAmounts: [{ value: 100, currencyCode: 'EUR', exchangeRate }],
+    };
+
+    expect(totalsXml(totals)).toContain(`ExchangeRate="${expected}"`);
+  });
+
   it('serializes large numbers without exponential notation', () => {
     expect(escapeXml(1e21)).toBe('1000000000000000000000');
   });

@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { messages } from '../../support/messages';
 import { isRecord } from '../../support/normalizers';
+import { SCHEMA_CURRENCY_CODES } from '../currency/schema-currency-codes';
 import { EfaturaValidationError } from '../errors';
 import { type DiscountData, discountDataFrom } from './discount-data';
 
@@ -25,7 +26,10 @@ export interface TotalsData {
 
 export const payableAlternativeAmountSchema = z.object({
   value: z.coerce.number().finite().min(0),
-  currencyCode: z.preprocess((value) => String(value ?? '').toUpperCase(), z.string().length(3)),
+  currencyCode: z.preprocess(
+    (value) => String(value ?? '').toUpperCase(),
+    z.enum(SCHEMA_CURRENCY_CODES),
+  ),
   exchangeRate: z.coerce.number().finite().gt(0),
 });
 
@@ -60,6 +64,14 @@ export function totalsDataFrom(data: Record<string, unknown>, prefix = ''): Tota
   if (!result.success) {
     const issuePath = result.error.issues[0]?.path.join('.') ?? 'totals';
 
+    if (isPayableAlternativeCurrencyIssue(issuePath)) {
+      throw new EfaturaValidationError(
+        field(issuePath),
+        messages.validation.payableAlternativeCurrencyUnsupported,
+        'validation.payable_alternative_currency_unsupported',
+      );
+    }
+
     throw new EfaturaValidationError(
       field(issuePath),
       messages.validation.totalsNegative,
@@ -68,6 +80,10 @@ export function totalsDataFrom(data: Record<string, unknown>, prefix = ''): Tota
   }
 
   return result.data;
+}
+
+function isPayableAlternativeCurrencyIssue(issuePath: string): boolean {
+  return /^payableAlternativeAmounts\.\d+\.currencyCode$/.test(issuePath);
 }
 
 function alternativeAmountsFrom(value: unknown): PayableAlternativeAmountData[] {
