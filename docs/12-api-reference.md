@@ -102,8 +102,8 @@ const prepared = await efatura.prepareInvoiceToCve(invoiceInEur, {
 
 | Field | Type | Required | Default |
 |---|---|---|---|
-| `sourceCurrency` | `string` | yes | none; trimmed and uppercased |
-| `effectiveAt` | `Date` | no | invoice issue date and time in Cape Verde time; midnight when time is absent |
+| `sourceCurrency` | `string` | yes | none; supported ISO 4217 code, trimmed and uppercased |
+| `effectiveAt` | `Date` | no | invoice issue date and explicit issue time; configured clock time in Cape Verde when issue time is absent |
 | `rateType` | `ExchangeRateType` | no | provider-specific; BCV uses `buy` |
 
 `PreparedCurrencyInvoice`:
@@ -149,7 +149,7 @@ interface ExchangeRateProvider {
 
 Rate direction is `amountInTarget = amountInSource * rate`.
 
-`normalizeCurrencyCode(currencyCode)` trims and uppercases a code. `validateExchangeRateQuote(request, quote)` verifies the pair, requested rate type, dates, provider, optional HTTPS source URL, and positive rate, then returns a normalized `ExchangeRateQuote`.
+`normalizeCurrencyCode(currencyCode)` trims and uppercases a code, then checks the cached Node.js 20 `Intl.supportedValuesOf('currency')` list. Unsupported codes fail with `exchange_rate.currency_unsupported`. `validateExchangeRateQuote(request, quote)` applies the same currency check before it verifies the pair, requested rate type, dates, provider, optional HTTPS source URL, and positive rate.
 
 Set `EfaturaDependencies.exchangeRateProvider` in the second `createEfatura()` argument to replace the provider. Omission constructs `BcvExchangeRateProvider` with the facade clock.
 
@@ -236,7 +236,7 @@ new ExchangeRateError(
 |---|---|
 | `exchange_rate.provider_unavailable` | Provider transport or callback failed |
 | `exchange_rate.response_invalid` | Provider content or quote shape is invalid |
-| `exchange_rate.currency_unsupported` | Provider lacks the requested currency or mapping |
+| `exchange_rate.currency_unsupported` | Input is not a supported ISO 4217 code, or the provider lacks its required mapping |
 | `exchange_rate.pair_mismatch` | Pair or requested rate type does not match |
 | `exchange_rate.rate_invalid` | Rate is non-positive, non-finite, or rounds to zero |
 | `exchange_rate.date_unavailable` | Quote is later than requested or no allowed date exists |

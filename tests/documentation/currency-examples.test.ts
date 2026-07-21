@@ -1,11 +1,11 @@
 import { readFile } from 'node:fs/promises';
 import { describe, expect, expectTypeOf, it } from 'vitest';
+import { dfa, prepared, xml } from '../../docs/examples/currency/eur-to-cve';
 import {
   BcvExchangeRateProvider,
   type BcvExchangeRateProviderOptions,
   CallbackExchangeRateProvider,
   type CurrencyConversionMetadata,
-  createEfatura,
   type DfaRenderer,
   type DfaRenderInput,
   type EfaturaDependencies,
@@ -48,35 +48,16 @@ describe('currency conversion documentation', () => {
     expectTypeOf<DocumentedCurrencyTypes>().toMatchTypeOf<DocumentedCurrencyTypes>();
   });
 
-  it('runs the documented fixed-rate EUR to CVE example without network access', async () => {
-    const example = await readFile(
-      new URL('../../docs/examples/currency/eur-to-cve.md', import.meta.url),
-      'utf8',
-    );
-    const effectiveAt = new Date('2026-07-21T00:00:00.000Z');
-    const efatura = createEfatura(config, {
-      clock: { now: () => new Date('2026-07-21T12:00:00.000Z') },
-      exchangeRateProvider: new FixedExchangeRateProvider({
-        sourceCurrency: 'EUR',
-        targetCurrency: 'CVE',
-        rate: 110.265,
-        effectiveAt,
-        provider: 'Rate approved by the accounting team',
-        sourceUrl: 'https://internal.example/rates/2026-07-21',
-      }),
-    });
+  it('reproduces the complete canonical EUR to CVE TypeScript example', async () => {
+    const [markdown, canonicalSource] = await Promise.all([
+      readFile(new URL('../../docs/examples/currency/eur-to-cve.md', import.meta.url), 'utf8'),
+      readFile(new URL('../../docs/examples/currency/eur-to-cve.ts', import.meta.url), 'utf8'),
+    ]);
 
-    const prepared = await efatura.prepareInvoiceToCve(invoiceInEur, {
-      sourceCurrency: 'EUR',
-    });
-    const xml = efatura.buildDfeXml(prepared.invoice, { iud });
-    const dfa = await efatura.renderDfa({
-      iud,
-      invoice: prepared.invoice,
-      conversion: prepared.conversion,
-    });
+    expect(extractTypeScriptBlock(markdown)).toBe(canonicalSource.trim());
+  });
 
-    expect(example).toContain("sourceCurrency: 'EUR'");
+  it('runs the documented fixed-rate EUR to CVE example without network access', () => {
     expect(prepared.conversion).toMatchObject({
       sourceCurrency: 'EUR',
       targetCurrency: 'CVE',
@@ -96,6 +77,14 @@ describe('currency conversion documentation', () => {
   });
 });
 
+function extractTypeScriptBlock(markdown: string): string {
+  const match = markdown.match(/```ts\n([\s\S]*?)\n```/);
+
+  expect(match, 'Expected one TypeScript block in the currency example.').not.toBeNull();
+
+  return match?.[1]?.trim() ?? '';
+}
+
 type DocumentedCurrencyTypes = {
   bcvOptions: BcvExchangeRateProviderOptions;
   callback: ExchangeRateCallback;
@@ -113,51 +102,4 @@ type DocumentedCurrencyTypes = {
   request: ExchangeRateRequest;
   rateType: ExchangeRateType;
   worldBankOptions: WorldBankExchangeRateProviderOptions;
-};
-
-const config = {
-  transmitterNif: '100200300',
-  transmitterLed: '123',
-  softwareCode: 'SW001',
-  softwareName: 'Efatura Suite',
-  softwareVersion: '1.0.0',
-  middlewareBaseUrl: 'https://middleware.example',
-};
-
-const invoiceInEur = {
-  type: 'FTE',
-  issueDate: '2026-07-21',
-  issueTime: '11:30:00',
-  serie: 'SER-F',
-  emitter: {
-    taxId: { countryCode: 'CV', value: '100200300' },
-    name: 'Emitter',
-    address: { countryCode: 'CV', addressDetail: 'Praia' },
-    contacts: { email: 'issuer@example.cv', telephone: '2600000' },
-  },
-  receiver: {
-    taxId: { countryCode: 'CV', value: '900800700' },
-    name: 'Receiver',
-    address: { countryCode: 'CV', addressDetail: 'Mindelo' },
-    contacts: { email: 'receiver@example.cv', telephone: '2300000' },
-  },
-  lines: [
-    {
-      lineTypeCode: 'N',
-      quantity: { value: 1, unitCode: 'EA' },
-      price: 173.91,
-      priceExtension: 173.91,
-      netTotal: 173.91,
-      taxes: [{ taxTypeCode: 'IVA', taxPercentage: 15, taxTotal: 26.09 }],
-      item: { description: 'Service', emitterIdentification: 'SERV-001' },
-    },
-  ],
-  totals: {
-    priceExtensionTotalAmount: 173.91,
-    chargeTotalAmount: 0,
-    discountTotalAmount: 0,
-    netTotalAmount: 173.91,
-    taxTotalAmount: 26.09,
-    payableAmount: 200,
-  },
 };

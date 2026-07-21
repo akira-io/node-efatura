@@ -28,8 +28,8 @@ export async function prepareInvoiceToCve(
   options: PrepareInvoiceToCveOptions,
   dependencies: PrepareInvoiceToCveDependencies,
 ): Promise<PreparedCurrencyInvoice> {
-  const sourceCurrency = sourceCurrencyFrom(options.sourceCurrency);
-  const effectiveAt = effectiveAtFrom(invoice, options.effectiveAt);
+  const sourceCurrency = normalizeCurrencyCode(options.sourceCurrency);
+  const effectiveAt = effectiveAtFrom(invoice, options.effectiveAt, dependencies.clock);
 
   if (sourceCurrency === 'CVE') {
     return prepareIdentityInvoice(invoice, effectiveAt, dependencies);
@@ -86,22 +86,13 @@ function identityQuote(effectiveAt: Date, clock: Clock): ExchangeRateQuote {
   };
 }
 
-function sourceCurrencyFrom(value: string): string {
-  const sourceCurrency = normalizeCurrencyCode(value);
-
-  if (!/^[A-Z]{3}$/.test(sourceCurrency)) {
-    throw new ExchangeRateError(
-      'exchange_rate.currency_unsupported',
-      'Source currency must be a three-letter alphabetic code.',
-    );
+function effectiveAtFrom(invoice: InvoiceData, override: Date | undefined, clock: Clock): Date {
+  if (override === undefined && invoice.issueTime !== null) {
+    return parseIssueDateTime(invoice.issueDate, invoice.issueTime);
   }
 
-  return sourceCurrency;
-}
-
-function effectiveAtFrom(invoice: InvoiceData, override: Date | undefined): Date {
   if (override === undefined) {
-    return parseIssueDateTime(invoice.issueDate, invoice.issueTime);
+    return parseIssueDateTime(invoice.issueDate.slice(0, 10), capeVerdeTimeFrom(clock.now()));
   }
 
   const timestamp = override instanceof Date ? override.getTime() : Number.NaN;
@@ -114,6 +105,12 @@ function effectiveAtFrom(invoice: InvoiceData, override: Date | undefined): Date
   }
 
   return new Date(timestamp);
+}
+
+function capeVerdeTimeFrom(now: Date): string {
+  const capeVerdeTime = new Date(now.getTime() - 60 * 60 * 1000);
+
+  return capeVerdeTime.toISOString().slice(11, 23);
 }
 
 function validateConvertedInvoice(

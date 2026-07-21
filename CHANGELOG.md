@@ -14,6 +14,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Preserve normalized rate direction, effective and retrieval dates, provider identity, source URL, and original and converted payable values as conversion evidence.
 - Convert first-class monetary fields into a new CVE invoice and emit the original payable value as `PayableAlternativeAmount`.
 
+### Fixed
+
+- Reject unsupported ISO 4217 currency codes before exchange-rate provider access.
+- Use the configured clock's Cape Verde time-of-day when an invoice has no issue time.
+
 ### Deprecated
 
 - Deprecate `renderDfa({ currency })`. Fiscal DFA values are always CVE; pass the prepared invoice and conversion metadata instead.

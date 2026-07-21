@@ -23,8 +23,28 @@ function validQuote(overrides = {}) {
 }
 
 describe('exchange-rate quotes', () => {
-  it('normalizes a currency code to uppercase', () => {
-    expect(normalizeCurrencyCode(' eur ')).toBe('EUR');
+  it.each([
+    [' eur ', 'EUR'],
+    ['cve', 'CVE'],
+    ['USD', 'USD'],
+    ['jpy', 'JPY'],
+  ])('normalizes supported currency code %j to %s', (currencyCode, expected) => {
+    expect(normalizeCurrencyCode(currencyCode)).toBe(expected);
+  });
+
+  it.each(['AAA', 'EU', 'EURO', '12A'])('rejects unsupported currency code %j', (currencyCode) => {
+    expect(() => normalizeCurrencyCode(currencyCode)).toThrowError(
+      expect.objectContaining({ code: 'exchange_rate.currency_unsupported' }),
+    );
+  });
+
+  it('rejects an unsupported requested currency before quote comparison', () => {
+    expect(() =>
+      validateExchangeRateQuote(
+        { ...request, sourceCurrency: 'AAA' },
+        validQuote({ sourceCurrency: 'AAA' }),
+      ),
+    ).toThrowError(expect.objectContaining({ code: 'exchange_rate.currency_unsupported' }));
   });
 
   it('normalizes and validates a matching quote without mutating the provider output', () => {

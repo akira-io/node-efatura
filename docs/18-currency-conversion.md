@@ -37,7 +37,7 @@ Currency preparation needs:
 
 - a valid `createEfatura()` configuration;
 - an `InvoiceData` value or raw invoice record that passes package validation;
-- a source currency expressed as a three-letter code;
+- a source currency in the Node.js 20 ISO 4217 currency list;
 - a configured provider, or network access to BCV when the default provider is used.
 
 The BCV and World Bank providers use the global `fetch` implementation available in Node.js 20. They require HTTPS and apply request timeouts and response-size limits. A fixed provider needs no network access. A callback provider uses the application service supplied by the consumer.
@@ -57,7 +57,7 @@ const prepared = await efatura.prepareInvoiceToCve(invoiceInEur, {
 });
 ```
 
-The facade derives `effectiveAt` from the invoice issue date and issue time in Cape Verde time. If the invoice has no issue time, it uses `00:00:00` in Cape Verde time. The default BCV request asks for a buy quote targeting CVE and requires the publication date to match the requested date.
+The facade derives `effectiveAt` from the invoice issue date and explicit issue time in Cape Verde time. If the invoice has no issue time, it combines the issue date with the configured clock's current Cape Verde time-of-day at fixed UTC-01. An explicit `effectiveAt` option takes priority over both paths. Host-local timezone settings do not affect this value. The default BCV request asks for a buy quote targeting CVE and requires the publication date to match the requested date.
 
 The default path performs a network request. Use the fixed-provider example for a deterministic local run: [EUR To CVE With A Fixed Rate](examples/currency/eur-to-cve.md).
 
@@ -154,7 +154,7 @@ export interface PrepareInvoiceToCveOptions {
 }
 ```
 
-`sourceCurrency` is required, trimmed, and uppercased. The target is fixed to `CVE`. `effectiveAt` defaults to the invoice issue date and time in Cape Verde time, using midnight when the invoice has no issue time. `rateType` is passed to the provider; the BCV provider defaults it to `buy`, while the World Bank provider defaults it to `reference` when called directly. A provider rejects unsupported types instead of reinterpreting them.
+`sourceCurrency` is required, trimmed, uppercased, and checked against the cached Node.js 20 `Intl.supportedValuesOf('currency')` list. Unsupported codes fail before provider access. The target is fixed to `CVE`. `effectiveAt` uses the invoice issue date and explicit issue time when present. Without an issue time, it uses that date and the configured clock's current Cape Verde time-of-day at fixed UTC-01. An explicit option overrides either derived value. `rateType` is passed to the provider; the BCV provider defaults it to `buy`, while the World Bank provider defaults it to `reference` when called directly. A provider rejects unsupported types instead of reinterpreting them.
 
 The result is:
 
@@ -170,7 +170,7 @@ export interface PreparedCurrencyInvoice {
 }
 ```
 
-The result contains a new normalized invoice. The source object is not mutated. `normalizeCurrencyCode()` trims and uppercases a code. `validateExchangeRateQuote()` applies the package pair, date, provenance, HTTPS source URL, and rate validations and returns a normalized quote.
+The result contains a new normalized invoice. The source object is not mutated. `normalizeCurrencyCode()` trims and uppercases a code, then enforces ISO 4217 membership from the cached Node.js 20 `Intl` list. `validateExchangeRateQuote()` applies the same currency check plus the package pair, date, provenance, HTTPS source URL, and rate validations before returning a normalized quote.
 
 ## 6. BCV Rate Type, Units, Publication Date, Weekend, Staleness, Timeout, And Current-Page Limitation
 
@@ -379,7 +379,7 @@ For a CVE identity preparation, the provider is not called and no CVE alternativ
 |---|---|---|
 | `exchange_rate.provider_unavailable` | Network, timeout, HTTP, or callback failure | Retry under an application policy or stop issuance. Do not substitute another source silently. |
 | `exchange_rate.response_invalid` | Upstream content or quote shape cannot be parsed safely | Stop and investigate provider or parser changes. |
-| `exchange_rate.currency_unsupported` | Provider lacks the requested currency or economy mapping | Configure a supported mapping, fixed quote, or callback. |
+| `exchange_rate.currency_unsupported` | Input is not a supported ISO 4217 code, or the provider lacks a required economy mapping | Correct the code or configure the selected provider's mapping. |
 | `exchange_rate.pair_mismatch` | Returned pair or rate type differs from the request | Correct provider configuration or callback normalization. |
 | `exchange_rate.rate_invalid` | Rate is non-finite, non-positive, or rounds to zero | Reject the quote and obtain approved evidence. |
 | `exchange_rate.date_unavailable` | No quote satisfies the requested date | Configure an explicit prior-publication policy or audited historical source. |

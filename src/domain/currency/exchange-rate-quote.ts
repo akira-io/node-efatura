@@ -7,9 +7,19 @@ import type {
 import { ExchangeRateError } from './exchange-rate-error';
 
 const RATE_TYPES: readonly ExchangeRateType[] = ['buy', 'sell', 'reference', 'custom'];
+const ISO_4217_CURRENCY_CODES = new Set(Intl.supportedValuesOf('currency'));
 
 export function normalizeCurrencyCode(currencyCode: string): string {
-  return currencyCode.trim().toUpperCase();
+  const normalizedCurrencyCode = currencyCode.trim().toUpperCase();
+
+  if (!ISO_4217_CURRENCY_CODES.has(normalizedCurrencyCode)) {
+    throw new ExchangeRateError(
+      'exchange_rate.currency_unsupported',
+      'Currency must be a supported ISO 4217 code.',
+    );
+  }
+
+  return normalizedCurrencyCode;
 }
 
 export function validateExchangeRateQuote(

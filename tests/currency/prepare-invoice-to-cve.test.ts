@@ -130,6 +130,7 @@ describe('prepareInvoiceToCve', () => {
     'EU',
     'EURO',
     '12A',
+    'AAA',
   ])('rejects invalid source code %j before provider access', async (sourceCurrency) => {
     const getQuote = vi.fn(async (request: ExchangeRateRequest) => quoteFor(request));
     const efatura = createEfatura(config, { exchangeRateProvider: { getQuote } });
@@ -167,9 +168,13 @@ describe('prepareInvoiceToCve', () => {
     );
   });
 
-  it('uses midnight in Cape Verde when the invoice has no issue time', async () => {
+  it('uses the configured clock time in Cape Verde when the invoice has no issue time', async () => {
     const getQuote = vi.fn(async (request: ExchangeRateRequest) => quoteFor(request));
-    const efatura = createEfatura(config, { exchangeRateProvider: { getQuote } });
+    const boundaryClock = { now: () => new Date('2026-01-02T00:15:30.456Z') };
+    const efatura = createEfatura(config, {
+      clock: boundaryClock,
+      exchangeRateProvider: { getQuote },
+    });
 
     await efatura.prepareInvoiceToCve(
       baseInvoicePayload({ issueDate: '2026-07-21', issueTime: undefined }),
@@ -177,7 +182,7 @@ describe('prepareInvoiceToCve', () => {
     );
 
     expect(getQuote).toHaveBeenCalledWith(
-      expect.objectContaining({ effectiveAt: new Date('2026-07-21T01:00:00.000Z') }),
+      expect.objectContaining({ effectiveAt: new Date('2026-07-22T00:15:30.456Z') }),
     );
   });
 
