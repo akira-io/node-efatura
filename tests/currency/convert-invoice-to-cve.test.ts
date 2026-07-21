@@ -134,13 +134,33 @@ describe('convertInvoiceToCve', () => {
     );
   });
 
-  it('converts signed payable rounding amounts with half-up rounding', () => {
+  it('preserves absent payable rounding when the converted fiscal totals reconcile exactly', () => {
     const source = conversionSource();
-    required(source.totals).payableRoundingAmount = -0.005;
+    required(source.totals).payableRoundingAmount = null;
+    required(source.totals).payableAmount = 1.9;
 
     const prepared = convertInvoiceToCve(source, quote);
 
-    expect(prepared.invoice.totals?.payableRoundingAmount).toBe(-0.55);
+    expect(prepared.invoice.totals?.payableRoundingAmount).toBeNull();
+  });
+
+  it('reconciles deduction, informational, discount, and withholding line amounts', () => {
+    const source = signedLineConversionSource();
+    const before = structuredClone(source);
+
+    const prepared = convertInvoiceToCve(source, { ...quote, rate: 0.5 });
+
+    expect(prepared.invoice.lines[0]?.discount).toEqual({ value: 0.01, valueType: 'A' });
+    expect(prepared.invoice.totals).toMatchObject({
+      priceExtensionTotalAmount: 0.01,
+      netTotalAmount: 0,
+      taxTotalAmount: 0.01,
+      withholdingTaxTotalAmount: 0.01,
+      payableRoundingAmount: 0.01,
+      payableAmount: 0.01,
+      payableAlternativeAmounts: [{ value: 0.01, currencyCode: 'EUR', exchangeRate: 0.5 }],
+    });
+    expect(source).toEqual(before);
   });
 
   it('treats discounts with no value type as amounts', () => {
@@ -219,6 +239,56 @@ function conversionSource() {
       extraFields: [{ name: 'SourceAmount', value: 2.2, attributes: { Currency: 'EUR' } }],
     }),
   );
+}
+
+function signedLineConversionSource() {
+  return invoiceDataFrom(
+    baseInvoicePayload({
+      lines: [
+        {
+          lineTypeCode: 'N',
+          quantity: { value: 1, unitCode: 'EA' },
+          priceExtension: 0.03,
+          discount: { value: 0.01, valueType: 'A' },
+          netTotal: 0.02,
+          taxes: taxesWithAmount(0.01),
+          item: { description: 'Net line', emitterIdentification: 'NET' },
+        },
+        {
+          lineTypeCode: 'D',
+          quantity: { value: 1, unitCode: 'EA' },
+          priceExtension: 0.01,
+          netTotal: 0.01,
+          taxes: taxesWithAmount(0.01),
+          item: { description: 'Deduction line', emitterIdentification: 'DEDUCTION' },
+        },
+        {
+          lineTypeCode: 'I',
+          quantity: { value: 1, unitCode: 'EA' },
+          priceExtension: 50,
+          netTotal: 50,
+          taxes: taxesWithAmount(0.02),
+          item: { description: 'Informational line', emitterIdentification: 'INFO' },
+        },
+      ],
+      totals: {
+        priceExtensionTotalAmount: 0.02,
+        chargeTotalAmount: 0,
+        discountTotalAmount: 0.01,
+        netTotalAmount: 0.01,
+        taxTotalAmount: 0.02,
+        withholdingTaxTotalAmount: 0.02,
+        payableAmount: 0.01,
+      },
+    }),
+  );
+}
+
+function taxesWithAmount(taxAmount: number) {
+  return [
+    { taxTypeCode: TaxTypeCode.IVA, taxAmount, taxTotal: taxAmount },
+    { taxTypeCode: TaxTypeCode.IncomeTax, taxAmount, taxTotal: taxAmount },
+  ];
 }
 
 function required<T>(value: T | null | undefined): T {

@@ -22,6 +22,29 @@ export function roundMoney(value: number): number {
   return Math.round(value * 100) / 100;
 }
 
+export function sumSignedLineAmounts(
+  lines: LineItemData[],
+  selector: (line: LineItemData) => number | null,
+): number | null {
+  let total = 0;
+
+  for (const line of lines) {
+    if (isIgnoredLine(line)) {
+      continue;
+    }
+
+    const value = selector(line);
+
+    if (value === null) {
+      return null;
+    }
+
+    total += lineSign(line) * value;
+  }
+
+  return roundMoney(total);
+}
+
 export function taxTotalsFrom(lines: LineItemData[]): {
   taxTotal: readonly number[] | null;
   withholdingTotal: readonly number[];

@@ -2,7 +2,13 @@ import Decimal from 'decimal.js';
 import type { ExchangeRateQuote } from '../../core/contracts/exchange-rate-provider';
 import { ExchangeRateError } from '../../domain/currency/exchange-rate-error';
 import type { DiscountData } from '../../domain/value-objects/discount-data';
+import {
+  roundMoney,
+  sumSignedLineAmounts,
+  taxTotalsFrom,
+} from '../../domain/value-objects/invoice-amounts';
 import type { InvoiceData } from '../../domain/value-objects/invoice-data';
+import type { LineItemData } from '../../domain/value-objects/line-item-data';
 import type { PaymentsData } from '../../domain/value-objects/payment-structures';
 import type { TaxData } from '../../domain/value-objects/tax-data';
 import type { TotalsData } from '../../domain/value-objects/totals-data';
@@ -25,23 +31,24 @@ export function convertInvoiceToCve(
     );
   }
 
+  const lines = invoice.lines.map((line) => ({
+    ...line,
+    price: convertAmount(line.price, rate),
+    priceExtension: convertAmount(line.priceExtension, rate),
+    discount: convertDiscount(line.discount, rate),
+    netTotal: convertAmount(line.netTotal, rate),
+    taxes: line.taxes.map((tax) => convertTax(tax, rate)),
+  }));
   const converted: InvoiceData = {
     ...invoice,
-    lines: invoice.lines.map((line) => ({
-      ...line,
-      price: convertAmount(line.price, rate),
-      priceExtension: convertAmount(line.priceExtension, rate),
-      discount: convertDiscount(line.discount, rate),
-      netTotal: convertAmount(line.netTotal, rate),
-      taxes: line.taxes.map((tax) => convertTax(tax, rate)),
-    })),
+    lines,
     references: invoice.references.map((reference) => ({
       ...reference,
       paymentAmount: convertAmount(reference.paymentAmount, rate),
       tax: reference.tax === null ? null : convertTax(reference.tax, rate),
     })),
     payments: convertPayments(invoice.payments, rate),
-    totals: convertTotals(invoice.totals, quote, rate),
+    totals: convertTotals(invoice.totals, quote, rate, lines),
   };
 
   const originalPayableAmount = invoice.totals.payableAmount;
@@ -112,22 +119,45 @@ function convertTotals(
   totals: TotalsData | null,
   quote: ExchangeRateQuote,
   rate: Decimal,
+  lines: LineItemData[],
 ): TotalsData | null {
   if (totals === null) {
     return null;
   }
 
+  const priceExtensionTotalAmount =
+    sumSignedLineAmounts(lines, (line) => line.priceExtension) ??
+    convertAmount(totals.priceExtensionTotalAmount, rate) ??
+    0;
+  const netTotalAmount =
+    sumSignedLineAmounts(lines, (line) => line.netTotal) ??
+    convertAmount(totals.netTotalAmount, rate) ??
+    0;
+  const lineTaxTotals = taxTotalsFrom(lines);
+  const taxTotalAmount =
+    lineTaxTotals.taxTotal?.[0] ?? convertAmount(totals.taxTotalAmount, rate) ?? 0;
+  const withholdingTaxTotalAmount =
+    totals.withholdingTaxTotalAmount === null ? null : (lineTaxTotals.withholdingTotal[0] ?? 0);
+  const payableAmount = convertAmount(totals.payableAmount, rate) ?? 0;
+  const derivedPayableRoundingAmount = roundMoney(
+    payableAmount - netTotalAmount - taxTotalAmount + (withholdingTaxTotalAmount ?? 0),
+  );
+  const payableRoundingAmount =
+    totals.payableRoundingAmount === null && derivedPayableRoundingAmount === 0
+      ? null
+      : derivedPayableRoundingAmount;
+
   return {
     ...totals,
-    priceExtensionTotalAmount: convertAmount(totals.priceExtensionTotalAmount, rate) ?? 0,
+    priceExtensionTotalAmount,
     chargeTotalAmount: convertAmount(totals.chargeTotalAmount, rate),
     discountTotalAmount: convertAmount(totals.discountTotalAmount, rate),
-    netTotalAmount: convertAmount(totals.netTotalAmount, rate) ?? 0,
+    netTotalAmount,
     discount: convertDiscount(totals.discount, rate),
-    taxTotalAmount: convertAmount(totals.taxTotalAmount, rate) ?? 0,
-    withholdingTaxTotalAmount: convertAmount(totals.withholdingTaxTotalAmount, rate),
-    payableRoundingAmount: convertAmount(totals.payableRoundingAmount, rate),
-    payableAmount: convertAmount(totals.payableAmount, rate) ?? 0,
+    taxTotalAmount,
+    withholdingTaxTotalAmount,
+    payableRoundingAmount,
+    payableAmount,
     payableAlternativeAmounts: [
       {
         value: totals.payableAmount,

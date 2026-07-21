@@ -91,15 +91,26 @@ describe('prepareInvoiceToCve', () => {
     expect(invalidInvoice).toEqual(before);
   });
 
-  it('revalidates the converted invoice and reports fiscal rounding inconsistencies', async () => {
+  it('reconciles accumulated line rounding before revalidating the converted invoice', async () => {
     const provider = providerAtRate(0.5);
     const efatura = createEfatura(config, { exchangeRateProvider: provider });
 
-    await expect(
-      efatura.prepareInvoiceToCve(roundingConflictPayload(), { sourceCurrency: 'EUR' }),
-    ).rejects.toMatchObject({
-      code: 'exchange_rate.invoice_invalid',
-      cause: expect.objectContaining({ code: 'invoice.totals_mismatch' }),
+    const prepared = await efatura.prepareInvoiceToCve(roundingConflictPayload(), {
+      sourceCurrency: 'EUR',
+    });
+
+    expect(prepared.invoice.totals).toMatchObject({
+      priceExtensionTotalAmount: 0.04,
+      netTotalAmount: 0.04,
+      taxTotalAmount: 0.04,
+      withholdingTaxTotalAmount: null,
+      payableRoundingAmount: -0.04,
+      payableAmount: 0.04,
+      payableAlternativeAmounts: [{ value: 0.08, currencyCode: 'EUR', exchangeRate: 0.5 }],
+    });
+    expect(prepared.conversion).toMatchObject({
+      originalPayableAmount: 0.08,
+      convertedPayableAmount: 0.04,
     });
   });
 

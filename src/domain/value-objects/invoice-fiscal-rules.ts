@@ -1,7 +1,7 @@
 import { DocumentType } from '../enums/document-type';
 import { TaxTypeCode } from '../enums/tax-type-code';
 import { EfaturaValidationError } from '../errors';
-import { isIgnoredLine, lineSign, roundMoney, taxTotalsFrom } from './invoice-amounts';
+import { isIgnoredLine, roundMoney, sumSignedLineAmounts, taxTotalsFrom } from './invoice-amounts';
 import type { InvoiceData } from './invoice-data';
 import type { LineItemData } from './line-item-data';
 
@@ -92,12 +92,12 @@ function assertTotals(invoice: InvoiceData): void {
   assertMoneyEquals(
     'totals.priceExtensionTotalAmount',
     invoice.totals.priceExtensionTotalAmount,
-    sumSigned(invoice.lines, (line) => line.priceExtension),
+    sumSignedLineAmounts(invoice.lines, (line) => line.priceExtension),
   );
   assertMoneyEquals(
     'totals.netTotalAmount',
     invoice.totals.netTotalAmount,
-    sumSigned(invoice.lines, (line) => line.netTotal),
+    sumSignedLineAmounts(invoice.lines, (line) => line.netTotal),
   );
 
   const taxTotals = taxTotalsFrom(invoice.lines);
@@ -193,29 +193,6 @@ function lineAmountRequired(field: string): EfaturaValidationError {
     'Line amount is required for totals reconciliation.',
     'invoice.totals_line_amount_required',
   );
-}
-
-function sumSigned(
-  lines: LineItemData[],
-  selector: (line: LineItemData) => number | null,
-): number | null {
-  let total = 0;
-
-  for (const line of lines) {
-    if (isIgnoredLine(line)) {
-      continue;
-    }
-
-    const value = selector(line);
-
-    if (value === null) {
-      return null;
-    }
-
-    total += lineSign(line) * value;
-  }
-
-  return roundMoney(total);
 }
 
 function assertMoneyEquals(field: string, actual: number, expected: number | null): void {
