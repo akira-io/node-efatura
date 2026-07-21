@@ -64,6 +64,10 @@ export * from './core';
 export type { DocumentTypePolicy } from './core/contracts/document-type-policy';
 export { createEfatura } from './create-efatura';
 export {
+  normalizeCurrencyCode,
+  validateExchangeRateQuote,
+} from './domain/currency/exchange-rate-quote';
+export {
   DOCUMENT_TYPES,
   DocumentType,
   documentTypeCode,
@@ -97,6 +101,8 @@ export {
 export {
   EfaturaError,
   EfaturaValidationError,
+  ExchangeRateError,
+  type ExchangeRateErrorCode,
   OfficialArtifactMissingError,
 } from './domain/errors';
 export {
