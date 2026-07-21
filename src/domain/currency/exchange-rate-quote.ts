@@ -5,14 +5,15 @@ import type {
   ExchangeRateType,
 } from '../../core/contracts/exchange-rate-provider';
 import { ExchangeRateError } from './exchange-rate-error';
+import { SCHEMA_CURRENCY_CODES } from './schema-currency-codes';
 
 const RATE_TYPES: readonly ExchangeRateType[] = ['buy', 'sell', 'reference', 'custom'];
-const ISO_4217_CURRENCY_CODES = new Set(Intl.supportedValuesOf('currency'));
+const SCHEMA_CURRENCY_CODE_SET = new Set<string>(SCHEMA_CURRENCY_CODES);
 
 export function normalizeCurrencyCode(currencyCode: string): string {
   const normalizedCurrencyCode = currencyCode.trim().toUpperCase();
 
-  if (!ISO_4217_CURRENCY_CODES.has(normalizedCurrencyCode)) {
+  if (!SCHEMA_CURRENCY_CODE_SET.has(normalizedCurrencyCode)) {
     throw new ExchangeRateError(
       'exchange_rate.currency_unsupported',
       'Currency must be a supported ISO 4217 code.',

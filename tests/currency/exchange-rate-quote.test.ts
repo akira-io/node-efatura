@@ -28,11 +28,23 @@ describe('exchange-rate quotes', () => {
     ['cve', 'CVE'],
     ['USD', 'USD'],
     ['jpy', 'JPY'],
+    ['xau', 'XAU'],
+    ['XTS', 'XTS'],
+    ['xxx', 'XXX'],
   ])('normalizes supported currency code %j to %s', (currencyCode, expected) => {
     expect(normalizeCurrencyCode(currencyCode)).toBe(expected);
   });
 
-  it.each(['AAA', 'EU', 'EURO', '12A'])('rejects unsupported currency code %j', (currencyCode) => {
+  it.each([
+    'AAA',
+    'EU',
+    'EURO',
+    '12A',
+    'IDR',
+    'SLE',
+    'XCG',
+    'ZWG',
+  ])('rejects unsupported currency code %j', (currencyCode) => {
     expect(() => normalizeCurrencyCode(currencyCode)).toThrowError(
       expect.objectContaining({ code: 'exchange_rate.currency_unsupported' }),
     );

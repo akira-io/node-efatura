@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Reject unsupported ISO 4217 currency codes before exchange-rate provider access.
+- Match accepted currency codes to the active embedded e-Fatura XSD before exchange-rate provider access.
 - Use the configured clock's Cape Verde time-of-day when an invoice has no issue time.
 
 ### Deprecated

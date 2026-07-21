@@ -63,14 +63,18 @@ describe('official XSD validation', () => {
     expect(result).toEqual({ valid: true, errors: [] });
   });
 
-  it('validates a prepared CVE invoice with its foreign alternative amount against the official schema', async () => {
+  it.each([
+    'XAU',
+    'XTS',
+    'XXX',
+  ])('validates a prepared %s alternative amount against the official schema', async (sourceCurrency) => {
     const effectiveAt = new Date('2026-07-21T11:30:00Z');
     const efatura = createEfatura(config(), {
       clock: { now: () => new Date('2026-07-21T12:00:00Z') },
       exchangeRateProvider: new FixedExchangeRateProvider({
-        sourceCurrency: 'EUR',
+        sourceCurrency,
         targetCurrency: 'CVE',
-        rate: 110.265,
+        rate: 1,
         effectiveAt,
         provider: 'Test provider',
       }),
@@ -98,7 +102,7 @@ describe('official XSD validation', () => {
           payableAmount: 200,
         },
       }),
-      { sourceCurrency: 'EUR' },
+      { sourceCurrency },
     );
     const xml = efatura.buildDfeXml(prepared.invoice, {
       documentNumber: 1,
@@ -111,6 +115,7 @@ describe('official XSD validation', () => {
       schemaVersion: '1.0',
     });
 
+    expect(xml).toContain(`CurrencyCode="${sourceCurrency}"`);
     expect(result).toEqual({ valid: true, errors: [] });
   });
 

@@ -156,7 +156,7 @@ new BcvExchangeRateProvider({
 
 ## Exchange-Rate Pair Or Currency Does Not Match
 
-`exchange_rate.currency_unsupported` means the input is not in the Node.js 20 ISO 4217 currency list or the selected provider lacks a required mapping. Invalid codes fail before the provider is called. `exchange_rate.pair_mismatch` means the quote pair or rate type differs from the request. Confirm that the source code is supported, the target is CVE, BCV uses buy or sell, and World Bank uses reference.
+`exchange_rate.currency_unsupported` means the input is absent from the active embedded e-Fatura XSD currency list or the selected provider lacks a required mapping. The runtime list matches all 178 values in `ISO_ISO3AlphaCurrencyCode_2012-08-31.xsd`; host `Intl` support does not change it. Invalid codes fail before the provider is called. `exchange_rate.pair_mismatch` means the quote pair or rate type differs from the request. Confirm that the source code is supported by the active schema, the target is CVE, BCV uses buy or sell, and World Bank uses reference.
 
 Rates follow `amountInTarget = amountInSource * rate`. A EUR to CVE rate must express CVE per EUR, not EUR per CVE.
 

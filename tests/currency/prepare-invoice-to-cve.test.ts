@@ -131,6 +131,10 @@ describe('prepareInvoiceToCve', () => {
     'EURO',
     '12A',
     'AAA',
+    'IDR',
+    'SLE',
+    'XCG',
+    'ZWG',
   ])('rejects invalid source code %j before provider access', async (sourceCurrency) => {
     const getQuote = vi.fn(async (request: ExchangeRateRequest) => quoteFor(request));
     const efatura = createEfatura(config, { exchangeRateProvider: { getQuote } });
