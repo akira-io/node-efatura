@@ -1,4 +1,5 @@
 import type { EmissionMode } from '../../domain/enums/emission-mode';
+import type { CurrencyConversionMetadata } from './exchange-rate-provider';
 
 export interface DfaRenderInput {
   iud: string;
@@ -20,7 +21,8 @@ export interface DfaRenderInput {
   lines?: DfaLineInput[];
   totals?: DfaTotalsInput;
   total?: number;
-  currency?: string;
+  currency?: 'CVE';
+  conversion?: CurrencyConversionMetadata;
   emissionMode?: EmissionMode;
   contingencyIuc?: string;
 }

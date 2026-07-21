@@ -1,6 +1,7 @@
 import type { DfaLineInput, DfaRenderInput, DfaTotalsInput } from '../../core/contracts';
 import { documentTypeCode } from '../../domain/enums/document-type';
 import { normalizeEmissionMode } from '../../domain/enums/emission-mode';
+import { EfaturaValidationError } from '../../domain/errors';
 import { parseIud } from '../../domain/iud/iud';
 import type { AddressData } from '../../domain/value-objects/address-data';
 import type { ContactsData } from '../../domain/value-objects/contacts-data';
@@ -33,10 +34,27 @@ export function dfaRenderInputFrom(options: RenderDfaOptions, qrCodeUrl: string)
     lines: options.invoice?.lines.map(dfaLineFrom),
     totals: dfaTotalsFromInvoice(options.invoice),
     total: options.invoice?.totals?.payableAmount,
-    currency: options.currency,
+    currency: options.invoice ? 'CVE' : normalizeLegacyCurrency(options.currency),
+    conversion: options.conversion,
     emissionMode: normalizeEmissionMode(options.emissionMode),
     contingencyIuc: options.contingencyIuc ?? options.invoice?.contingency?.iuc ?? undefined,
   };
+}
+
+function normalizeLegacyCurrency(currency: string | undefined): 'CVE' | undefined {
+  if (currency === undefined) {
+    return undefined;
+  }
+
+  if (currency.trim().toUpperCase() === 'CVE') {
+    return 'CVE';
+  }
+
+  throw new EfaturaValidationError(
+    'currency',
+    'DFA fiscal values must use CVE.',
+    'dfa.currency_invalid',
+  );
 }
 
 function trimLeadingZeros(value: string): string {

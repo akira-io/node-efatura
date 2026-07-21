@@ -1,6 +1,7 @@
 import type {
   CertificateValidator,
   Clock,
+  CurrencyConversionMetadata,
   DfaRenderer,
   EmitterAuthorizationClient,
   ExchangeRateProvider,
@@ -71,7 +72,9 @@ export interface RenderDfaOptions {
   emissionMode?: EmissionModeInput;
   contingencyIuc?: string;
   title?: string;
+  /** @deprecated Fiscal DFA values are always denominated in CVE. */
   currency?: string;
+  conversion?: CurrencyConversionMetadata;
 }
 
 export interface SubmitPlatformOptions {

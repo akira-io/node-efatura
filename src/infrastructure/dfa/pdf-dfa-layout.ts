@@ -1,10 +1,10 @@
 import type { DfaRenderInput } from '../../core/contracts';
 import { EmissionMode } from '../../domain/enums/emission-mode';
+import { conversionEvidenceHeight, renderDfaConversionEvidence } from './pdf-dfa-conversion';
 import { colors, drawLine, money, page } from './pdf-dfa-primitives';
 import { renderDfaItemsTable } from './pdf-dfa-table';
 
 type TotalRow = [string, string];
-
 export function renderDfaPdfLayout(
   document: PDFKit.PDFDocument,
   input: DfaRenderInput,
@@ -17,8 +17,9 @@ export function renderDfaPdfLayout(
   const nextY = renderDfaItemsTable(document, input, () => continuationPage(document, input));
   const totalsY = prepareTotalsArea(document, input, nextY);
   const totalsBottomY = totals(document, input, totalsY);
+  const conversionBottomY = renderDfaConversionEvidence(document, input.conversion, totalsBottomY);
 
-  verification(document, input, qrCode, Math.max(665, totalsBottomY + 18));
+  verification(document, input, qrCode, Math.max(665, conversionBottomY + 18));
   pageNumbers(document);
 }
 
@@ -136,9 +137,9 @@ function prepareTotalsArea(
   input: DfaRenderInput,
   nextY: number,
 ): number {
-  let totalsY = Math.max(nextY + 16, 540);
+  let totalsY = Math.max(nextY + 16, input.conversion ? 430 : 540);
 
-  if (!summaryFits(input, totalsY)) {
+  if (!summaryFits(document, input, totalsY)) {
     continuationPage(document, input);
     totalsY = 245;
   }
@@ -146,25 +147,30 @@ function prepareTotalsArea(
   return totalsY;
 }
 
-function summaryFits(input: DfaRenderInput, totalsY: number): boolean {
-  const verificationY = Math.max(665, totalsY + totalRows(input).length * 21 + 18);
+function summaryFits(
+  document: PDFKit.PDFDocument,
+  input: DfaRenderInput,
+  totalsY: number,
+): boolean {
+  const totalsBottomY = totalsY + totalRows(input).length * 21;
+  const conversionBottomY = totalsBottomY + conversionEvidenceHeight(document, input.conversion);
+  const verificationY = Math.max(665, conversionBottomY + 18);
 
   return verificationY + 96 <= 790;
 }
 
 function totalRows(input: DfaRenderInput): TotalRow[] {
-  const currency = input.currency ?? 'CVE';
   const totalsInput = input.totals;
 
   return totalsInput
     ? [
-        ['Subtotal:', money(totalsInput.netTotalAmount, currency)],
-        ['Descontos:', money(totalsInput.discountTotalAmount, currency)],
-        ['Encargos:', money(totalsInput.chargeTotalAmount, currency)],
-        ['Imposto:', money(totalsInput.taxTotalAmount, currency)],
-        ['Total:', money(totalsInput.payableAmount, currency)],
+        ['Subtotal:', money(totalsInput.netTotalAmount, 'CVE')],
+        ['Descontos:', money(totalsInput.discountTotalAmount, 'CVE')],
+        ['Encargos:', money(totalsInput.chargeTotalAmount, 'CVE')],
+        ['Imposto:', money(totalsInput.taxTotalAmount, 'CVE')],
+        ['Total:', money(totalsInput.payableAmount, 'CVE')],
       ]
-    : [['Total:', money(input.total ?? 0, currency)]];
+    : [['Total:', money(input.total ?? 0, 'CVE')]];
 }
 
 function totals(document: PDFKit.PDFDocument, input: DfaRenderInput, startY: number): number {
