@@ -79,6 +79,52 @@ describe('currency conversion documentation', () => {
     expect(dfa.buffer.length).toBeGreaterThan(0);
   });
 
+  it('publishes a dedicated example page for every exchange-rate provider choice', async () => {
+    const [bcv, worldBank, fixed, callback, index] = await Promise.all([
+      readFile(new URL('../../docs/examples/currency/bcv-default.md', import.meta.url), 'utf8'),
+      readFile(
+        new URL('../../docs/examples/currency/world-bank-reference.md', import.meta.url),
+        'utf8',
+      ),
+      readFile(new URL('../../docs/examples/currency/fixed-rate.md', import.meta.url), 'utf8'),
+      readFile(
+        new URL('../../docs/examples/currency/callback-provider.md', import.meta.url),
+        'utf8',
+      ),
+      readFile(new URL('../../docs/00-index.md', import.meta.url), 'utf8'),
+    ]);
+
+    expect(bcv).toContain('createEfatura(config)');
+    expect(bcv).toContain("rateType: 'buy'");
+    expect(bcv).toContain('does not switch to another provider after a failure');
+
+    expect(worldBank).toContain('new WorldBankExchangeRateProvider');
+    expect(worldBank).toContain("EUR: 'EMU'");
+    expect(worldBank).toContain('annual reference');
+
+    expect(fixed).toContain('new FixedExchangeRateProvider');
+    expect(fixed).toContain('rate: 110.265');
+    expect(fixed).toContain('[complete EUR-to-CVE example](eur-to-cve.md)');
+
+    expect(callback).toContain('new CallbackExchangeRateProvider');
+    expect(callback).toContain('applicationRates.getApprovedQuote(request)');
+    expect(callback).toContain('must describe the quote that was selected');
+
+    for (const page of [bcv, worldBank, fixed, callback]) {
+      expect(page).toContain('prepareInvoiceToCve(invoiceInEur');
+      expect(page).toContain('../../18-currency-conversion.md');
+    }
+
+    for (const fileName of [
+      'bcv-default.md',
+      'world-bank-reference.md',
+      'fixed-rate.md',
+      'callback-provider.md',
+    ]) {
+      expect(index).toContain(`examples/currency/${fileName}`);
+    }
+  });
+
   it('documents the final provider and metadata hardening rules', async () => {
     const [guide, apiReference, compliance, configuration] = await Promise.all([
       readFile(new URL('../../docs/18-currency-conversion.md', import.meta.url), 'utf8'),

@@ -34,4 +34,8 @@
 | [React](examples/fastify/react.md) | Call the Fastify adapter from a React SPA |
 | [Vue](examples/fastify/vue.md) | Call the Fastify adapter from a Vue SPA |
 | [Svelte](examples/fastify/svelte.md) | Call the Fastify adapter from a Svelte SPA |
+| [BCV Default Provider](examples/currency/bcv-default.md) | Use the official daily BCV fiscal exchange rate |
+| [World Bank Reference Provider](examples/currency/world-bank-reference.md) | Use an approved annual reference-rate policy |
+| [Fixed Rate Provider](examples/currency/fixed-rate.md) | Supply one audited application-approved rate |
+| [Callback Provider](examples/currency/callback-provider.md) | Connect an application-owned exchange-rate service |
 | [EUR To CVE With A Fixed Rate](examples/currency/eur-to-cve.md) | Prepare XML and DFA output with deterministic conversion evidence |
