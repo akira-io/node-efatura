@@ -202,6 +202,63 @@ describe('BcvExchangeRateProvider', () => {
     });
   });
 
+  it('rejects an oversized valid Content-Length before reading the body', async () => {
+    const getReader = vi.fn();
+    const fetcher: typeof fetch = vi.fn(async () => {
+      return {
+        ok: true,
+        status: 200,
+        headers: new Headers({ 'content-length': '4096' }),
+        body: { getReader },
+      } as unknown as Response;
+    });
+    const provider = providerFor(fixture, { fetcher, maxResponseBytes: 1024 });
+
+    await expect(provider.getQuote(request())).rejects.toMatchObject({
+      code: 'exchange_rate.response_invalid',
+    });
+    expect(getReader).not.toHaveBeenCalled();
+  });
+
+  it('cancels a streamed response as soon as chunked bytes exceed the limit', async () => {
+    const encoder = new TextEncoder();
+    const cancel = vi.fn();
+    let pulls = 0;
+    const body = new ReadableStream<Uint8Array>(
+      {
+        pull(controller) {
+          pulls += 1;
+
+          if (pulls > 3) {
+            controller.close();
+            return;
+          }
+
+          controller.enqueue(encoder.encode('abc'));
+        },
+        cancel,
+      },
+      { highWaterMark: 0 },
+    );
+    const fetcher = vi.fn(async () => new Response(body));
+    const provider = providerFor(fixture, { fetcher, maxResponseBytes: 5 });
+
+    await expect(provider.getQuote(request())).rejects.toMatchObject({
+      code: 'exchange_rate.response_invalid',
+    });
+    expect(pulls).toBe(2);
+    expect(cancel).toHaveBeenCalledOnce();
+  });
+
+  it('rejects an HTTP source URL during construction without fetching', () => {
+    const fetcher = vi.fn(async () => response());
+
+    expect(
+      () => new BcvExchangeRateProvider({ fetcher, sourceUrl: 'http://www.bcv.cv/rates' }),
+    ).toThrowError(expect.objectContaining({ code: 'exchange_rate.source_required' }));
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+
   it('rejects unsupported target currencies and rate types before fetching', async () => {
     const fetcher = vi.fn(async () => response());
     const provider = providerFor(fixture, { fetcher });

@@ -1,6 +1,3 @@
-import { Buffer } from 'node:buffer';
-import { type CheerioAPI, load } from 'cheerio';
-import Decimal from 'decimal.js';
 import type { Clock } from '../../core/contracts/clock';
 import type {
   ExchangeRateProvider,
@@ -14,6 +11,7 @@ import {
   validateExchangeRateQuote,
 } from '../../domain/currency/exchange-rate-quote';
 import { SystemClock } from '../clock/system-clock';
+import { parseBcvExchangeRateHtml } from './bcv-exchange-rate-parser';
 
 export interface BcvExchangeRateProviderOptions {
   fetcher?: typeof fetch;
@@ -32,8 +30,6 @@ const DEFAULT_MAX_RESPONSE_BYTES = 1024 * 1024;
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 const PROVIDER_NAME = 'Banco de Cabo Verde';
 
-type TableRow = string[];
-
 export class BcvExchangeRateProvider implements ExchangeRateProvider {
   readonly #fetch: typeof fetch;
   readonly #clock: Clock;
@@ -46,7 +42,7 @@ export class BcvExchangeRateProvider implements ExchangeRateProvider {
   constructor(options: BcvExchangeRateProviderOptions = {}) {
     this.#fetch = options.fetcher ?? fetch;
     this.#clock = options.clock ?? new SystemClock();
-    this.#sourceUrl = options.sourceUrl ?? DEFAULT_BCV_SOURCE_URL;
+    this.#sourceUrl = normalizeSourceUrl(options.sourceUrl ?? DEFAULT_BCV_SOURCE_URL);
     this.#timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
     this.#maxResponseBytes = options.maxResponseBytes ?? DEFAULT_MAX_RESPONSE_BYTES;
     this.#allowPreviousPublication = options.allowPreviousPublication ?? false;
@@ -61,10 +57,8 @@ export class BcvExchangeRateProvider implements ExchangeRateProvider {
     assertSupportedRequest(targetCurrency, rateType);
 
     const html = await this.#fetchHtml();
-    const $ = load(html);
-    const publicationDate = parsePublicationDate($);
+    const { publicationDate, rate } = parseBcvExchangeRateHtml(html, sourceCurrency, rateType);
     this.#assertPublicationDate(request.effectiveAt, publicationDate);
-    const rate = parseRate($, sourceCurrency, rateType);
 
     return validateExchangeRateQuote(request, {
       sourceCurrency,
@@ -94,19 +88,15 @@ export class BcvExchangeRateProvider implements ExchangeRateProvider {
       throw providerUnavailable(response.status);
     }
 
-    let html: string;
-
     try {
-      html = await response.text();
+      return await readBoundedResponse(response, this.#maxResponseBytes);
     } catch (cause) {
+      if (cause instanceof ExchangeRateError) {
+        throw cause;
+      }
+
       throw providerUnavailable(undefined, cause);
     }
-
-    if (Buffer.byteLength(html, 'utf8') > this.#maxResponseBytes) {
-      throw invalidBcvResponse('response size exceeds the configured limit');
-    }
-
-    return html;
   }
 
   #assertPublicationDate(requestedAt: Date, publicationDate: Date): void {
@@ -149,120 +139,6 @@ function assertSupportedRequest(
   }
 }
 
-function parsePublicationDate($: CheerioAPI): Date {
-  const text = $.root().text().replaceAll('\u00a0', ' ');
-  const dateMatch = text.match(/Taxas de Câmbio para o dia\s+(\d{2})\/(\d{2})\/(\d{4})/i);
-
-  if (!dateMatch) {
-    throw invalidBcvResponse('publication date is missing');
-  }
-
-  const [, dayText, monthText, yearText] = dateMatch;
-  const day = Number(dayText);
-  const month = Number(monthText);
-  const year = Number(yearText);
-  const publicationDate = new Date(Date.UTC(year, month - 1, day));
-
-  if (
-    publicationDate.getUTCFullYear() !== year ||
-    publicationDate.getUTCMonth() !== month - 1 ||
-    publicationDate.getUTCDate() !== day
-  ) {
-    throw invalidBcvResponse('publication date is invalid');
-  }
-
-  return publicationDate;
-}
-
-function parseRate($: CheerioAPI, sourceCurrency: string, rateType: 'buy' | 'sell'): number {
-  for (const table of $('table').toArray()) {
-    const rows = $(table)
-      .find('tr')
-      .toArray()
-      .map((element) =>
-        $(element)
-          .find('th,td')
-          .toArray()
-          .map((cell) => $(cell).text().trim()),
-      );
-    const headerIndex = rows.findIndex((row) => row.some((cell) => headerName(cell) === 'MOEDA'));
-
-    if (headerIndex < 0) {
-      continue;
-    }
-
-    const headers = rows[headerIndex]?.map(headerName) ?? [];
-    const requiredHeaders = ['PAIS', 'MOEDA', 'UNIDADES', 'COMPRA', 'VENDA'];
-
-    if (requiredHeaders.some((header) => !headers.includes(header))) {
-      throw invalidBcvResponse('required rate table columns are missing');
-    }
-
-    const currencyIndex = headers.indexOf('MOEDA');
-    const unitsIndex = headers.indexOf('UNIDADES');
-    const rateIndex = headers.indexOf(rateType === 'buy' ? 'COMPRA' : 'VENDA');
-    const row = findCurrencyRow(rows.slice(headerIndex + 1), currencyIndex, sourceCurrency);
-
-    if (!row) {
-      throw new ExchangeRateError(
-        'exchange_rate.currency_unsupported',
-        `BCV did not publish a rate for ${sourceCurrency}.`,
-      );
-    }
-
-    return normalizePublishedRate(row[rateIndex], row[unitsIndex]);
-  }
-
-  throw invalidBcvResponse('rate table is missing');
-}
-
-function findCurrencyRow(
-  rows: TableRow[],
-  currencyIndex: number,
-  sourceCurrency: string,
-): TableRow | undefined {
-  return rows.find((row) => normalizeCurrencyCode(row[currencyIndex] ?? '') === sourceCurrency);
-}
-
-function normalizePublishedRate(
-  rateText: string | undefined,
-  unitsText: string | undefined,
-): number {
-  try {
-    const rate = parseLocalizedDecimal(rateText);
-    const units = parseLocalizedDecimal(unitsText);
-
-    if (!rate.isFinite() || !units.isFinite() || rate.lte(0) || units.lte(0)) {
-      throw new Error('BCV rate and units must be positive finite numbers.');
-    }
-
-    return rate.dividedBy(units).toNumber();
-  } catch (cause) {
-    throw new ExchangeRateError(
-      'exchange_rate.rate_invalid',
-      'The BCV rate or unit count is invalid.',
-      { cause },
-    );
-  }
-}
-
-function parseLocalizedDecimal(value: string | undefined): Decimal {
-  if (value === undefined || value.trim().length === 0) {
-    throw new Error('A localized decimal value is missing.');
-  }
-
-  return new Decimal(value.replace(/[ \u00a0]/g, '').replace(',', '.'));
-}
-
-function headerName(value: string): string {
-  return value
-    .replaceAll('\u00a0', ' ')
-    .trim()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toUpperCase();
-}
-
 function utcCalendarDay(value: Date): number {
   const timestamp = value instanceof Date ? value.getTime() : Number.NaN;
 
@@ -284,6 +160,63 @@ function providerUnavailable(status?: number, cause?: unknown): ExchangeRateErro
     `The BCV exchange-rate source is unavailable${statusSuffix}.`,
     { cause },
   );
+}
+
+async function readBoundedResponse(response: Response, maxResponseBytes: number): Promise<string> {
+  const contentLength = response.headers.get('content-length');
+
+  if (
+    contentLength !== null &&
+    /^\d+$/.test(contentLength) &&
+    BigInt(contentLength) > BigInt(maxResponseBytes)
+  ) {
+    throw invalidBcvResponse('response size exceeds the configured limit');
+  }
+
+  if (!response.body) {
+    return '';
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  const decodedChunks: string[] = [];
+  let responseBytes = 0;
+
+  while (true) {
+    const chunk = await reader.read();
+
+    if (chunk.done) {
+      decodedChunks.push(decoder.decode());
+      return decodedChunks.join('');
+    }
+
+    responseBytes += chunk.value.byteLength;
+
+    if (responseBytes > maxResponseBytes) {
+      await reader.cancel().catch(() => undefined);
+      throw invalidBcvResponse('response size exceeds the configured limit');
+    }
+
+    decodedChunks.push(decoder.decode(chunk.value, { stream: true }));
+  }
+}
+
+function normalizeSourceUrl(sourceUrl: string): string {
+  try {
+    const url = new URL(sourceUrl);
+
+    if (url.protocol !== 'https:') {
+      throw new Error('The BCV source URL must use HTTPS.');
+    }
+
+    return url.toString();
+  } catch (cause) {
+    throw new ExchangeRateError(
+      'exchange_rate.source_required',
+      'An HTTPS BCV exchange-rate source URL is required.',
+      { cause },
+    );
+  }
 }
 
 function invalidBcvResponse(detail: string): ExchangeRateError {
