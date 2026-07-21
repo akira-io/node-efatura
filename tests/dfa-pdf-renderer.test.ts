@@ -19,6 +19,19 @@ describe('PdfDfaRenderer', () => {
     expect(text).toContain('Banco de Cabo Verde');
   });
 
+  it.each([
+    [110.265, '110,265'],
+    [0.59727, '0,59727'],
+    [101.7495, '101,7495'],
+  ])('renders the rate %s with up to five fractional digits', async (rate, expected) => {
+    const dfa = await new PdfDfaRenderer().render(
+      renderInput({ conversion: { ...conversion(), rate } }),
+    );
+    const text = pdfTextPages(dfa.buffer).join('\n');
+
+    expect(text).toContain(`1 EUR = ${expected} CVE`);
+  });
+
   it('wraps a long conversion source URL into multiple PDF text rows', async () => {
     const sourceUrl =
       'https://www.bcv.cv/pt/PoliticaMonetaria/EstatisticasCambiais/Documentos/Taxas-de-cambio-oficiais-2026-07-21?documento=referencia-fiscal-e-fatura';

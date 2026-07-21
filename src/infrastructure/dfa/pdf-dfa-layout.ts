@@ -1,6 +1,6 @@
 import type { DfaRenderInput } from '../../core/contracts';
 import { EmissionMode } from '../../domain/enums/emission-mode';
-import { conversionEvidenceHeight, renderDfaConversionEvidence } from './pdf-dfa-conversion';
+import { renderDfaConversionEvidence } from './pdf-dfa-conversion';
 import { colors, drawLine, money, page } from './pdf-dfa-primitives';
 import { renderDfaItemsTable } from './pdf-dfa-table';
 
@@ -17,7 +17,16 @@ export function renderDfaPdfLayout(
   const nextY = renderDfaItemsTable(document, input, () => continuationPage(document, input));
   const totalsY = prepareTotalsArea(document, input, nextY);
   const totalsBottomY = totals(document, input, totalsY);
-  const conversionBottomY = renderDfaConversionEvidence(document, input.conversion, totalsBottomY);
+  const conversionBottomY = renderDfaConversionEvidence(
+    document,
+    input.conversion,
+    totalsBottomY,
+    () => {
+      continuationPage(document, input);
+
+      return 245;
+    },
+  );
 
   verification(document, input, qrCode, Math.max(665, conversionBottomY + 18));
   pageNumbers(document);
@@ -139,7 +148,7 @@ function prepareTotalsArea(
 ): number {
   let totalsY = Math.max(nextY + 16, input.conversion ? 430 : 540);
 
-  if (!summaryFits(document, input, totalsY)) {
+  if (!summaryFits(input, totalsY)) {
     continuationPage(document, input);
     totalsY = 245;
   }
@@ -147,13 +156,14 @@ function prepareTotalsArea(
   return totalsY;
 }
 
-function summaryFits(
-  document: PDFKit.PDFDocument,
-  input: DfaRenderInput,
-  totalsY: number,
-): boolean {
+function summaryFits(input: DfaRenderInput, totalsY: number): boolean {
   const totalsBottomY = totalsY + totalRows(input).length * 21;
-  const conversionBottomY = totalsBottomY + conversionEvidenceHeight(document, input.conversion);
+
+  if (input.conversion) {
+    return totalsBottomY <= 700;
+  }
+
+  const conversionBottomY = totalsBottomY;
   const verificationY = Math.max(665, conversionBottomY + 18);
 
   return verificationY + 96 <= 790;
