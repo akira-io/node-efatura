@@ -1,6 +1,6 @@
 const warningStateKey = Symbol.for('@akira-io/efatura/render-dfa-currency-deprecation');
 
-export function warnRenderDfaCurrencyDeprecation(currency: string | undefined): void {
+export function warnRenderDfaCurrencyDeprecation(currency: unknown): void {
   if (
     currency === undefined ||
     Object.getOwnPropertyDescriptor(globalThis, warningStateKey) !== undefined

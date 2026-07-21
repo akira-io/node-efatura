@@ -98,6 +98,9 @@ describe('currency conversion documentation', () => {
     expect(guide).toContain('rounded to two fractional digits with half-up rounding');
     expect(guide).toContain('origin must be exactly `https://www.bcv.cv`');
     expect(guide).toContain('Redirect responses are rejected');
+    expect(guide).toContain(
+      'BCV requires the exact official `https://www.bcv.cv` origin. For another trusted source, use `FixedExchangeRateProvider` or `CallbackExchangeRateProvider`.',
+    );
     expect(apiReference).toContain('ExchangeRateEvidence');
     expect(apiReference).toContain('validation.payable_alternative_currency_unsupported');
     expect(apiReference).toContain('exactly `https://www.bcv.cv`');

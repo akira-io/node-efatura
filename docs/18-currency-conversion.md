@@ -414,7 +414,7 @@ For a CVE identity preparation, the provider is not called and no CVE alternativ
 | `exchange_rate.date_unavailable` | No quote satisfies the requested date | Configure an explicit prior-publication policy or audited historical source. |
 | `exchange_rate.date_invalid` | Requested or returned date is invalid or a BCV publication is in the future | Correct the date source before issuance. |
 | `exchange_rate.stale` | BCV publication exceeds `maxPublicationAgeDays` | Obtain a newer publication or change policy through an approved configuration change. |
-| `exchange_rate.source_required` | A configured source URL is empty, invalid, or not HTTPS | Supply a trusted HTTPS URL or omit the optional URL where supported. |
+| `exchange_rate.source_required` | A configured source URL is empty, invalid, or not allowed by the provider | BCV requires the exact official `https://www.bcv.cv` origin. For another trusted source, use `FixedExchangeRateProvider` or `CallbackExchangeRateProvider`. |
 | `exchange_rate.invoice_invalid` | Totals are absent or the converted invoice fails fiscal validation | Supply totals or inspect the validation cause and correct the source invoice. |
 | `exchange_rate.alternatives_conflict` | Existing alternative amounts cannot be merged safely | Remove them before automatic preparation or use the low-level API. |
 
