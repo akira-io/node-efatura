@@ -344,14 +344,19 @@ An application may implement an explicit provider sequence inside its callback. 
 
 ## 10. Monetary-Field Conversion Matrix
 
-Every non-null first-class monetary amount is multiplied by the same normalized quote and rounded independently. Null values remain null.
+Line, reference, payment, and non-reconciled total amounts are multiplied by the same normalized quote and rounded independently. Null values remain null. Fiscal aggregate totals are then recomputed from the rounded converted lines so the prepared invoice remains internally consistent.
 
-| Location | Converted fields |
+| Location | Conversion or reconciliation behavior |
 |---|---|
 | `lines[]` | `price`, `priceExtension`, `netTotal` |
 | `lines[].discount` | `value` when `valueType` is `A` or absent |
 | `lines[].taxes[]` | `taxAmount`, `taxTotal` |
-| `totals` | `priceExtensionTotalAmount`, `chargeTotalAmount`, `discountTotalAmount`, `netTotalAmount`, `taxTotalAmount`, `withholdingTaxTotalAmount`, `payableRoundingAmount`, `payableAmount` |
+| `totals` | `chargeTotalAmount`, `discountTotalAmount`, and `payableAmount` are multiplied and rounded independently |
+| `totals.priceExtensionTotalAmount` | signed sum of rounded line `priceExtension` values, excluding informational lines |
+| `totals.netTotalAmount` | signed sum of rounded line `netTotal` values, excluding informational lines |
+| `totals.taxTotalAmount` | signed sum of rounded non-withholding line tax totals under the package fiscal rules |
+| `totals.withholdingTaxTotalAmount` | signed sum of rounded income-tax line totals; remains `null` only when no converted withholding evidence exists |
+| `totals.payableRoundingAmount` | derived as `payableAmount - netTotalAmount - taxTotalAmount + withholdingTaxTotalAmount` |
 | `totals.discount` | `value` when `valueType` is `A` or absent |
 | `references[]` | `paymentAmount` |
 | `references[].tax` | `taxAmount`, `taxTotal` |
@@ -372,7 +377,7 @@ The original source object remains unchanged. The converted invoice is validated
 
 Quote validation uses decimal arithmetic to round the provider rate to at most five fractional digits with half-up rounding. The active embedded XSD defines `ExchangeRate` as `stDecimal5MinExc0`, so the serialized rate must be positive and have no more than five fractional digits.
 
-Every fiscal monetary amount is multiplied with decimal arithmetic and rounded independently to two fractional digits with half-up rounding. `payableRoundingAmount` remains signed. The converter does not derive a line from an already rounded total and does not change an arbitrary line to force reconciliation.
+Every directly converted fiscal monetary amount uses decimal arithmetic and two fractional digits with half-up rounding. Signed line and tax accumulation also uses decimal arithmetic. The converter does not derive a line from an already rounded total and does not change an arbitrary line to force reconciliation.
 
 ```text
 original payable amount: 200.00 EUR
@@ -383,7 +388,7 @@ alternative amount:      200.00 EUR
 XML exchange rate:        110.265
 ```
 
-Independent rounding can expose a mismatch between converted lines, taxes, and totals. In that case preparation throws `exchange_rate.invoice_invalid` with the underlying validation error as its cause. Correct the source invoice or the conversion policy; do not patch the converted projection after preparation.
+Independent line rounding can create a residual between converted lines, taxes, and the directly converted payable amount. The converter recomputes the fiscal aggregates from rounded line evidence and records that residual in `payableRoundingAmount`. Preparation then validates the reconciled invoice. It throws `exchange_rate.invoice_invalid` only when the converted projection still violates a fiscal rule, such as missing line evidence required for totals reconciliation.
 
 The embedded `Read Me.txt` records an earlier three-decimal revision. The active XSD type in `common/CV_EFatura_Types_v1.0.xsd` permits five fractional digits, and generated XML is validated against that active schema.
 

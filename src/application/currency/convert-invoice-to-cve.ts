@@ -136,11 +136,15 @@ function convertTotals(
   const lineTaxTotals = taxTotalsFrom(lines);
   const taxTotalAmount =
     lineTaxTotals.taxTotal?.[0] ?? convertAmount(totals.taxTotalAmount, rate) ?? 0;
-  const withholdingTaxTotalAmount =
-    totals.withholdingTaxTotalAmount === null ? null : (lineTaxTotals.withholdingTotal[0] ?? 0);
+  const withholdingTaxTotalAmount = lineTaxTotals.hasWithholdingTaxTotal
+    ? (lineTaxTotals.withholdingTotal[0] ?? 0)
+    : null;
   const payableAmount = convertAmount(totals.payableAmount, rate) ?? 0;
   const derivedPayableRoundingAmount = roundMoney(
-    payableAmount - netTotalAmount - taxTotalAmount + (withholdingTaxTotalAmount ?? 0),
+    new Decimal(payableAmount)
+      .minus(netTotalAmount)
+      .minus(taxTotalAmount)
+      .plus(withholdingTaxTotalAmount ?? 0),
   );
   const payableRoundingAmount =
     totals.payableRoundingAmount === null && derivedPayableRoundingAmount === 0

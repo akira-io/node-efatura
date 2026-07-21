@@ -1,11 +1,13 @@
+import Decimal from 'decimal.js';
 import { TaxTypeCode } from '../enums/tax-type-code';
 import type { LineItemData } from './line-item-data';
 import type { TaxData } from './tax-data';
 
 interface TaxAccumulator {
-  lineTotal: number;
-  aggregateTotal: number;
-  roundedLineTotal: number;
+  lineTotal: Decimal;
+  aggregateTotal: Decimal;
+  roundedLineTotal: Decimal;
+  hasTaxTotal: boolean;
   hasComputedTax: boolean;
   canUseComputedTax: boolean;
 }
@@ -18,15 +20,15 @@ export function isIgnoredLine(line: LineItemData): boolean {
   return line.lineTypeCode === 'I';
 }
 
-export function roundMoney(value: number): number {
-  return Math.round(value * 100) / 100;
+export function roundMoney(value: Decimal.Value): number {
+  return new Decimal(value).toDecimalPlaces(2, Decimal.ROUND_HALF_UP).toNumber();
 }
 
 export function sumSignedLineAmounts(
   lines: LineItemData[],
   selector: (line: LineItemData) => number | null,
 ): number | null {
-  let total = 0;
+  let total = new Decimal(0);
 
   for (const line of lines) {
     if (isIgnoredLine(line)) {
@@ -39,7 +41,7 @@ export function sumSignedLineAmounts(
       return null;
     }
 
-    total += lineSign(line) * value;
+    total = total.plus(new Decimal(value).mul(lineSign(line)));
   }
 
   return roundMoney(total);
@@ -48,6 +50,7 @@ export function sumSignedLineAmounts(
 export function taxTotalsFrom(lines: LineItemData[]): {
   taxTotal: readonly number[] | null;
   withholdingTotal: readonly number[];
+  hasWithholdingTaxTotal: boolean;
 } {
   let missingTaxTotal = false;
   const taxTotal = taxAccumulator();
@@ -78,14 +81,16 @@ export function taxTotalsFrom(lines: LineItemData[]): {
   return {
     taxTotal: missingTaxTotal ? null : moneyCandidates(taxTotal),
     withholdingTotal: moneyCandidates(withholdingTotal),
+    hasWithholdingTaxTotal: withholdingTotal.hasTaxTotal,
   };
 }
 
 function taxAccumulator(): TaxAccumulator {
   return {
-    lineTotal: 0,
-    aggregateTotal: 0,
-    roundedLineTotal: 0,
+    lineTotal: new Decimal(0),
+    aggregateTotal: new Decimal(0),
+    roundedLineTotal: new Decimal(0),
+    hasTaxTotal: false,
     hasComputedTax: false,
     canUseComputedTax: true,
   };
@@ -97,7 +102,8 @@ function addTaxTotal(
   line: LineItemData,
   tax: TaxData,
 ): void {
-  accumulator.lineTotal += sign * (tax.taxTotal ?? 0);
+  accumulator.hasTaxTotal = true;
+  accumulator.lineTotal = accumulator.lineTotal.plus(new Decimal(tax.taxTotal ?? 0).mul(sign));
 
   const computedTax = computedTaxFrom(line, tax);
 
@@ -107,16 +113,18 @@ function addTaxTotal(
   }
 
   accumulator.hasComputedTax = true;
-  accumulator.aggregateTotal += sign * computedTax;
-  accumulator.roundedLineTotal += sign * roundMoney(computedTax);
+  accumulator.aggregateTotal = accumulator.aggregateTotal.plus(computedTax.mul(sign));
+  accumulator.roundedLineTotal = accumulator.roundedLineTotal.plus(
+    new Decimal(roundMoney(computedTax)).mul(sign),
+  );
 }
 
-function computedTaxFrom(line: LineItemData, tax: TaxData): number | null {
+function computedTaxFrom(line: LineItemData, tax: TaxData): Decimal | null {
   if (line.netTotal === null || tax.taxPercentage === null) {
     return null;
   }
 
-  return line.netTotal * (tax.taxPercentage / 100);
+  return new Decimal(line.netTotal).mul(tax.taxPercentage).div(100);
 }
 
 function moneyCandidates(accumulator: TaxAccumulator): readonly number[] {
