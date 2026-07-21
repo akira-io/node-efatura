@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { WorldBankExchangeRateProvider } from '../../src';
+import { ExchangeRateError, WorldBankExchangeRateProvider } from '../../src';
 
 const cpvFixture = await readFixture('world-bank-cpv.json');
 const emuFixture = await readFixture('world-bank-emu.json');
@@ -51,6 +51,22 @@ function request(sourceCurrency = 'USD', targetCurrency = 'CVE') {
     effectiveAt: new Date('2025-07-21T00:00:00Z'),
     rateType: 'reference' as const,
   };
+}
+
+async function exchangeRateError(promise: Promise<unknown>): Promise<ExchangeRateError> {
+  let caughtError: unknown;
+
+  try {
+    await promise;
+  } catch (error) {
+    caughtError = error;
+  }
+
+  if (!(caughtError instanceof ExchangeRateError)) {
+    throw new Error('Expected an ExchangeRateError.');
+  }
+
+  return caughtError;
 }
 
 afterEach(() => {
@@ -131,6 +147,21 @@ describe('WorldBankExchangeRateProvider', () => {
     });
   });
 
+  it('does not expose invalid observation data through parser errors', async () => {
+    const secretSentinel = 'TOP_SECRET_TOKEN';
+    const invalidObservation = cpvFixture.replace(
+      '"value": 101.7495',
+      `"value": "${secretSentinel}"`,
+    );
+    const provider = providerFor({ fetcher: vi.fn(async () => response(invalidObservation)) });
+
+    const error = await exchangeRateError(provider.getQuote(request()));
+
+    expect(error.code).toBe('exchange_rate.response_invalid');
+    expect(error.message).not.toContain(secretSentinel);
+    expect(String(error.cause)).not.toContain(secretSentinel);
+  });
+
   it('requires an explicit economy mapping for ambiguous currencies', async () => {
     const fetcher = fixtureFetcher();
     const provider = new WorldBankExchangeRateProvider({ fetcher, clock });
@@ -191,11 +222,29 @@ describe('WorldBankExchangeRateProvider', () => {
     });
   });
 
-  it('rejects malformed JSON responses', async () => {
-    const provider = providerFor({ fetcher: vi.fn(async () => response('{not-json')) });
+  it('wraps body stream failures as stable provider-unavailable errors', async () => {
+    const failingBodyStream = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        controller.error(new Error('body stream failed'));
+      },
+    });
+    const provider = providerFor({ fetcher: vi.fn(async () => new Response(failingBodyStream)) });
 
     await expect(provider.getQuote(request())).rejects.toMatchObject({
-      code: 'exchange_rate.response_invalid',
+      code: 'exchange_rate.provider_unavailable',
+      message: 'The World Bank exchange-rate source is unavailable.',
+      cause: undefined,
     });
+  });
+
+  it('rejects malformed JSON without exposing response data', async () => {
+    const secretSentinel = 'TOP_SECRET_TOKEN';
+    const provider = providerFor({ fetcher: vi.fn(async () => response(secretSentinel)) });
+
+    const error = await exchangeRateError(provider.getQuote(request()));
+
+    expect(error.code).toBe('exchange_rate.response_invalid');
+    expect(error.message).not.toContain(secretSentinel);
+    expect(String(error.cause)).not.toContain(secretSentinel);
   });
 });

@@ -145,12 +145,22 @@ export class WorldBankExchangeRateProvider implements ExchangeRateProvider {
       throw providerUnavailable(httpResponse.status);
     }
 
-    const responseBody = await readBoundedWorldBankResponse(httpResponse, this.#maxResponseBytes);
+    let responseBody: string;
+
+    try {
+      responseBody = await readBoundedWorldBankResponse(httpResponse, this.#maxResponseBytes);
+    } catch (cause) {
+      if (cause instanceof ExchangeRateError) {
+        throw cause;
+      }
+
+      throw providerUnavailable();
+    }
 
     try {
       return JSON.parse(responseBody);
-    } catch (cause) {
-      throw invalidWorldBankResponse('response body is not valid JSON', cause);
+    } catch {
+      throw invalidWorldBankResponse('response body is not valid JSON');
     }
   }
 }

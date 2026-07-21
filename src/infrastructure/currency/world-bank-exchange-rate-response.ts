@@ -50,8 +50,8 @@ export function parseWorldBankObservation(
     }
 
     return observationValue;
-  } catch (cause) {
-    throw invalidWorldBankResponse('observation value is not a positive decimal', cause);
+  } catch {
+    throw invalidWorldBankResponse('observation value is not a positive decimal');
   }
 }
 
