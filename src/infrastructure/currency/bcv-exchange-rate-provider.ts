@@ -25,6 +25,7 @@ export interface BcvExchangeRateProviderOptions {
 
 const DEFAULT_BCV_SOURCE_URL =
   'https://www.bcv.cv/pt/PoliticaMonetaria/EstatisticasCambiais/Paginas/Estatisticas_Cambiais.aspx?_expType=PDF';
+const OFFICIAL_BCV_ORIGIN = 'https://www.bcv.cv';
 const DEFAULT_TIMEOUT_MS = 10_000;
 const DEFAULT_MAX_RESPONSE_BYTES = 1024 * 1024;
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -84,6 +85,7 @@ export class BcvExchangeRateProvider implements ExchangeRateProvider {
     try {
       response = await this.#fetch(this.#sourceUrl, {
         headers: { accept: 'text/html' },
+        redirect: 'manual',
         signal: AbortSignal.timeout(this.#timeoutMs),
       });
     } catch {
@@ -216,15 +218,15 @@ function normalizeSourceUrl(sourceUrl: string): string {
   try {
     const url = new URL(sourceUrl);
 
-    if (url.protocol !== 'https:' || url.username.length > 0 || url.password.length > 0) {
-      throw new Error('The BCV source URL must use HTTPS.');
+    if (url.origin !== OFFICIAL_BCV_ORIGIN || url.username.length > 0 || url.password.length > 0) {
+      throw new Error('The BCV source URL must use the official origin.');
     }
 
     return url.toString();
   } catch {
     throw new ExchangeRateError(
       'exchange_rate.source_required',
-      'An HTTPS BCV exchange-rate source URL is required.',
+      'An official BCV HTTPS exchange-rate source URL is required.',
     );
   }
 }

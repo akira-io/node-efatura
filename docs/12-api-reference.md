@@ -174,6 +174,8 @@ new BcvExchangeRateProvider(options?: BcvExchangeRateProviderOptions)
 
 `getQuote()` supports buy and sell quotes targeting CVE and defaults to buy when called without a rate type. It requires exactly one rate table and one anchored spanning publication row, with one adjacent semantic-heading compatibility shape when the spanning row is absent. It normalizes rates published for multiple units and compares the requested instant by the fixed UTC-01 Cape Verde calendar date. `timeoutMs` and `maxResponseBytes` must be positive safe integers; `maxPublicationAgeDays` must be a nonnegative safe integer. Previous publications require both an enabled policy and an adequate maximum age. The current BCV page is dynamic and is not a documented historical API.
 
+The `sourceUrl` origin must be exactly `https://www.bcv.cv`, without credentials or a non-default port. Automatic redirects are disabled, and redirect responses fail with `exchange_rate.provider_unavailable`. Use `FixedExchangeRateProvider` or `CallbackExchangeRateProvider` for another approved source.
+
 ### `WorldBankExchangeRateProvider`
 
 ```ts

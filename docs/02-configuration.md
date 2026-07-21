@@ -107,7 +107,7 @@ const efatura = createEfatura(config, { exchangeRateProvider });
 
 Set both `allowPreviousPublication` and a positive `maxPublicationAgeDays` to permit an earlier BCV publication for a weekend or public holiday. The current BCV print page is dynamic and is not a documented historical API.
 
-BCV `timeoutMs` and `maxResponseBytes` must be positive safe integers. `maxPublicationAgeDays` must be a finite nonnegative safe integer. Provider URLs must use HTTPS without user information.
+BCV `timeoutMs` and `maxResponseBytes` must be positive safe integers. `maxPublicationAgeDays` must be a finite nonnegative safe integer. The BCV `sourceUrl` origin must be exactly `https://www.bcv.cv`; credentials, non-default ports, and redirect responses are rejected. Other provider evidence URLs must use HTTPS without user information.
 
 Provider-specific options:
 

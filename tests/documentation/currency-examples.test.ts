@@ -80,10 +80,11 @@ describe('currency conversion documentation', () => {
   });
 
   it('documents the final provider and metadata hardening rules', async () => {
-    const [guide, apiReference, compliance] = await Promise.all([
+    const [guide, apiReference, compliance, configuration] = await Promise.all([
       readFile(new URL('../../docs/18-currency-conversion.md', import.meta.url), 'utf8'),
       readFile(new URL('../../docs/12-api-reference.md', import.meta.url), 'utf8'),
       readFile(new URL('../../docs/11-compliance-matrix.md', import.meta.url), 'utf8'),
+      readFile(new URL('../../docs/02-configuration.md', import.meta.url), 'utf8'),
     ]);
 
     expect(guide).toContain('spanning `th[colspan="5"]` publication row');
@@ -95,9 +96,13 @@ describe('currency conversion documentation', () => {
     expect(guide).toContain('DFA conversion metadata is validated against the invoice');
     expect(guide).toContain('validation.payable_alternative_currency_unsupported');
     expect(guide).toContain('rounded to two fractional digits with half-up rounding');
+    expect(guide).toContain('origin must be exactly `https://www.bcv.cv`');
+    expect(guide).toContain('Redirect responses are rejected');
     expect(apiReference).toContain('ExchangeRateEvidence');
     expect(apiReference).toContain('validation.payable_alternative_currency_unsupported');
+    expect(apiReference).toContain('exactly `https://www.bcv.cv`');
     expect(compliance).toContain('payableAlternativeAmountSchema');
+    expect(configuration).toContain('exactly `https://www.bcv.cv`');
   });
 });
 

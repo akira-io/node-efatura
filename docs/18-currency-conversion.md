@@ -211,7 +211,7 @@ const efatura = createEfatura(config, { exchangeRateProvider: provider });
 |---|---:|---|
 | `fetcher` | global `fetch` | HTTP implementation used for the official page |
 | `clock` | `SystemClock` | Supplies `retrievedAt` |
-| `sourceUrl` | official BCV print URL | Must use HTTPS without user information |
+| `sourceUrl` | official BCV print URL | Origin must be exactly `https://www.bcv.cv`, without credentials or a non-default port |
 | `timeoutMs` | `10000` | Positive safe integer that aborts a slow request |
 | `maxResponseBytes` | `1048576` | Positive safe integer that rejects a response above 1 MiB |
 | `allowPreviousPublication` | `false` | Permits an earlier publication only when enabled |
@@ -221,11 +221,13 @@ The provider defaults to the BCV buy column. Set `rateType: 'sell'` in preparati
 
 BCV can publish a row for more than one source-currency unit. The parser divides the published CVE value by the unit count. A row of `11,026.50 CVE` for `100 EUR` becomes `110.265 CVE` for one EUR. Missing currencies, malformed tables, non-positive units, non-positive rates, absent publication dates, HTTP failures, oversized responses, and timeouts fail closed.
 
+The configured `sourceUrl` origin must be exactly `https://www.bcv.cv`. Automatic redirects are disabled. Redirect responses are rejected without reading or exposing their `Location` value. Use `FixedExchangeRateProvider` for an approved static quote or `CallbackExchangeRateProvider` for another trusted integration; neither receives BCV attribution automatically.
+
 `timeoutMs` and `maxResponseBytes` must be positive safe integers. `maxPublicationAgeDays` must be a finite nonnegative safe integer. Fractions, infinities, unsafe integers, and invalid signs fail at construction.
 
 By default, the publication date must equal the requested instant's fixed UTC-01 Cape Verde calendar date. The comparison changes date at `01:00Z`, including month and year boundaries; it does not use the UTC date directly. For a weekend or public holiday, enable `allowPreviousPublication` and set a positive `maxPublicationAgeDays`. The provider records the actual earlier publication date and rejects future or older publications. Setting `allowPreviousPublication: true` while leaving the maximum age at `0` does not permit an earlier date.
 
-The BCV print page is current and dynamic. It is not a documented historical-rate API. Changing `effectiveAt` does not make that page return an archived publication. An earlier request fails unless `sourceUrl` points to a separately configured, trusted historical source with the same expected page shape. For audited historical rates, prefer `FixedExchangeRateProvider` or a trusted `CallbackExchangeRateProvider`.
+The BCV print page is current and dynamic. It is not a documented historical-rate API. Changing `effectiveAt` does not make that page return an archived publication. The BCV provider does not accept a separately hosted historical page. For audited historical rates, use `FixedExchangeRateProvider` or a trusted `CallbackExchangeRateProvider` with provenance that identifies the source actually used.
 
 The package never switches to World Bank, a cached value, a prior day, or another provider after a BCV failure. Any fallback policy must be explicit in application code and must preserve the provenance of the rate that was applied.
 
