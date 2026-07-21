@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { FixedExchangeRateProvider } from '../src';
 import { createEfatura } from '../src/create-efatura';
 import { DocumentType } from '../src/domain/enums/document-type';
 import { resolveDefaultSchemaPath, XmllintXsdValidator } from '../src/infrastructure';
@@ -58,6 +59,57 @@ describe('official XSD validation', () => {
       },
     );
     const result = await efatura.validateDfeXml(xml, DocumentType.ElectronicInvoice);
+
+    expect(result).toEqual({ valid: true, errors: [] });
+  });
+
+  it('validates a prepared CVE invoice with its foreign alternative amount against the official schema', async () => {
+    const effectiveAt = new Date('2026-07-21T11:30:00Z');
+    const efatura = createEfatura(config(), {
+      clock: { now: () => new Date('2026-07-21T12:00:00Z') },
+      exchangeRateProvider: new FixedExchangeRateProvider({
+        sourceCurrency: 'EUR',
+        targetCurrency: 'CVE',
+        rate: 110.265,
+        effectiveAt,
+        provider: 'Test provider',
+      }),
+    });
+    const prepared = await efatura.prepareInvoiceToCve(
+      baseInvoicePayload({
+        issueDate: '2026-07-21',
+        lines: [
+          {
+            lineTypeCode: 'N',
+            quantity: { value: 1, unitCode: 'EA' },
+            price: 173.91,
+            priceExtension: 173.91,
+            netTotal: 173.91,
+            taxes: [{ taxTypeCode: 'IVA', taxPercentage: 15, taxTotal: 26.09 }],
+            item: { description: 'Item', emitterIdentification: 'ITEM1' },
+          },
+        ],
+        totals: {
+          priceExtensionTotalAmount: 173.91,
+          chargeTotalAmount: 0,
+          discountTotalAmount: 0,
+          netTotalAmount: 173.91,
+          taxTotalAmount: 26.09,
+          payableAmount: 200,
+        },
+      }),
+      { sourceCurrency: 'EUR' },
+    );
+    const xml = efatura.buildDfeXml(prepared.invoice, {
+      documentNumber: 1,
+      randomCode: '1234567890',
+    });
+    const validator = new XmllintXsdValidator();
+
+    const result = await validator.validate(xml, {
+      documentType: DocumentType.ElectronicInvoice,
+      schemaVersion: '1.0',
+    });
 
     expect(result).toEqual({ valid: true, errors: [] });
   });

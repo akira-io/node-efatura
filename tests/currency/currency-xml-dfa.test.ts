@@ -5,8 +5,10 @@ import {
   type DfaRenderInput,
   EfaturaValidationError,
   type ExchangeRateRequest,
+  FixedExchangeRateProvider,
 } from '../../src';
 import { dfaRenderInputFrom } from '../../src/application/dfa/dfa-render-input';
+import { EmissionMode } from '../../src/domain/enums/emission-mode';
 import { baseInvoicePayload } from '../helpers';
 
 const iud = 'CV3260208100200300001230100000000112345678909';
@@ -20,6 +22,34 @@ const config = {
 };
 
 describe('currency conversion DFA mapping', () => {
+  it('builds synchronous XML with CVE payable and foreign alternative amounts', async () => {
+    const effectiveAt = new Date('2026-07-21T11:30:00Z');
+    const efatura = createEfatura(config, {
+      clock: { now: () => new Date('2026-07-21T12:00:00Z') },
+      exchangeRateProvider: new FixedExchangeRateProvider({
+        sourceCurrency: 'EUR',
+        targetCurrency: 'CVE',
+        rate: 110.265,
+        effectiveAt,
+        provider: 'Test provider',
+      }),
+    });
+    const prepared = await efatura.prepareInvoiceToCve(invoicePayableAt200(), {
+      sourceCurrency: 'EUR',
+    });
+
+    const xml = efatura.buildDfeXml(prepared.invoice, {
+      iud,
+      emissionMode: EmissionMode.Online,
+    });
+
+    expect(xml).toBeTypeOf('string');
+    expect(xml).toContain('<PayableAmount>22053</PayableAmount>');
+    expect(xml).toContain(
+      '<PayableAlternativeAmount CurrencyCode="EUR" ExchangeRate="110.265">200</PayableAlternativeAmount>',
+    );
+  });
+
   it('gives custom renderers the complete prepared conversion evidence and CVE totals', async () => {
     const renderedInputs: DfaRenderInput[] = [];
     const render = vi.fn(async (input: DfaRenderInput) => {
