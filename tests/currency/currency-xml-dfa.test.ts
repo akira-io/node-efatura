@@ -63,19 +63,18 @@ describe('currency conversion DFA mapping', () => {
     });
     const effectiveAt = new Date('2026-07-21T00:00:00Z');
     const retrievedAt = new Date('2026-07-21T12:30:00Z');
+    const getQuote = vi.fn(async (request: ExchangeRateRequest) => ({
+      ...request,
+      rate: 110.265,
+      rateType: 'reference' as const,
+      effectiveAt,
+      retrievedAt,
+      provider: 'Banco de Cabo Verde',
+      sourceUrl: 'https://www.bcv.cv/taxas/2026-07-21',
+    }));
     const efatura = createEfatura(config, {
       dfaRenderer: { render },
-      exchangeRateProvider: {
-        getQuote: async (request: ExchangeRateRequest) => ({
-          ...request,
-          rate: 110.265,
-          rateType: 'reference',
-          effectiveAt,
-          retrievedAt,
-          provider: 'Banco de Cabo Verde',
-          sourceUrl: 'https://www.bcv.cv/taxas/2026-07-21',
-        }),
-      },
+      exchangeRateProvider: { getQuote },
     });
     const prepared = await efatura.prepareInvoiceToCve(invoicePayableAt200(), {
       sourceCurrency: 'EUR',
@@ -91,6 +90,7 @@ describe('currency conversion DFA mapping', () => {
     });
 
     expect(render).toHaveBeenCalledOnce();
+    expect(getQuote).toHaveBeenCalledOnce();
     expect(renderedInputs[0]).toMatchObject({
       currency: 'CVE',
       total: 22_053,
