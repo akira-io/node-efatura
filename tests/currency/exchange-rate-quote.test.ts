@@ -40,6 +40,7 @@ describe('exchange-rate quotes', () => {
     'EU',
     'EURO',
     '12A',
+    'IdR',
     'IDR',
     'SLE',
     'XCG',

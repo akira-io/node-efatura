@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Match accepted currency codes to the active embedded e-Fatura XSD before exchange-rate provider access.
+- Match canonical currency codes to the active embedded e-Fatura XSD and reject `IDR`, whose schema entry is the noncanonical `IdR`.
 - Use the configured clock's Cape Verde time-of-day when an invoice has no issue time.
 
 ### Deprecated

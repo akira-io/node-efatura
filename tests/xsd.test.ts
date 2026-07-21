@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { FixedExchangeRateProvider } from '../src';
 import { createEfatura } from '../src/create-efatura';
 import { DocumentType } from '../src/domain/enums/document-type';
@@ -117,6 +117,48 @@ describe('official XSD validation', () => {
 
     expect(xml).toContain(`CurrencyCode="${sourceCurrency}"`);
     expect(result).toEqual({ valid: true, errors: [] });
+  });
+
+  it('rejects canonical IDR before provider access', async () => {
+    const getQuote = vi.fn(async () => {
+      throw new Error('Provider must not be called.');
+    });
+    const efatura = createEfatura(config(), { exchangeRateProvider: { getQuote } });
+
+    await expect(
+      efatura.prepareInvoiceToCve(baseInvoicePayload(), { sourceCurrency: 'IDR' }),
+    ).rejects.toMatchObject({ code: 'exchange_rate.currency_unsupported' });
+    expect(getQuote).not.toHaveBeenCalled();
+  });
+
+  it('records the active XSD mixed-case IDR lexical anomaly', async () => {
+    const efatura = createEfatura(config(), {
+      clock: { now: () => new Date('2026-02-08T12:00:00Z') },
+    });
+    const generatedXml = efatura.buildDfeXml(
+      baseInvoicePayload({
+        totals: {
+          payableAlternativeAmounts: [{ value: 1150, currencyCode: 'IdR', exchangeRate: 1 }],
+        },
+      }),
+      { documentNumber: 1, randomCode: '1234567890' },
+    );
+    const anomalousSchemaXml = generatedXml.replace('CurrencyCode="IDR"', 'CurrencyCode="IdR"');
+    const validator = new XmllintXsdValidator();
+    const context = {
+      documentType: DocumentType.ElectronicInvoice,
+      schemaVersion: '1.0',
+    } as const;
+
+    expect(generatedXml).toContain('CurrencyCode="IDR"');
+    expect(generatedXml).not.toContain('CurrencyCode="IdR"');
+    await expect(validator.validate(generatedXml, context)).resolves.toMatchObject({
+      valid: false,
+    });
+    await expect(validator.validate(anomalousSchemaXml, context)).resolves.toEqual({
+      valid: true,
+      errors: [],
+    });
   });
 
   it.each(

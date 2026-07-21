@@ -154,7 +154,7 @@ export interface PrepareInvoiceToCveOptions {
 }
 ```
 
-`sourceCurrency` is required, trimmed, uppercased, and checked against all 178 codes in the active embedded `ISO_ISO3AlphaCurrencyCode_2012-08-31.xsd` enumeration. The checked-in runtime set requires no filesystem access. Unsupported codes fail before provider access. The target is fixed to `CVE`. `effectiveAt` uses the invoice issue date and explicit issue time when present. Without an issue time, it uses that date and the configured clock's current Cape Verde time-of-day at fixed UTC-01. An explicit option overrides either derived value. `rateType` is passed to the provider; the BCV provider defaults it to `buy`, while the World Bank provider defaults it to `reference` when called directly. A provider rejects unsupported types instead of reinterpreting them.
+`sourceCurrency` is required, trimmed, uppercased, and checked against the 178 canonical uppercase codes in the active embedded `ISO_ISO3AlphaCurrencyCode_2012-08-31.xsd` enumeration. The XSD contains 179 entries, but its `IdR` value is noncanonical. The package rejects canonical `IDR` before provider access and does not emit mixed-case `IdR`. The checked-in runtime set requires no filesystem access. Other unsupported codes also fail before provider access. The target is fixed to `CVE`. `effectiveAt` uses the invoice issue date and explicit issue time when present. Without an issue time, it uses that date and the configured clock's current Cape Verde time-of-day at fixed UTC-01. An explicit option overrides either derived value. `rateType` is passed to the provider; the BCV provider defaults it to `buy`, while the World Bank provider defaults it to `reference` when called directly. A provider rejects unsupported types instead of reinterpreting them.
 
 The result is:
 
@@ -170,7 +170,7 @@ export interface PreparedCurrencyInvoice {
 }
 ```
 
-The result contains a new normalized invoice. The source object is not mutated. `normalizeCurrencyCode()` trims and uppercases a code, then enforces membership in the active e-Fatura XSD currency enumeration. Schema-listed special codes such as `XAU`, `XTS`, and `XXX` are accepted. Codes absent from that schema are rejected even when the host runtime recognizes them. `validateExchangeRateQuote()` applies the same currency check plus the package pair, date, provenance, HTTPS source URL, and rate validations before returning a normalized quote.
+The result contains a new normalized invoice. The source object is not mutated. `normalizeCurrencyCode()` trims and uppercases a code, then enforces membership in the active e-Fatura XSD's canonical uppercase currency entries. Schema-listed special codes such as `XAU`, `XTS`, and `XXX` are accepted. Canonical `IDR` and other codes absent from the usable set are rejected even when the host runtime recognizes them. `validateExchangeRateQuote()` applies the same currency check plus the package pair, date, provenance, HTTPS source URL, and rate validations before returning a normalized quote.
 
 ## 6. BCV Rate Type, Units, Publication Date, Weekend, Staleness, Timeout, And Current-Page Limitation
 

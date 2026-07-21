@@ -11,13 +11,22 @@ const currencySchemaUrl = new URL(
 describe('schema currency codes', () => {
   it('matches the complete checked-in runtime set to the active XSD enumeration', async () => {
     const schemaSource = await readFile(currencySchemaUrl, 'utf8');
-    const schemaCurrencyCodes = Array.from(
-      schemaSource.matchAll(/xsd:enumeration value="(?<currencyCode>[A-Z]{3})"/g),
+    const schemaEnumerationValues = Array.from(
+      schemaSource.matchAll(/xsd:enumeration value="(?<currencyCode>[^"]+)"/g),
       (match) => match.groups?.currencyCode ?? '',
     );
-    expect(SCHEMA_CURRENCY_CODES).toEqual(schemaCurrencyCodes);
+    const canonicalCurrencyCodes = schemaEnumerationValues.filter((currencyCode) =>
+      /^[A-Z]{3}$/.test(currencyCode),
+    );
+    const noncanonicalCurrencyCodes = schemaEnumerationValues.filter(
+      (currencyCode) => !/^[A-Z]{3}$/.test(currencyCode),
+    );
 
-    for (const currencyCode of schemaCurrencyCodes) {
+    expect(schemaEnumerationValues).toHaveLength(179);
+    expect(noncanonicalCurrencyCodes).toEqual(['IdR']);
+    expect(SCHEMA_CURRENCY_CODES).toEqual(canonicalCurrencyCodes);
+
+    for (const currencyCode of canonicalCurrencyCodes) {
       expect(normalizeCurrencyCode(currencyCode)).toBe(currencyCode);
     }
   });
