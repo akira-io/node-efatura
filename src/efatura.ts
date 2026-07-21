@@ -6,6 +6,7 @@ import type {
 import { prepareInvoiceToCve as prepareInvoiceToCveForInvoice } from './application/currency/prepare-invoice-to-cve';
 import { dfaQrCodeUrl } from './application/dfa/dfa';
 import { dfaRenderInputFrom } from './application/dfa/dfa-render-input';
+import { warnRenderDfaCurrencyDeprecation } from './application/dfa/render-dfa-currency-deprecation';
 import { resolveEfaturaDependencies } from './application/efatura-dependencies';
 import {
   isInvoiceData,
@@ -265,6 +266,8 @@ export class Efatura extends EfaturaDocuments {
   }
 
   async renderDfa(options: RenderDfaOptions): Promise<DfaDocument> {
+    warnRenderDfaCurrencyDeprecation(options.currency);
+
     return this.dfaRenderer.render(dfaRenderInputFrom(options, this.dfaQrCodeUrl(options.iud)));
   }
 
